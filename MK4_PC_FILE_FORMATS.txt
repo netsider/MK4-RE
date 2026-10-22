@@ -1,0 +1,334 @@
+MK4 PC FILE FORMATS - A WALKTHROUGH FOR REVERSE ENGINEERS
+Mortal Kombat 4, PC port (1998, GT Interactive / Eurocom). Notes by netsider, as of 2026-10-22.
+
+INTRO
+This file explains how to get from the retail game files to meshes, textures, sounds, animations and live game
+state. It is self-contained and follows the order you would work in:
+  1 open FILESYS.DAT -> 2 extract files -> 3 meshes/textures -> 4 sounds -> 5 videos -> 6 animations ->
+  7 skeletons (link animations to meshes) -> 8 MK4.EXE code/tables -> 9 runtime memory -> 10 physics -> 11 gaps -> 12 quick reference.
+Every claim is tagged:
+  PROVEN = checked against the game's code, data or a live run
+  LIKELY = strong evidence, not fully traced
+  GUESS  = unverified idea
+No game data is included here: only offsets, structures and descriptions. You need your own copy of the game.
+Paths: <MK4 install folder> = wherever the game is installed (the installer lets you choose; no fixed default verified).
+All integers are little-endian. "u32" = unsigned 32-bit, "s16" = signed 16-bit, etc. Offsets are hex unless noted.
+
+==========================================================================================
+0. FILES ON THE DISC / INSTALL
+==========================================================================================
+<MK4 install folder>\DATA\ (or the CD's DATA folder):
+  MK4.EXE        main executable (Win32 PE, 1,182,720 bytes in the version studied)        PROVEN
+  FILESYS.DAT    one container holding every mesh, texture, sound and the animation pack   PROVEN
+  M_*.ECM        full-motion videos (M_INTRO, M_MIDWAY, M_EURO, M_KOMERC ... on the CD)      PROVEN (files exist)
+Registry: HKLM\SOFTWARE\GT Interactive\Mortal Kombat 4\1.00 (WOW6432Node on 64-bit Windows),
+  values Path (install folder), Setup, Config (binary saved settings incl. key bindings).        PROVEN
+The game runs fine under Wine (32-bit prefix) at 640x480x16, which is how the live work below was done.  PROVEN
+
+==========================================================================================
+1. FILESYS.DAT - THE CONTAINER
+==========================================================================================
+Layout (PROVEN):
+  offset 0x0000: directory of exactly 799 entries, 12 bytes each (0x2574 bytes total), no header.
+  after that:    file data, packed. No compression at container level (files are stored as-is).
+Directory entry (12 bytes):
+  +0x0  u32  hash    hash of the file's original full path (see below)
+  +0x4  u32  offset  absolute byte offset of the file inside FILESYS.DAT
+  +0x8  u32  size    file size in bytes
+There are no filenames in the container. Names are found by hashing candidate paths.
+
+Name hash (PROVEN; reproduces all 799 entries with names recovered from strings in MK4.EXE):
+  def fsys_hash(path):
+      s = path.upper()
+      h = 0; shift = 0
+      for ch in s:
+          b = ord(ch); if b >= 0x80: b -= 0x100        # signed char
+          h = (h + (b << shift)) & 0xFFFFFFFF
+          shift = shift + 8 if shift < 24 else 0
+      return (h + len(s)) & 0xFFFFFFFF
+Path prefixes the game used (PROVEN, dev paths still inside MK4.EXE):
+  meshes/textures: "C:\SOURCE\MK4\WIN\GEOGFX\" + name   e.g. C:\SOURCE\MK4\WIN\GEOGFX\SZ_GEO.GEO
+  animations:      "C:\SOURCE\MK4\WIN\ANIM\"   + name   e.g. C:\SOURCE\MK4\WIN\ANIM\ANIMDAT4.AP0
+  sounds:          "c:\source\mk4\win\sound\pcmk..."     (names pcmkNNNN; hash the same way)
+Worked example (pseudocode):
+  fs = read("FILESYS.DAT"); h = fsys_hash("C:\\SOURCE\\MK4\\WIN\\GEOGFX\\SZ_GEO.GEO")
+  for i in 0..798: (eh, off, size) = u32x3(fs, i*12); if eh == h: data = fs[off:off+size]
+What is inside (PROVEN, by magic/content):
+  674 x ESF sound files, 122 x GEO mesh/texture files ("v1.0"), 1 x MENU.TGA, ANIMDAT4.AP0 + ANIMDAT4.AP1,
+  2 small unidentified entries (#0, #1).
+  In the copy studied, AP0 sits at offset 12288 (size 2964) and AP1 at 15252 (size 1,138,516). (PROVEN for that copy;
+  always look them up by hash.)
+There are NO separate sprite or palette files: all 2D art is texture pages inside GEO files (section 3).  PROVEN
+
+==========================================================================================
+2. EXTRACTING
+==========================================================================================
+Procedure (PROVEN):
+  1. Build a list of candidate names: scan MK4.EXE for strings ending in .geo/.GEO, .AP0/.AP1, .tga, and pcmk sound names.
+  2. Hash prefix+name for each, match against the 799 directory hashes, write out data[off:off+size].
+  3. Identify the rest by magic: "ESF" = sound, "v1.0" = GEO.
+All 122 GEOs and MENU.TGA got names this way.
+The game reads files by seeking into FILESYS.DAT (seen with strace under Wine): a live session loaded 57 named .geo files.  PROVEN
+
+==========================================================================================
+3. .GEO - MESHES AND TEXTURES
+==========================================================================================
+A GEO holds 3D parts and/or texture pages. Fighters, arenas, logos, HUD/fonts, VS portraits are all GEOs.  PROVEN
+Header (PROVEN):
+  +0x00 4 bytes  magic/version ("v1.0")
+  +0x04 u32      tex_off  - offset of the texture section
+  +0x08 u32      size
+  +0x0C          block table starts (16-byte records), runs until a record fails the checks or tex_off is reached
+Block record, 16 bytes (PROVEN; matches the open-source mk4decomp geo_mesh.py layout):
+  +0x0 u16 type     0 / 1 / 4 = 3D part; 0x100, 0x2 also seen; 128..640 with count 0 = 2D set (see below)
+  +0x2 u16 count    number of triangles in this part
+  +0x4 s32 a        vertex offset, relative to the address of THIS field   -> vtx_off   = rec + 4 + a
+  +0x8 s32 b        strip-list offset, relative to this field              -> strip_off = rec + 8 + b
+  +0xC s32 c        UV-row offset, relative to this field                  -> uv_off    = rec + 12 + c
+Block types:
+  1   = mesh parts (fighter body parts, arena pieces)                                       PROVEN
+  0   = repeats the counts of type 1; skip when exporting fighters                          LIKELY
+  0x4 = mesh parts used by logos: midway_g.geo (3D Midway logo), attract_.geo (MK dragon medallion),
+        MKlogo_g.geo (title logo, LIKELY). Same record layout as type 1. Older exporters that only accept 0/1 miss them. PROVEN
+  0x100, 0x2 = seen in shared_g/share2_g/buyin_ge alongside 0/1; meaning not traced                GUESS: effect/sprite quads
+  128..640 with count 0 = no 3D data; files that only use these are 2D sets (VS portraits vs_*_ge, fonts, menus,
+        theatre_, hstd_, eurocom_). LIKELY 2D sprite/texture sets.
+Strip list at strip_off (PROVEN): repeated {u16 flag, s16 n}; n < 0 ends the list. Each strip has n+1 triangles and
+  n+3 vertices. Sum of (n+1) == count, and vtx_off + 12*sum(n+3) == uv_off (use both as sanity checks).
+Vertex, 12 bytes (PROVEN): s16 x, y, z, nx, ny, nz (position + normal). Game Y: negative = up.
+  Divide by 100 to get a sensible scale for export (convention, not from the game).
+UV row, 8 bytes per triangle (PROVEN): +0 u8 ?, +1 u8 texture page index (LIKELY), +2..7 = u0,v0,u1,v1,u2,v2 (u8, /255).
+Decoding a part (pseudocode, PROVEN):
+  cursor = 0; t = 0
+  for (flag, n) in strips:
+      for i in 0..n:
+          a, b, c = cursor+i, cursor+i+1, cursor+i+2
+          uv = row[t]; t += 1        # uv for a = bytes 2,3; b = 4,5; c = 6,7 (keep UVs tied to their vertex)
+          order = [a,b,c]; if i odd: swap order[1],order[2]; if flag & 1: swap order[1],order[2]
+          emit triangle(order)
+      cursor += n + 3
+Part order matters: in fighter GEOs each part attaches to one skeleton bone (section 7).  PROVEN
+Arenas: all 15 arena GEOs are full 3D meshes, fully decoded; the block table is short (e.g. 7 blocks) and the last
+  block's data ends exactly at tex_off. Triangle counts e.g. shaolin 881, ice_pit 708, forest 1411.  PROVEN
+Fighter files: SC_GEO (Scorpion), SZ_GEO (Sub-Zero), LK_GEO (Liu Kang), JC_GEO (Cage), JX_GEO (Jax), JA_GEO (Jarek),
+  TA_GEO (Tanya), RA_GEO (Raiden), SB_GEO (Sonya), plus RE/QC/KI/ME/NS/SH/GO/WG_GEO (Reptile, Quan Chi, Kai, Reiko?,
+  Noob?, Shinnok, Goro, ...). First nine PROVEN by render; the rest LIKELY/GUESS from the two-letter codes.
+  Alternate costumes use _a_/_e_/_g_/_m_ name variants (LIKELY).
+
+Texture section at tex_off (PROVEN):
+  +0x0 u32 ?            (skip)
+  +0x4 u32 count        number of texture pages
+  then count x { u16 width, u16 height, u32 packed_size, packed_size bytes of RLE data }
+  Pages are typically 256x256. Pixel format 15-bit RGB 5-5-5: r = (c>>10)&31, g = (c>>5)&31, b = c&31.
+RLE (PROVEN), per row, until width pixels are written:
+  token = u16
+  if token & 0x8000 == 0: one pixel of colour token
+  else: colour = token & 0x7FFF; run = next u8; write colour run times
+Transparency: not decoded; sprite backgrounds come out black (GUESS: black or a flag bit is the key).
+2D art (HUD text, "FIGHT!", fonts, effects, gore, portraits, logos) lives in these pages as ATLASES; cutting single
+  sprites out needs the GEO UV rectangles (not done).  PROVEN (atlases), cut-out = open.
+MENU.TGA is a standard TGA.  PROVEN
+
+==========================================================================================
+4. SOUNDS (ESF)
+==========================================================================================
+674 ESF files in FILESYS.DAT (PROVEN). Decoder found in MK4.EXE code at file offset 0xAFA8D.  PROVEN
+Layout:
+  +0x0 3 bytes "ESF", +0x3 u8 0x06
+  +0x4 u32: low 24 bits = data length, top byte = flags
+  +0x8 sample data
+Flags (PROVEN except 0x80):
+  0x20 set -> 4-bit IMA ADPCM, high nibble first, decodes to 16-bit PCM; clear -> 8-bit unsigned PCM
+  0x40 set -> 22050 Hz; clear -> 11025 Hz
+  0x80 = unknown (GUESS: loop)
+Mono. Full arena music is probably not in FILESYS.DAT (GUESS; likely CD audio).
+
+==========================================================================================
+5. VIDEOS (.ECM)
+==========================================================================================
+Only the container header is understood; the video codec is NOT decoded.
+  +0x0 4 bytes "ECM" 0x02                                                    PROVEN (all files)
+  +0x4 u32 n         chunk/frame count (e.g. 203, 152)                       LIKELY
+  +0x8 n x u32       chunk sizes; 8 + 4n + sum(sizes) lands within ~3 KB of the file size for the small files  LIKELY
+  M_INTRO.ECM does not fit this reading cleanly (different header or layout)  GUESS: variant / interleaved audio
+Codec: unknown (GUESS: Eurocom in-house).
+
+==========================================================================================
+6. ANIMATIONS - ANIMDAT4.AP0 / ANIMDAT4.AP1 + THE EXE CLIP TABLE
+==========================================================================================
+There are exactly 612 clips, ids 0..611, shared by all fighters (one global table).  PROVEN
+Any clip can be played on any fighter (575 clips use the 18-word human layout).  PROVEN
+AP0 = index (PROVEN):
+  +0x000 512 bytes: a 256-entry nibble/code table used by the decompressor (the game copies it to VA 0x5220D8)
+  +0x200 records {u16 id_flags, u16 size}, one per clip in id order, ends with 0xFFFF.
+         id_flags & 0x8000 = compressed; size = byte size of that clip in AP1.
+  Sum of sizes == AP1 size exactly.
+AP1 = clip data, concatenated in id order (clip k starts at sum of sizes of clips 0..k-1).  PROVEN
+
+Clip descriptor table in MK4.EXE (PROVEN): file offset 0xFC76C = VA 0x4FDD6C, 612 x 12-byte records.
+  +0x0 u32  ?
+  +0x4 u32  ?        (one of these is the clip data pointer at runtime, LIKELY)
+  +0x8 u32  frame count in the low 16 bits, node (word) count in the high 16 bits
+  Record address for clip k = 0x4FDD6C + 12*k. Uncompressed sizes match 4*frames*nodes for all 41 raw clips.
+Frame layout (PROVEN):
+  each frame = node_count s32 words. For human clips node_count = 18 -> 72 bytes/frame:
+    word 0..2  root translation (signed, /256)
+    word 3..17 one packed rotation per animated bone (15 bones)
+Raw clips (41): s32 data[frames][nodes] directly.
+Compressed clips (571): a bitstream decoded by MK4.EXE's routine at VA 0x4013A0 using the 512-byte AP0 table.
+  The simplest reliable route is to run that routine in a CPU emulator (e.g. Unicorn): map the EXE, put the AP0 table at
+  0x5220D8, point it at the clip data, read back frames*nodes words. This gives smooth, correct curves.  PROVEN
+  A hand rewrite from the open-source mk4decomp C code gave wrong output for this build.  PROVEN
+Packed angle word (PROVEN):
+  x = w & 0x7FF; y = (w >> 11) & 0x7FF; z = ((w >> 22) & 0x3FF) << 1;  angle units = 2*pi/2048 (2048 = 360 deg)
+Rotation order (PROVEN, from EXE code):
+  ordinary bone local = Rz(-z) * Ry(-y) * Rx(-x)   (EXE 0x4BCE80)
+  root local          = Rx(-x) * Ry(-y) * Rz(-z)   (EXE 0x4BD070)
+  World = Parent * Local; bone position = parent position + parentWorldRot * joint offset.
+Human word -> bone order: frame word (3+i) drives bone [3,2,0,4,7,5,8,6,9,11,14,12,15,13,16][i].  PROVEN
+  (Readable: pelvis, chest, head, shoulders, elbows, wrists, hips, knees, ankles; elbows/knees mostly use x.)
+A root rotation of (180,0,180) is just a 180-degree yaw, not upside down.  PROVEN
+Playback rate: 1 frame per game tick, ~60 frames/s.  PROVEN (measured 61.3/s on the frame counter)
+Worked example (pseudocode):
+  ap0 = file("ANIMDAT4.AP0"); ap1 = file("ANIMDAT4.AP1"); exe = file("MK4.EXE")
+  offs = cumulative sizes from ap0[0x200:]; rec = exe[0xFC76C + 12*k : +12]
+  frames = u32(rec,8) & 0xFFFF; nodes = u32(rec,8) >> 16
+  if not compressed(k): F = s32 array(ap1[offs[k]:], frames*nodes)  else: F = emulate(0x4013A0, k)
+  for f in frames: root = F[f][0:3]/256; for i in 0..14: (x,y,z) = unpack(F[f][3+i]) -> bone order[i]
+Game-driven motion (LIKELY, strong): for travelling and airborne moves the clip gives only the pose; the game plays
+  frames forward, holds one, may play them in reverse, and moves the body itself (section 10). So a clip exported
+  "as is" can look short or odd. Clips are short pieces that game code chains together.
+
+==========================================================================================
+7. SKELETONS - LINKING ANIMATIONS TO MESHES
+==========================================================================================
+Skeleton tables live in MK4.EXE. Address mapping (PROVEN): code VA = file + 0x400C00; data VA = file + 0x401600.
+Bone record, 7 x u32 (PROVEN):
+  w0 = kind << 16 | flags        flags 0x100 = animated; 0x10 clear = push current node; 0x08 = end of branch (pop)
+  w1 = stream pointer
+  w2 = pointer to the part's size box (7 words: min xyz, max xyz, 0; 16.16 fixed; x270 = animation units)
+  w3..w5 = joint offset (16.16 fixed; multiply by 270 for animation units)
+  w6 = node index
+Parents come from walking the flags as a push/pop tree (rule above); this reproduces RAM-dumped trees exactly.  PROVEN
+Animated records take frame words in order of their kind.  PROVEN
+Mesh link: fighter GEO part i attaches to bone i of the 15-bone human skeleton. Size boxes (w2) can be compared to
+  each GEO part's min/max (one axis sign-flipped) to identify which mesh a skeleton belongs to.  PROVEN (method)
+Model-name table near file 0xF3918: 16-byte entries {name ptr, id/flags, ...}, e.g. "sc_fat2_.geo".  PROVEN
+Special skeletons found (PROVEN unless noted):
+  file 0x11BB0C (copy 0x11BD90)  Goro, 23 bones (21 animated), mesh go_geo.geo (22 parts)
+  file 0x10E518  scorpion creature (fatality), 21 animated, mesh sc_fat2_.geo (12 parts),
+                 bone->part [0,1,1,1,1,2,3,4,4,4,4,5,6,7,8,8,8,8,9,10,11]; clips 578-581
+  file 0x109BF4  Liu Kang dragon, 10-link chain, mesh lk_fat_g.geo (10 parts); clip 418
+  file 0x109DB4  Shinnok giant hand, 19 records (17 animated); clips 434/541 (match HIGH, LIKELY)
+  file 0x11F318  1 animated bone; fits 1-bone clips 429/430 by count (GUESS, untested)
+Sonya has one extra head bone at (0, -17, 26.2) (PROVEN from arcade RAM; GUESS: ponytail).
+
+==========================================================================================
+8. MK4.EXE - KEY CODE AND TABLES
+==========================================================================================
+  VA 0x4013A0  animation frame decompressor (emulate it)                                    PROVEN
+  VA 0x4BCE80  bone local rotation build (Rz*Ry*Rx order)                                    PROVEN
+  VA 0x4BD070  root rotation build (Rx*Ry*Rz order)                                          PROVEN
+  file 0xFC76C / VA 0x4FDD6C  clip descriptor table (612 x 12 bytes)                         PROVEN
+  VA 0x5220D8  runtime copy of the AP0 512-byte decoder table                               PROVEN
+  file 0xAFA8D sound (ESF) decoder                                                          PROVEN
+  file ~0xF3918 model-name table                                                            PROVEN
+  VA 0x41EAAF  loads the scorpion-creature object; started from a script at VA 0x4D5E80      PROVEN
+Display modes (PROVEN from code): renderers Glide (glide2x.dll, F5), fullscreen software (F7), windowed software (F8).
+  DirectDraw SetDisplayMode calls: 640x480x16 at VA 0x4AE8F0, 320x240x16 at VA 0x4AFB20; the Glide path clips to
+  640x480 at VA 0x4B3F81. Maximum = 640x480, 16-bit colour. (ESC toggles windowed mode; colours break on a 16-bit desktop.)
+Dev paths left in the EXE (PROVEN): c:\source\mk4\win\geogfx\, c:\source\mk4\win\anim\, c:\source\mk4\win\sound\pcmk, menu.tga.
+
+==========================================================================================
+9. RUNTIME MEMORY (MK4.EXE, version studied; static addresses)
+==========================================================================================
+Read with any memory reader while the game runs (process memory is read-only for observing).
+Global decoder state (PROVEN):
+  0x521A64 u32  pointer to the clip data the decoder last read (global, mixes both players)
+  0x521A60 u32  frame
+  0x521AA4 u32  frame count
+  Clip id from the pointer: pointer -> AP1 offset -> AP0 entry -> id (AP1 is loaded unchanged).
+Per-player fighter animation struct (PROVEN): P1 at 0x522514, P2 = P1 + 0x84.
+  offset  P1        P2        size  meaning
+  +0x00   0x522514  0x522598  u32   clip record address >> 2; clip = ((value << 2) - 0x4FDD6C) / 12
+  +0x04   0x522518  0x52259C  u32   current frame index (advances ~60/s)
+  +0x08   0x52251C  0x5225A0  u32   frame data pointer >> 2 (= clip data + 72 * frame)
+  Writing the record every few ms forces any clip; also pinning frame + pointer freezes an exact frame.  PROVEN
+Position fields in the same struct (PROVEN as observed, meaning partly LIKELY):
+  0x522540 (P1)            s32  vertical, ground ~460000-469000 in the practice stage (varies a little per clip)
+  0x522544 (P1) / 0x5225C8 (P2)  s32  X (practice start -85196 / +85196, mirrored)
+  0x522538, 0x522548 (P1)  s32  Z/depth as first logged (-73629)
+  0x5225CC (P2)            s32  height used in the physics measurements (section 10), ground -77660, negative = up
+  0x5225E4 (P2)            s32  vertical velocity
+  NOTE: 0x5225CC - 0x84 = 0x522548, so the P1 field logged as "Z" is LIKELY the same height field as P2's 0x5225CC;
+  the two logs used different stages/coordinates. Treat the P1 vertical/depth naming as LIKELY until re-checked.
+Worked example: P1 plays clip 293 -> record = 0x4FDD6C + 12*293 = 0x4FEB28 -> 0x522514 holds 0x13FACA.
+  Reverse: clip = ((0x13FACA << 2) - 0x4FDD6C) / 12 = 293.
+
+==========================================================================================
+10. PHYSICS / GAME-DRIVEN MOTION
+==========================================================================================
+Tick rate: 60 game ticks per second, 1 animation frame per tick.                         PROVEN (measured ~61/s)
+Measured jump-launch (Sonya's uppercut, D+HP = clip 293; victim plays 128 -> 328 -> stance, 6/6 runs):  PROVEN
+  P2 height  0x5225CC, ground value -77660, negative = up
+  P2 vertical velocity 0x5225E4
+  launch velocity  -12583 units/tick (upward)
+  gravity          +524 units/tick per tick (added to velocity each tick)
+  airborne         48 ticks = 0.80 s at 60/s (0.73 s measured wall-clock under emulation timing)
+  peak height      157,375 units above ground at ~0.37 s  (check: 12583^2 / (2*524) ~ 151,000, consistent)
+Scale: ~238,800 units = 1 metre (LIKELY, from walk speed vs a human stride).
+  -> peak ~0.66 m; gravity 524 * 60^2 / 238,800 ~ 7.9 m/s^2 per pure tick math, ~9.5 m/s^2 from the measured
+     wall-clock arc. Reported figure: ~9.5 m/s^2 (LIKELY).
+  Push-back on hit ~0.67 m measured at the stage edge (LIKELY; open-floor distance unconfirmed).
+Floor travel (from arcade per-tick captures, same engine logic, units = arcade world units):  LIKELY
+  walk forward +0.059/tick, walk back -0.042/tick, slide constant 0.150/tick; flying kick gravity ~+0.004/tick^2.
+Playback pattern (LIKELY, strong): e.g. slide clip 95 = frames 1->9, hold frame 9 ~17 ticks, then 9->0, while game code
+  moves the body. Hit range: a gap of ~30-45k units between fighters (LIKELY).
+
+==========================================================================================
+11. GAPS - NOT YET UNDERSTOOD
+==========================================================================================
+- ECM video codec (only the outer header is known; M_INTRO.ECM header differs).
+- GEO block types 0x100, 0x2 and the 128..640 "2D set" table; sprite cut-out rectangles; transparency key.
+- UV row byte 0 meaning.
+- Clip table words +0x0/+0x4 exact meaning.
+- ESF flag 0x80.
+- Two unidentified FILESYS.DAT entries (#0, #1).
+- Which fighter owns which clip (only Sonya fully mapped; most of the 612 clips unlabeled).
+- Unit conversion to metres (LIKELY only); P1 vs P2 position field naming (section 9 note).
+- Unmatched odd clips 386 (6 bones), 422/423, 426/427, 446/447 (3 bones): no skeleton found (GUESS: severed limbs).
+- Fatality scripts not traced back to fighter ids.
+- Arena music location (GUESS: CD audio).
+
+==========================================================================================
+12. QUICK REFERENCE
+==========================================================================================
+FILE OFFSETS
+  FILESYS.DAT 0x0000          799 x 12-byte directory {hash, offset, size}                     PROVEN
+  ANIMDAT4.AP0 +0x000         512-byte decoder table                                           PROVEN
+  ANIMDAT4.AP0 +0x200         {u16 id|0x8000, u16 size} x 612, 0xFFFF end                      PROVEN
+  GEO +0x04 / +0x0C           tex_off / block table (16-byte records)                          PROVEN
+  ESF +0x04                   u32 len(24) | flags(8)                                           PROVEN
+  ECM +0x00                   "ECM" 0x02, u32 count, u32 sizes[]                               LIKELY
+  MK4.EXE file 0xFC76C        clip table (VA 0x4FDD6C), 612 x 12                               PROVEN
+  MK4.EXE file 0xAFA8D        ESF decoder                                                      PROVEN
+  MK4.EXE file ~0xF3918       model-name table                                                 PROVEN
+  MK4.EXE file 0x11BB0C       Goro skeleton (copy 0x11BD90)                                    PROVEN
+  MK4.EXE file 0x10E518       scorpion creature skeleton                                       PROVEN
+  MK4.EXE file 0x109BF4       dragon skeleton                                                  PROVEN
+  MK4.EXE file 0x109DB4       Shinnok hand skeleton                                            LIKELY
+  MK4.EXE file 0x11F318       1-bone object                                                    GUESS
+CODE VAs (VA = file + 0x400C00)
+  0x4013A0 frame decompressor | 0x4BCE80 bone rot | 0x4BD070 root rot | 0x41EAAF creature load | 0x4D5E80 script
+  0x4AE8F0 640x480x16 | 0x4AFB20 320x240x16 | 0x4B3F81 Glide 640x480 clip                     PROVEN
+DATA VAs (VA = file + 0x401600)
+  0x4FDD6C clip table | 0x5220D8 AP0 table copy                                                PROVEN
+RUNTIME
+  0x521A60 / 0x521A64 / 0x521AA4  global decoder frame / clip ptr / frame count                PROVEN
+  0x522514 / 0x522518 / 0x52251C  P1 clip record>>2 / frame / frame ptr>>2                     PROVEN
+  0x522598 / 0x52259C / 0x5225A0  P2 same (P1 + 0x84)                                          PROVEN
+  0x522540 / 0x522544 / 0x522538,0x522548   P1 vertical / X / depth (naming LIKELY)            PROVEN values
+  0x5225C8 P2 X | 0x5225CC P2 height (ground -77660) | 0x5225E4 P2 vertical velocity            PROVEN
+CONSTANTS
+  612 clips; 18 words/frame (72 bytes) for human clips; 15 animated bones; angle 2048 = 360 deg
+  60 ticks/s; launch -12583; gravity +524/tick^2; 48 ticks airborne; peak 157,375; ~238,800 units/m (LIKELY)

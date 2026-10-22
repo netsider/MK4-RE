@@ -1,0 +1,196 @@
+==================== PROJECT STATUS (as of 2026-10-22) ====================
+PER-FIGHTER CLIP IDENTIFICATION: ONLY SONYA IS DONE SO FAR.
+- Sonya: all clips she plays in normal fights have been identified by netsider. 49 clip IDs (52 table rows) are PROVEN by live input testing (SONYA_PROVEN_TABLE.txt); the rest are LIKELY/unconfirmed - see the Sonya sections.
+- Sub-Zero: next. 19 clips still unidentified (26 42 47 58 62 79 103 115 116 117 118 151 153 162 174 185 186 188 262); 128 done (shared knockdown).
+- All other fighters: clip identification not started.
+- How Sonya was verified: PROVEN clips = pressed the move in the real game and logged which clip played (live memory). Separately, a Sonya-vs-Sonya fight sim (our own rebuild from those clips) was watched by netsider to check moves, transitions and hit reactions by eye; that visual check is LIKELY-level, not proof.
+Note: section 3 'Practice ... done for all 15 fighters' only means basic practice-mode captures were run, not full clip identification.
+===========================================================================
+MK4 RE NOTES v3 - live capture under Wine (2026-10-21, times ET). Tags: PROVEN / LIKELY / GUESS.
+
+1. SETUP (PROVEN)
+- MK4_nocd.EXE runs under Wine 10 (32-bit prefix) on a virtual 640x480x16 screen (Xvfb). No physical display or input is used.
+- Registry: HKLM\Software\GT Interactive\Mortal Kombat 4\1.00 (Wow6432Node on 64-bit Windows). Path = <MK4 install folder>\DATA, e.g. C:\Games\Mortal Kombat 4\DATA [LIKELY - the installer writes whatever folder is chosen; no fixed default verified]. Config = the game's saved keyboard config.
+- F: is a Wine CD-ROM drive holding DATA\M_*.ECM (the 277 MB ISO was too big to copy; the 4 menu videos are enough to boot).
+- Keys (PROVEN via the Practice input display): U=HK J=LK T=HP G=LP SPACE=BL H=RN, W/Z/A/S = up/down/back/forward. Arrow keys drive Player 2's cursor; key "2" = Player 2 start.
+- ESC switches the game to windowed mode (colours break on a 16-bit screen); avoid it.
+
+2. CLIP ID FROM LIVE MEMORY (PROVEN)
+- 0x521A64 = pointer the frame decoder (VA 0x4013A0) reads; 0x521A60 = frame; 0x521AA4 = frame count.
+- ANIMDAT4.AP1 is loaded unchanged, so pointer -> AP1 offset -> AP0 entry -> clip id. Live frame counts equal the EXE table at file 0xFC76C.
+- The pointer holds whichever object was decoded last, so opponent reactions are mixed in (LIKELY).
+- Validation: Sonya walk = 267 (30f). Crouch = 259 (5f, going down) then 258 (39f, held). The old labels had 258/259 swapped.
+
+3. RESULTS
+- Practice (opponent INACTIVE, screenshot each run) done for all 15 fighters: walks, jumps, run, block, attacks, jump attacks, close throw, every listed special x2.
+- Crouch attacks re-done holding down then pressing: 293 crouch HP/uppercut, 260 crouch LP, 53 crouch HK, 315 crouch LK (PROVEN, Sonya/Jax/Reptile runs).
+- Continue screen (loser falls down the well): clip 8 then 9 (PROVEN; every VS continue screen + netsider's ID).
+- 190 of 612 clips seen live; 422 never seen (list in NEVER_SEEN_CLIPS_v3.txt).
+- Fatalities: VS mode matches are 2 rounds. Only partial captures: Quan Chi Leg Beatup window shows 38/160/168/206 (LIKELY), Reiko 437 (GUESS). Most VS runs froze or paused after the first KO (cause GUESS: a fatality input opened the PAUSED menu). Not solved.
+- Clip 44 (shared bow) was never decoded in arcade/VS intros in this build (netsider ID kept).
+- Stage objects: the Lair rock and Goro's Lair heads are on screen, but pickup attempts (D+LP, D+HP, LP, run over) gave no pickup clip. Not solved.
+
+4. DISPLAY MODES (PROVEN from code)
+- Renderers: Glide (glide2x.dll, F5), Fullscreen software (F7), Window software (F8).
+- DirectDraw SetDisplayMode calls: 640x480x16 (VA 0x4AE8F0) and 320x240x16 (VA 0x4AFB20). Glide path also clips to 640x480 (VA 0x4B3F81). Max = 640x480, 16-bit colour.
+
+5. MESHES (PROVEN)
+- Live strace of FILESYS.DAT reads lists 57 named .geo files loaded. 48 named .geo have no export in MK4-PC-Assembly.
+- Midway logo = midway_g.geo, MK dragon medallion = attract_.geo, title logo = MKlogo_g.geo (LIKELY). They use block type 0x4, which the old exporter skipped. Now exported (missed_meshes\).
+
+6. NETSIDER'S VISUAL IDs (in clip_names_v3.json)
+ SHARED (all fighters): 44 bow; 328 flip get-up recovery; 327 jump kick starting mid-air (in-air transition into kick, not a takeoff) [netsider 2026-10-22]; 324 face (high) hit reaction (netsider verified; shared LIKELY).
+ OTHER IDs: 373 fold-up; 515-517 floating set; 518 touch then look at hand; 526 180 turn; 530 shielding face from slap; 531 walk with arm raised to crowd; 532 right-arm strike; 533 left-arm strike.
+
+7. FILES (capture_v3): MK4_MOVES_TO_CLIPS_v3.txt, FRAME_PLAYBACK_TABLE_v3.txt, NEVER_SEEN_CLIPS_v3.txt, clips_seen_never_v3.json, MISSED_MESHES_v3.txt, missed_meshes\, clip_names_v3.json (viewer can use it in place of clip_names.json), CLIP_POINTER_MAP_VALIDATION_v3.txt, screenshots\.
+
+8. FORCED PLAYBACK (2026-10-22 ~00:00 EDT) [PROVEN]
+ P1 fighter anim struct (static): 0x522514 = anim record >>2, record = 0x4FDD6C + 12*clip; 0x522518 = frame index (ticks ~60/s);
+ 0x52251c = frame-data pointer >>2 (= clipdata + 72*frame). P2 struct = +0x84 (0x522598/0x52259c/0x5225a0). Writing the record
+ every ~3 ms makes P1 play any clip; pinning frame+ptr freezes an exact frame. Clip 44 forced on Sonya = bow (PROVEN).
+ 0x521A64 is only the LAST decoded clip (global) - it does not identify which fighter. All 575 18-word clips play on any fighter skeleton.
+ Tool: capture/fcap.py (5 pinned frames/clip, screenshots), compare.py (in-game | code-derived export at same frames), cindex.py.
+9. PER-CHARACTER BATCHES (capture_v3\compare\<Fighter>\: *_compare.png, <F>_COMPARE_INDEX.txt, <F>_CLIPS_v3.txt)
+ SONYA: 61 live-seen clips compared. Death Kiss triggers live (old mixed log 322 13 388 206 8; 388 later shown NOT Sonya).
+ Leg Twist = hold BL U,D,D,U+HK outside sweep (FAQ); attempts at 2 distances did not trigger yet.
+ Stage fatalities: Goro's Lair F,D,F+HP close; Prison D,D,B,B+HK close (not yet run).
+ VS logs cannot separate P1/P2 clips via 0x521A64; use 0x522514/0x522598 records instead (TODO in logger).
+ Rematch path in VS picks wrong fighters (P2 cursor) - those log segments discarded.
+10. NETSIDER VERIFICATIONS (from compare sheets)
+ 328 = SHARED flip get-up recovery used by every fighter [PROVEN, verified by netsider 2026-10-22] (first reported as Sonya-only; corrected).
+ netsider flagged sonya_clip388_compare.png broken (Sonya off-screen in game frames) -> all Sonya game frames being re-checked/regenerated as _v2.
+ 327 = SHARED mid-air jump-kick transition (starts after the jump is underway) [PROVEN, verified by netsider 2026-10-22].
+ 324 = face (high) hit reaction [PROVEN, verified by netsider 2026-10-22]; shared by all fighters = LIKELY (his note 'tonya/char').
+ PATTERN [LIKELY]: clips reviewed by netsider so far (324, 327, 328, 44 ...) are SHARED by every fighter. The high id range ~250-330
+ appears to be the shared generic block (movement, basic attacks, reactions, get-ups); fighter-unique moves sit mostly below ~250
+ (specials, fatalities, intros). Per-fighter compare indexes are split into SHARED vs FIGHTER-ONLY sections.
+ 323 = SHARED standing block held loop [PROVEN, netsider 2026-10-22].
+ 322 = UNKNOWN (NOT block): fists far apart then back to fighting stance; candidates recovery-to-stance / stance transition [netsider 2026-10-22]. Earlier '322/323 block' pairing and '322 block going up' REMOVED.
+ 317 = SHARED run start [PROVEN, netsider 2026-10-22]; 307 = run loop [LIKELY, from 317+307 pairing].
+ 314 = SHARED knee strike from stance [PROVEN, netsider 2026-10-22]; = close-range knee (LK up close) [LIKELY].
+ 311 = head snaps back, punch reaction or lean-back dodge [LIKELY, netsider 2026-10-22]; old 'HP 2nd hit/close' attack label REMOVED.
+ 310 = SHARED regular jump [PROVEN, netsider 2026-10-22]. CONFLICT FLAG: 304 was PROVEN live as the clip decoded on 'jump straight up' (hold U) for every captured fighter. Data check: both 28f, same root-height curve (low/tucked f0-17, rises f18-24, settles f27); 304 root X constant (-12) = no horizontal drift (straight up), 310 root X drifts 13->8->20->-7 (slight travel). 310 was decoded live only inside Sonya's Square Wave (F,B+HP) sequence. Working hypothesis [GUESS]: 304 = straight-up jump, 310 = jump with slight drift / alternate jump used by a move; neither is takeoff-only or landing-only (both contain full air arc). UNRESOLVED - needs netsider to compare 304 vs 310 sheets.
+ 308 = SHARED standing low kick (LK) [PROVEN, netsider 2026-10-22; matches live Sonya LK capture].
+ 307 = SHARED run loop [PROVEN, netsider 2026-10-22] (was LIKELY).
+ 305 = UNKNOWN: upright 'bunny/motorcycle-grip' pose, hands at chest, wrists bent down; candidates held-in-throw reaction / dizzy / throw setup [netsider 2026-10-22].
+ 305 update: netsider says it looks like RIDING something -> GUESS carried/held pose in throw or fatality, or stage-object/vehicle pose; still UNKNOWN.
+ 304 vs 310 KEYFRAME DIFF (netsider: near-identical jumps): both 28f, same root-height curve (crouch f0-17, extend ~f20, settle f27); legs/spine within ~15-35 deg. Differences: (1) root X/Z: 304 constant (-12,-2) all frames = straight up; 310 drifts X 13->19->10->-22, Z 8->17->-18 = travels and comes back. (2) one arm chain (bones 4-6) differs by 80-129 deg (310 swings that arm; 304 holds it bent). NOT a mirror (left/right chains are not swapped). Result: 304 = straight-up jump [PROVEN live, hold U]; 310 = jump variant with root travel + arm swing [LIKELY, seen live only inside Sonya's Square Wave sequence]; direction/purpose of 310 UNRESOLVED.
+ 301 = SHARED jump flip tuck (angled jump) [LIKELY]; netsider: starts in jump pose then tucks into a ball; matches live jump_f/jump_b decode.
+ 296 = SHARED high punch [PROVEN, verified by netsider 2026-10-22].
+11. WHY SONYA FLOATED / LEFT THE SCREEN IN v1 COMPARE IMAGES
+ Cause [PROVEN]: the P1 fighter struct holds world position right after the anim fields: 0x522540 = height (Y, ground ~460000-469000),
+ 0x522544 = X (-85196 at practice start; P2 mirror +85196 at 0x5225c8), 0x522538/0x522548 = Z/depth (-73629). Forcing clips without
+ resetting these let each clip's root motion and the game's per-clip movement build up from one clip to the next (no ground snap, because
+ the state machine never left the forced clip). After the v1 run they read Y=572200 (about 111k above ground = floating) and
+ X=-169357 (moved toward / past the screen edge); later she was below the floor with only her hat showing. Pinned jump frames also inherit the clip's own root height.
+ Fix (v2): fcap2.py saves the four position words at practice start and rewrites them every ~3 ms during the idle reset and every pinned
+ frame; compare2.py also takes a same-moment idle reference and zooms on Sonya. v2 sheets checked: Sonya on the ground and in frame (e.g. 102, 57, 388).
+ Note: 0x522540 still varies a little per clip (467264 / 455296 / 469376 in a test) = per-clip root offset, not drift.
+ 388 = LIKELY Liu Kang fatality clip [netsider 2026-10-22]; 'Sonya Death Kiss = 388' was WRONG - the old VS log (0x521A64 global decoder) mixed both fighters. Re-running Death Kiss with the per-player log to find Sonya's real kiss clip.
+12. REVIEW RULE (netsider 2026-10-22): a clip netsider has described counts as DONE (his description is the label, even if its purpose is unclear).
+ Done: 296 301 304 305 307 308 310 311 314 317 322 323 324 327 328, 388 (Liu Kang fatality). Their duplicate copies in compare\Sonya_TODO go to
+ the Recycle Bin (only those copies; tool: capture_v3\tools\recycle_todo.ps1). Sonya_TODO: 227, 219, 217, 201, 197, 195, 191, 176, 156, 134, 137, 130, 114, 102, 78, 73, 72, 63, 50, 57, 15, 206 also removed - Sonya_TODO EMPTY.
+ 285 = DONE: idle with fists far apart (= 322's start pose); LIKELY held/idle loop, 322 = transition out of it back to stance [netsider 2026-10-22]. Link 285 -> 322.
+ 276 = DONE: walk backwards with fists apart (285 pose) [netsider 2026-10-22]. STANCE SET [LIKELY]: 285 idle, 276 walk back, 275 walk forward (same root offset -38 and identical arm pose at f0 as 276), 322 return to normal stance. Keyframe check shows the same pattern for other stance styles: (277 278 286) root -27, (281 282 274) root 23, (270 288), (272 271 287), (273 289) = per-style walk-fwd/walk-back/idle groups.
+ 275 = DONE: walk forward fists apart [netsider]. WHEN USED [LIKELY, strong]: the fists-apart set (285 idle, 275 walk fwd, 276 walk back, 322 back to normal stance) is the WEAPON-HELD stance. Evidence: in practice runs these clips first appear exactly at the weapon draw and stay in every later move: Sonya Bladed Wheel (F,F+LK: 63/195/197/244 then 285 276), Tanya Boomerang (64/142/141/143 then 285 276 - same set, shared), Shinnok Bladed Staff (then 278 286 277 = his style's set). 322 = LIKELY the drop/put-away of the weapon, back to the normal stance. Trigger = draw the weapon; forced playback shows the poses (the weapon prop is not attached when forced).
+ 229 = DONE: left-fist punch from arms-spread stance [netsider]; LIKELY weapon-held attack / weapon throw (decoded live during Sonya weapon_throw_try). Supports arms-spread set 285/275/276/322/229 = WEAPON-HELD stance [LIKELY]; in-game draw test pending.
+ 264 = DONE: stance into elbow strike [netsider]; LIKELY close-range punch. CONFLICT FLAG: live practice decoded 264 on Sonya's HP tap (HP: 264 311) and the shared table says 294 = LP; an elbow on HP-at-range-0 fits 'close HP', so either the dummy was in close range during the HP test or 264 is Sonya's own close punch. 294 = LP label UNCHANGED but unverified.
+ 388 RE-CHECK [PROVEN]: Death Kiss re-run with the per-player log (P1=Sonya struct 0x522514, P2=0x522598): P1 goes block/crouch-block (323 259 258 257 256) during the input, then P1=388 for the whole fatality while P2 (victim) alternates 13 (dazed) and 206. So 388 IS played by Sonya's fighter in Death Kiss. netsider's viewer listing it only under Liu Kang is a VIEWER/catalogue mapping conflict (388 may be shared, or the viewer's per-fighter assignment is wrong). 206 = victim reaction in Death Kiss (torso split) [LIKELY].
+ SHARED UPDATE (netsider 2026-10-22): every clip reviewed so far is SHARED by all fighters: 44 229 264 275 276 285 296 301 304 305 307 308 310 311 314 317 322 323 324 327 328.
+ Each review now counts for the whole roster (list: shared_done_v3.json); other fighters' TODO folders skip these.
+ DOWNGRADE: arms-spread stance set (285/275/276/322/229) = generic stance; 'Sonya weapon (Bladed Wheel) stance' is now GUESS only
+ (candidate: the weapon-held stance every fighter uses - it does first appear right after each fighter's weapon draw in the practice logs).
+ 227 = DONE, SHARED: arms-apart stance into low spinning fist strike [netsider]; old 'weapon throw' label REMOVED.
+ 219 = DONE, SHARED: ~1 s held shoot-or-pull pose [netsider]; LIKELY projectile fire or pull/grab (harpoon-style).
+ 217 = DONE, SHARED: arms-apart pose into 219 shoot/pull pose; chain 217 -> 219 [netsider].
+ 201 = DONE, SHARED (fightkit/<fighter>/..._c201_fall_knockdown_lying_torso_horizontal.glb exists for every fighter): riding pose -> flip -> lands on ground [netsider]; LIKELY thrown/flipped victim reaction. Old 'Sonya-only Leg Grab' label REMOVED. Note: 305 (held 'riding' pose) may be the held-in-a-throw victim pose too.
+13. VIEWER: WHY CLIP 206 WAS MISSING [PROVEN]
+ The viewer lists every .glb under MK4-PC-Assembly. 206's only export was anim\clips\206_subzero.glb, which is in VIEWER\old_pipeline.json
+ (1144 old early-pipeline exports flagged as known-wrong) and so hidden unless "show old early-pipeline exports" is ticked. There is no
+ fightkit\<fighter>\*_c206_* export for any fighter. 388 likewise: old anim\clips\388_subzero.glb (hidden) + anim\liukang\fatalities\liukang_fatality_388_code.glb
+ (visible, which is why 388 looked Liu Kang-only). Fix: new code-derived exports on Sonya's rig in capture_v3\viewer_extra\
+ (sonya_c206_deathkiss_victim_reaction_v3.glb, sonya_c388_deathkiss_blowkiss_v3.glb); restart the viewer, search "c206" or "c388".
+14. WEAPON STANCE TEST (Practice, Sonya, per-player log) [PROVEN]
+ F,F+LK (draw Bladed Wheel) -> P1 244 (draw) -> 285 (idle, arms spread). Walk forward = 275, walk back = 276 (netsider's arms-spread set).
+ F,F+LK again (throw) -> P1 208 (weapon throw), opponent 131 (hit by the weapon), then P1 439 (normal idle, weapon gone; 322 was not decoded here).
+ => the arms-spread set 285/275/276 IS the WEAPON-HELD stance (generic clips, shared). Earlier GUESS upgraded to PROVEN. 244 = weapon draw [PROVEN], 208 = weapon throw [PROVEN], 131 = hit by thrown weapon [LIKELY].
+ 197 = DONE: get-up from lying on back to stance [LIKELY, netsider]; distinct from 328 flip get-up. Old 'weapon draw' label REMOVED (weapon draw is 244, PROVEN).
+ 197 CORRECTION: NOT a normal get-up (netsider: physically implausible). UNKNOWN but DONE. Keyframe check: 29 frames, no single-frame snap; max bone change 35-36 deg/frame sustained over f9-12 and 25 deg/frame over f25-28, rest 5-14 deg/frame; root moves smoothly (max 23 units/frame f13-16). = fast but continuous interpolation, not a snap/reset. Reversed-playback hypothesis (stance -> fall on back) remains plausible.
+ 195 = DONE, SHARED: stance -> knockdown fall onto back [netsider]; old 'weapon draw' label REMOVED. 195 vs 197-REVERSED keyframe test: both 29f; 195 f0 matches reversed-197 f0 within 1 deg and the last frame within 18 deg (same start/end poses), but the in-between differs a lot (bone diffs 37-158 deg over f4-24, no frame identical). => 197 is NOT an exact reversed copy of 195 [PROVEN]; it is a separately keyed clip with the same two end poses, i.e. LIKELY the paired recovery for 195 (back-on-ground -> stance), hand-keyed with an odd path (fits netsider's 'physically odd').
+ 191 = DONE, SHARED: lying arms-out -> stance, physically odd [netsider]. Reverse search over all 574 other 18-word clips (191 start vs clip end, 191 end vs clip start): 191's end (stance) matches many clips' first frame within 1 deg, but NO clip ends in 191's lying arms-out start pose - best is 189 (30f) at 34/35 deg endpoint error, then 181 (52/43). => 191 is NOT a reversed copy of any existing fall [LIKELY]; like 197 it is a separately keyed recovery from a lying pose whose matching fall may be 189 (loosely) or not exported/merged. Old LP label for 191 dropped.
+ 176 = DONE, SHARED: upside-down head-on-ground -> lying arms out [netsider]. Sequence 176 -> 191 [LIKELY]: 176 last frame vs 191 first frame worst-bone diff 58 deg (same pose family, not an exact join). Predecessor search (clip whose last frame = 176's first): none close; best 195 (75 deg), 73 (77, Sonya bicycle-kick part), 178 (81), 156 (86) => the launch/uppercut fall before 176 is not identified [the game may blend into it]. Old 'Sonya LP' label for 176 dropped.
+ 156 = DONE, SHARED: stance -> slide -> fall backwards [netsider]; chain 156 -> 176 -> 191 [LIKELY]. Keyframe join check: 156 last vs 176 first worst-bone diff 86 deg (similar family, not a clean join - game likely blends or an in-between airborne clip sits between them); 176 last vs 191 first 58 deg. Old 'Sonya LP' label for 156 dropped.
+ 134 = DONE, SHARED: stomach/body (mid) hit reaction [netsider]; pairs with 324 face (high) hit reaction.
+ 137 = DONE, SHARED: stiff 'timber' fall onto back [netsider]; consistent with per-player log (victim played 137 right after Sonya's 114 kick in the Leg Twist attempts).
+ 130 = DONE, SHARED: unnatural hard-hit reaction [netsider]. Live data: appears right after projectile/special hits on the dummy for many fighters (Energy Ring, Ice Blast, Freeze Wand, Triple Blade, weapon throw, Dashing Punch) => generic projectile/special hit reaction [LIKELY]; Raiden-lightning-specific = GUESS (VS test not yet run).
+ 114 = DONE, Sonya-specific: military salute then hands behind back [netsider]. LOG RE-CHECK resolves the conflict: P1=114 occurs (a) in VS filler right after a round KO and (b) in every failed Leg Twist attempt right after the input, when the game shows 'SONYA WINS' (fatality missed -> victory pose); also in practice boot (practice start). It was NEVER a landing kick - the opponent's 13->137 (dazed -> timber fall) was the round-ending fall. => 114 = Sonya's victory/win pose [LIKELY]; also used at practice start. 134 stays the stomach-hit reaction.
+ 102 = DONE, Sonya-specific: handstand Leg Grab special [PROVEN, verified by netsider].
+ 78 = DONE: bear hug -> backward body slam = LIKELY Sonya's throw, attacker side [netsider]; old 'object pickup try' label REMOVED. Victim pairing check: 78 is 45f; 305 is only 3f (a held/static pose - fits 'victim held during the hug'); 201 is 58f (flip and land - fits 'victim slammed'). No 45f victim clip pairs exactly (45f clips: 18 64 74 82 100 202 230 231 233 234 237 240 ...). => victim side LIKELY 305 held + 201 slam/land sequence [GUESS until a live throw is logged with the per-player log].
+ 73 = DONE, Sonya-specific: on-back bicycle-kick motion [netsider]; Bicycle Kick (B,B,D+HK) = 72 takeoff [LIKELY] -> 73 kicking part [LIKELY].
+ 72 = DONE, Sonya-specific: Bicycle Kick start (stance -> on-ground kick), chain 72 -> 73 [netsider; matches live B,B,D+HK capture].
+ 63 = DONE, SHARED: leg sweep (B+LK) [netsider]; old 'weapon draw' label REMOVED (weapon draw = 244 PROVEN).
+ 50 = DONE: fist flourish [netsider]. ROUND START vs WIN check (per-player log): at VS round start Sonya (P1) plays 46 then idle 439, while the OPPONENT (P2, Reptile in those runs) plays 50 then 289; Sonya plays 50 only at practice start. 114 (salute) never appears at round start - only after a round/match win. => 46 = Sonya round-start intro [PROVEN]; 114 = Sonya win pose [LIKELY]; 50 = fight-start flourish used by the opponent too [LIKELY, not Sonya-specific].
+ 57 = DONE, SHARED: squat -> sit back onto elbows, knees up (reclined) [netsider]; LIKELY sit-down fall; GUESS easter egg. Old 'jump-forward kick' label REMOVED (it was only decoded during jump_f_HK in practice).
+ 57 addendum: netsider - maybe an easter egg OR just a normal in-game pose; kept as recorded.
+ 15 = DONE, Sonya-specific: two-arm forward lunge = Energy Ring fire [LIKELY, matches live capture + netsider's view].
+ 206 = DONE: fatality victim death fall (dazed -> falls dead) [netsider]; LIKELY Death Kiss victim, consistent with per-player log (P2 13 -> 206); probably shared. Sonya_TODO is now EMPTY (all live-seen Sonya clips reviewed).
+15. UNIDENTIFIED LISTS (netsider 2026-10-22: no more compare images/TODO image folders; plain clip lists only) -> forced\UNIDENTIFIED_v3.txt
+ Sonya live-seen, not yet named: 26 48 49 79 103 128 157 549 586 (101 Square Wave and 104 Cartwheel are PROVEN from practice; 439 = idle).
+ Sub-Zero live-seen, not yet named (practice + VS so far): 26 42 56 58 62 79 103 128 141 142 143 151 153 162 174 185 186 188 194 262 263 313 (several are LIKELY his specials per SUBZERO_CLIPS_v3.txt).
+ 458 of 575 18-word clips are still unlabeled overall. Sonya forced capture + Sub-Zero VS/forced runs continue (chain_sz.sh).
+
+== PLAYBACK RATE (2026-10-22) ==
+- PROVEN: animations advance 1 frame per game tick, ~60 frames/s (P1 counter 0x522518 measured 61.3/s, median 15.2 ms step; P2 0x52259c ~63/s).
+- LIKELY: game logic and rendering run at ~60 Hz (120 Hz screen grab gave 132 unique frames in 2 s).
+- Game-clip MP4s (capture_v3\game_clips\<Fighter>\) play at real speed, recorded at 30 fps (every 2nd game frame).
+- Dev paths left in MK4.EXE (PROVEN): c:\source\mk4\win\geogfx\, c:\source\mk4\win\anim\, menu.tga. No 3D-program name found in MK4.EXE or FILESYS.DAT.
+
+== CLIP TABLE + SONYA OWN CLIPS (2026-10-22) ==
+- PROVEN: clip table has exactly 612 clips (IDs 0-611). Forcing can play any clip on any fighter, so forced playback does NOT prove ownership. Clip 607 fails when forced.
+- Sonya group A (played naturally in her own fights): 69 clips. Movies: capture_v3\game_clips\Sonya\A_hers\ (66; 153/154/156 capture failed).
+- Sonya unidentified (group A): 25, 26, 27, 28, 101, 104, 128, 153, 154, 172, 192, 194. (439 = shared idle.)
+- Sub-Zero provisional unidentified: 26, 42, 47, 58, 62, 79, 103, 115, 116, 117, 118, 128, 151, 153, 162, 174, 185, 186, 188, 262 (fatality runs pending).
+
+== SUB-ZERO OWN CLIPS (2026-10-22) ==
+- Sub-Zero group A: 61 clips (fatality runs added none). Movies: capture_v3\game_clips\SubZero\A_his\ (58).
+- Sub-Zero unidentified (final): 26, 42, 47, 58, 62, 79, 103, 115, 116, 117, 118, 128, 151, 153, 162, 174, 185, 186, 188, 262.
+- Clips 150-162 block (Sonya 153/154/156, Sub-Zero 151/153/162) cannot be forced in practice: frame pointer never set. LIKELY that block only loads when the move really happens; must be caught live in a match.
+
+[2026-10-22] Sonya clip 25 = DONE: her spitting something from her mouth (netsider's description).
+[2026-10-22] Sonya clip 26 = DONE: fighting stance to wide arms-open stance, not the knife stance (netsider's description).
+[2026-10-22] Sonya clip 27 = DONE: a punch, exact type unclear (netsider's description).
+[2026-10-22] Sonya clip 27 label updated: a straight punch (netsider).
+[2026-10-22] Sonya clip 28 = DONE: most likely an uppercut (netsider's description).
+[2026-10-22] Sonya clip 101 = DONE: a transition from a crouch/ball to a horizontal, almost flying-punch pose (netsider's description). GUESS: possibly a leap or roll toward her Leg Grab / flying attack.
+[2026-10-22] Sonya clip 104 = DONE: forward flip, like a handstand flip (netsider's description).
+[2026-10-22] Sonya clip 128 = DONE: in fighting stance, then knocked onto her back (netsider's description). Clip 128 also played for Sub-Zero, so it is LIKELY a shared knockdown.
+[2026-10-22] Sonya clip 153 = DONE: sliding/moving forward in fighting stance, then flipped onto her head (netsider, from viewer). LIKELY a throw-victim reaction (it would not force in-game, consistent with only loading during a real throw).
+[2026-10-22] Sonya clip 154 = DONE: almost the same as 153 but ends in a different upside-down pose, legs up (netsider, from viewer). LIKELY a second throw-victim variant (e.g. a different throw direction).
+[2026-10-22] Sonya clip 172 = DONE: on her back on the ground, lifted up into the air, then lands flat on her back (netsider's description). LIKELY the landing/bounce after a knockdown or throw.
+[2026-10-22] Sonya clip 192 = DONE: from fighting stance she falls forward, kind of onto her face (netsider's description).
+[2026-10-22] Sonya clip 194 = DONE: starts upside-down (head down, legs over) then recovers into a proper fighting stance, one of the reverse/get-up clips (netsider's description). Sonya's own (group A) clips are now ALL identified.
+
+== SONYA FIGHT DEMOS (2026-10-22) ==
+- sonya_vs_sonya.html (v1, scripted fight, ~73 of her clips). netsider: ~90% correct; attacks good, some reactions wrong.
+- sonya_vs_sonya_v2.html: 9 targeted fixes from natural logs (296->324 PROVEN x26, 65->311 PROVEN x8, 305 is only 3 frames - v1 looped it causing the flutter, now plays once and holds; Death Kiss victim 13 then 206 PROVEN; others LIKELY/GUESS).
+- Death Kiss attacker clip is 388 (PROVEN in Sonya's per-player log) - conflicts with viewer listing 388 under Liu Kang.
+- sonya_sim.html: AI vs AI endless fight in Shaolin arena (arenas\shaolin_.glb, from SHAOLIN_.GEO PROVEN; in-game Shaolin stage LIKELY). HP locked 100%, no rounds. 8 basic moves: 296, 27, 65, 308, 314, 28, 293, 63, plus block 323 and crouch block 257->256.
+- netsider feedback on sim: the backward fall after UPPERCUT (128->328) is the wrong clip; sweep fall 63->195->197 is right but her GET-UP after the sweep fall is wrong. Fixes + left-click camera orbit in progress as sonya_sim_v2.html.
+- Bicycle Kick (netsider): it juggles the victim in the air while she keeps kicking, and they fall when the kicks stop. ON HOLD, not added yet.
+- Reactions still needing a live catch (only logged against the dummy): 294, 27, 264, 28, 15, 101, 104, 102, 72/73, 78, 310/301/327, 229, 227, 315, 260, and all block pairings.
+
+== UPPERCUT MEASURED LIVE (2026-10-22, Wine copy) ==
+- Sonya's real uppercut is 293 (down+HP). Victim 128 -> 328 -> stance, 6/6 PROVEN. 128 lasts 1.24 s (frames 0-52 at 1/tick, then ~2/tick).
+- P2 height at 0x5225cc (ground -77660, negative=up), vertical velocity at 0x5225e4 (PROVEN). Velocity -12583, +524/tick, 48 ticks airborne (0.73 s), peak 157,375 units at ~0.37 s (PROVEN).
+- ~238,800 units = 1 m (LIKELY, from walk speed): peak 0.66 m, gravity ~9.5 m/s^2. Push-back ~0.67 m measured at stage edge (LIKELY; open-floor distance unconfirmed).
+- Clips 27 and 28: no Sonya input produces them; in those slots they are Jarek (27) and Cage's Green Orb (28) (LIKELY not Sonya's moves). netsider's labels kept, flagged.
+- Crouch: 259 down (5 ticks), 258 hold, stand = 259 reversed (PROVEN). Stance 439, walk fwd 267, back 272 (PROVEN).
+- sonya_sim_v4.html (27/28 removed, crouch fixed) and sonya_sim_v4b.html (+ measured launch).
+
+==== SONYA LIVE CLIP CONFIRMATION (20261022_1925 ET) ====
+Full table: capture_v3\final\SONYA_PROVEN_TABLE.txt
+PROVEN by live input (P1 Sonya): 439 267 272 259 258 257 256 304 301 317 307 323 296 264 294 78 65 308 293 260 53 315 63 313 97 96 327 57 60
+ specials: 15 Ring (D,F+LP); 102 Leg Grab (D+LP+BL); 310-101-310 Square Wave (F,B+HP); 72-73-72 Bicycle (B,B,D+HK, not in sim); 104 Cartwheel (B,D,F+LK)
+ weapon: 244 draw (F,F+LK) -> 285 stance, 275 walk, 230 HP, 229 LP, 246 block, 217/219 crouch
+PROVEN defender (P2 Sonya): 311 324 134 130 305; 156-176-191 thrown; 186-188; 131-185; 183-185; 136-183-185; 201-328; 195-197; 128-328
+NOT HERS (LIKELY): 27, 28. Not triggered (GUESS): 25 26 153 154 172 192 194, air throw, taunt. 50/114 victory LIKELY from vs.txt; 388 Death Kiss PROVEN earlier.
