@@ -1,17 +1,22 @@
 MK4 PC FILE FORMATS - A WALKTHROUGH FOR REVERSE ENGINEERS
-Mortal Kombat 4, PC port (1998, GT Interactive / Eurocom). Notes by netsider, as of 2026-10-22.
+Mortal Kombat 4, Windows port (1998, ported by Eurocom; published by Midway in North America and GT Interactive in
+Europe). Notes by netsider, as of 2026-10-22.
 
 INTRO
 This file explains how to get from the retail game files to meshes, textures, sounds, animations and live game
 state. It is self-contained and follows the order you would work in:
   1 open FILESYS.DAT -> 2 extract files -> 3 meshes/textures -> 4 sounds -> 5 videos -> 6 animations ->
   7 skeletons (link animations to meshes) -> 8 MK4.EXE code/tables -> 8A move scripts (which clips a move plays, in what
-  order, with what velocities) -> 9 runtime memory -> 10 physics -> 11 gaps -> 12 quick reference.
+  order, with what velocities) -> 8B from button press to clip (command lists, strikes, reactions, fighter ids) ->
+  9 runtime memory -> 10 physics -> 11 gaps -> 12 quick reference.
 Every claim is tagged:
   PROVEN = checked against the game's code, data or a live run
   LIKELY = strong evidence, not fully traced
   GUESS  = unverified idea
 No game data is included here: only offsets, structures and descriptions. You need your own copy of the game.
+Tools: the tools\ folder next to this file holds netsider's scripts for each step (FILESYS.DAT extraction, GEO/texture
+  export, ESF->WAV, the emulated animation decoder, the script/command-list decoder, live-game logger). They contain
+  no game data and take your own file paths as arguments. See tools\README.txt for dependencies and usage.
 Paths: <MK4 install folder> = wherever the game is installed (the installer lets you choose; no fixed default verified).
 All integers are little-endian. "u32" = unsigned 32-bit, "s16" = signed 16-bit, etc. Offsets are hex unless noted.
 
@@ -24,6 +29,10 @@ All integers are little-endian. "u32" = unsigned 32-bit, "s16" = signed 16-bit, 
   M_*.ECM        full-motion videos (M_INTRO, M_MIDWAY, M_EURO, M_KOMERC ... on the CD)      PROVEN (files exist)
 Registry: HKLM\SOFTWARE\GT Interactive\Mortal Kombat 4\1.00 (WOW6432Node on 64-bit Windows),
   values Path (install folder), Setup, Config (binary saved settings incl. key bindings).        PROVEN
+Config blob (0x24C bytes): byte i is XORed with (i*0x7B)&0xFF; after that u32 +0 = checksum = 0x43464729 + sum of
+  signed byte[i] << (i mod 23) for i = 4..0x247 (mod 2^32). PROVEN (the stored checksum matched on the copy studied).
+  s32 +0x240 / +0x244 = P1/P2 joystick selection (LIKELY). On modern Windows the value may sit under the per-user
+  VirtualStore copy of that key. Tool: tools\mk4_config.py (read-only unless --reset-joystick).
 The game runs fine under Wine (32-bit prefix) at 640x480x16, which is how the live work below was done.  PROVEN
 
 ==========================================================================================
@@ -31,7 +40,8 @@ The game runs fine under Wine (32-bit prefix) at 640x480x16, which is how the li
 ==========================================================================================
 Layout (PROVEN):
   offset 0x0000: directory of exactly 799 entries, 12 bytes each (0x2574 bytes total), no header.
-  after that:    file data, packed. No compression at container level (files are stored as-is).
+  after that:    file data (the first file starts at 0x3000 in the copy studied). No compression at container level
+                 (files are stored as-is).
 Directory entry (12 bytes):
   +0x0  u32  hash    hash of the file's original full path (see below)
   +0x4  u32  offset  absolute byte offset of the file inside FILESYS.DAT
@@ -50,13 +60,14 @@ Name hash (PROVEN; reproduces all 799 entries with names recovered from strings 
 Path prefixes the game used (PROVEN, dev paths still inside MK4.EXE):
   meshes/textures: "C:\SOURCE\MK4\WIN\GEOGFX\" + name   e.g. C:\SOURCE\MK4\WIN\GEOGFX\SZ_GEO.GEO
   animations:      "C:\SOURCE\MK4\WIN\ANIM\"   + name   e.g. C:\SOURCE\MK4\WIN\ANIM\ANIMDAT4.AP0
-  sounds:          "c:\source\mk4\win\sound\pcmk..."     (names pcmkNNNN; hash the same way)
+  sounds:          "c:\source\mk4\win\sound\pcmkNNNN.esf"  (try NNNN = 0000-9999; hash the same way)
+  menu image:      "C:\SOURCE\MK4\WIN\menu.tga"
 Worked example (pseudocode):
   fs = read("FILESYS.DAT"); h = fsys_hash("C:\\SOURCE\\MK4\\WIN\\GEOGFX\\SZ_GEO.GEO")
   for i in 0..798: (eh, off, size) = u32x3(fs, i*12); if eh == h: data = fs[off:off+size]
 What is inside (PROVEN, by magic/content):
-  674 x ESF sound files, 122 x GEO mesh/texture files ("v1.0"), 1 x MENU.TGA, ANIMDAT4.AP0 + ANIMDAT4.AP1,
-  2 small unidentified entries (#0, #1).
+  674 x ESF sound files, 122 x GEO mesh/texture files (magic "v1.0", see section 3), 1 x MENU.TGA,
+  ANIMDAT4.AP0 + ANIMDAT4.AP1 = 799. Every entry gets a name by hashing (AP0 and AP1 are directory entries #0 and #1).
   In the copy studied, AP0 sits at offset 12288 (size 2964) and AP1 at 15252 (size 1,138,516). (PROVEN for that copy;
   always look them up by hash.)
 There are NO separate sprite or palette files: all 2D art is texture pages inside GEO files (section 3).  PROVEN
@@ -67,8 +78,8 @@ There are NO separate sprite or palette files: all 2D art is texture pages insid
 Procedure (PROVEN):
   1. Build a list of candidate names: scan MK4.EXE for strings ending in .geo/.GEO, .AP0/.AP1, .tga, and pcmk sound names.
   2. Hash prefix+name for each, match against the 799 directory hashes, write out data[off:off+size].
-  3. Identify the rest by magic: "ESF" = sound, "v1.0" = GEO.
-All 122 GEOs and MENU.TGA got names this way.
+  3. Identify the rest by magic: "ESF" = sound, bytes "0.1v" (u32 0x76312E30) = GEO.
+All 799 entries get names this way (tools\fsys_tool.py does steps 1-2: list or extract).
 The game reads files by seeking into FILESYS.DAT (seen with strace under Wine): a live session loaded 57 named .geo files.  PROVEN
 
 ==========================================================================================
@@ -76,7 +87,7 @@ The game reads files by seeking into FILESYS.DAT (seen with strace under Wine): 
 ==========================================================================================
 A GEO holds 3D parts and/or texture pages. Fighters, arenas, logos, HUD/fonts, VS portraits are all GEOs.  PROVEN
 Header (PROVEN):
-  +0x00 4 bytes  magic/version ("v1.0")
+  +0x00 4 bytes  magic/version: bytes "0.1v" on disk, i.e. the u32 0x76312E30 = multi-char constant 'v1.0'
   +0x04 u32      tex_off  - offset of the texture section
   +0x08 u32      size
   +0x0C          block table starts (16-byte records), runs until a record fails the checks or tex_off is reached
@@ -129,6 +140,7 @@ Transparency: not decoded; sprite backgrounds come out black (GUESS: black or a 
 2D art (HUD text, "FIGHT!", fonts, effects, gore, portraits, logos) lives in these pages as ATLASES; cutting single
   sprites out needs the GEO UV rectangles (not done).  PROVEN (atlases), cut-out = open.
 MENU.TGA is a standard TGA.  PROVEN
+Tools: tools\export_pc_geo.py (GEO -> GLB + texture + preview), tools\extract_textures.py (all texture pages -> PNG).
 
 ==========================================================================================
 4. SOUNDS (ESF)
@@ -136,13 +148,15 @@ MENU.TGA is a standard TGA.  PROVEN
 674 ESF files in FILESYS.DAT (PROVEN). Decoder found in MK4.EXE code at file offset 0xAFA8D.  PROVEN
 Layout:
   +0x0 3 bytes "ESF", +0x3 u8 0x06
-  +0x4 u32: low 24 bits = data length, top byte = flags
+  +0x4 u32: low 24 bits = length, top byte = flags. For 8-bit PCM the length = data bytes (579/579 files); for ADPCM
+           it is the decoded 16-bit PCM byte count, = 4 x data bytes (53 exact, 42 within a few bytes)
   +0x8 sample data
 Flags (PROVEN except 0x80):
   0x20 set -> 4-bit IMA ADPCM, high nibble first, decodes to 16-bit PCM; clear -> 8-bit unsigned PCM
   0x40 set -> 22050 Hz; clear -> 11025 Hz
-  0x80 = unknown (GUESS: loop)
+  0x80 = unknown, set on 13 files (GUESS: loop)
 Mono. Full arena music is probably not in FILESYS.DAT (GUESS; likely CD audio).
+Tool: tools\esf2wav.py converts every ESF to WAV (the flag 0x80 is ignored).
 
 ==========================================================================================
 5. VIDEOS (.ECM)
@@ -166,8 +180,8 @@ AP0 = index (PROVEN):
   Sum of sizes == AP1 size exactly.
 AP1 = clip data, concatenated in id order (clip k starts at sum of sizes of clips 0..k-1).  PROVEN
 
-Clip descriptor table in MK4.EXE (PROVEN): file offset 0xFC76C = VA 0x4FDD6C, 612 x 12-byte records, followed by a
-  13th record whose +0x0 is 0xFFFFFFFF (end marker). Record address for clip k = 0x4FDD6C + 12*k.
+Clip descriptor table in MK4.EXE (PROVEN): file offset 0xFC76C = VA 0x4FDD6C, 612 x 12-byte records, followed by one
+  more record (index 612) whose +0x0 is 0xFFFFFFFF (end marker). Record address for clip k = 0x4FDD6C + 12*k.
   +0x0 u32  clip data pointer. 0 in the file; at load time the game fills it with the address of the clip's data in the
             loaded ANIMDAT4.AP1 buffer. This is the pointer the frame decompressor (VA 0x4013A0) reads.        PROVEN
   +0x4 u32  frame count. Equals the decoded frame count for all 612 of 612 clips (e.g. intro clip 46 = 90 frames,
@@ -182,9 +196,10 @@ Clip descriptor table in MK4.EXE (PROVEN): file offset 0xFC76C = VA 0x4FDD6C, 61
     2. Read ANIMDAT4.AP1 into one buffer (pointer kept at VA 0x5222D8).
     3. Walk the AP0 list at +0x200, {u16 id|0x8000, u16 size} until 0xFFFF. For each entry:
          rec+0x0 = current buffer position;  rec+0x8 = (rec+0x8 & ~0x8000) | (id & 0x8000);  position += size.
-  Engine note (PROVEN): the PC code is a port of the arcade's TMS34010 code, so objects store "bit addresses"
-    (address >> 2) and read fields as [reg*4 + offset]. Example: a fighter's current clip is stored as
-    (record address >> 2), see section 9.
+  Engine note: objects store addresses as (address >> 2) and read fields as [reg*4 + offset] (PROVEN). Example: a
+    fighter's current clip is stored as (record address >> 2), see section 9. The PC code is LIKELY ported from the
+    arcade (Midway Zeus) code; the arcade main CPU is a TI TMS320C3x-family DSP (MAME lists a TMS32032 at 60 MHz, older
+    listings say TMS32031), whose 32-bit word addressing would explain the >> 2 storage (GUESS).
 Frame layout (PROVEN):
   each frame = node_count s32 words. For human clips node_count = 18 -> 72 bytes/frame:
     word 0..2  root translation (signed, /256)
@@ -210,6 +225,8 @@ Worked example (pseudocode):
   frames = u32(rec,4); nodes = u32(rec,8) >> 16
   if not compressed(k): F = s32 array(ap1[offs[k]:], frames*nodes)  else: F = emulate(0x4013A0, k)
   for f in frames: root = F[f][0:3]/256; for i in 0..14: (x,y,z) = unpack(F[f][3+i]) -> bone order[i]
+Tool: tools\anim_emu.py does the emulate() step with the Unicorn CPU emulator ("info" lists every clip, "dump" writes
+  the raw per-frame words of one clip).
 Game-driven motion (LIKELY, strong): for travelling and airborne moves the clip gives only the pose; the game plays
   frames forward, holds one, may play them in reverse, and moves the body itself (section 10). So a clip exported
   "as is" can look short or odd. Clips are short pieces that game code chains together. The chaining, the
@@ -249,25 +266,32 @@ Sonya has one extra head bone at (0, -17, 26.2) (PROVEN from arcade RAM; GUESS: 
   VA 0x5220D8  runtime copy of the AP0 512-byte decoder table                               PROVEN
   file 0xAFA8D sound (ESF) decoder                                                          PROVEN
   file ~0xF3918 model-name table                                                            PROVEN
-  VA 0x41EAAF  loads the scorpion-creature object; started from a script at VA 0x4D5E80      PROVEN
+  VA 0x41EAAF  loads the scorpion-creature skeleton (mov ecx, 0x50FB18 = file 0x10E518) inside routine VA 0x41EA50,
+               whose pointer is the first word of a data block at VA 0x4D5E80 that also names clips 578-580  PROVEN
   VA 0x401205-0x40130F  animation loader: reads ANIMDAT4.AP1, fills clip table +0x0/+0x8     PROVEN
   VA 0x406B20  start the current clip's animation on an object                               PROVEN
   VA 0x4594E0  start a move script on a fighter (449 call sites); interpreter loop VA 0x459500 PROVEN (section 8A)
-  VA 0x4E6970  script opcode handler table, 128 entries                                      PROVEN
-  VA 0x478E40-0x481350  special-move code block; its handler table at VA 0x4EB8F4 (36 entries) PROVEN
+  VA 0x4E6970  script opcode handler table (opcode = word >> 24; 0x00-0x7F used, unused slots -> 0x49CBB0) PROVEN
+  VA 0x478E40-0x481350  special-move code block; its handler table at VA 0x4EB8F8 (35 entries) PROVEN
+  VA 0x41FCC0  start-up fixup routine: applies the (dest, value) pair lists at 0x4D6E80 and 0x4DC3F8 PROVEN
+  VA 0x45F640  move dispatcher process: move word -> action table -> handler                 PROVEN
+  VA 0x4ED4D0  hit-reaction handler table, ids 0x00-0xC0 (193 slots, 0x71-0x74 empty)         PROVEN
   VA 0x4ED1E0  knockdown / fall-continuation table, (velocity, clip) pairs                    LIKELY
-Hard-coded clips (PROVEN): only 9 clips appear as immediates in code (0, 8, 9, 13, 39, 183, 301, 527, 587). Example at
-  VA 0x42D4B8: mov eax, <record of clip 9>; shr eax, 2; store to object +0x24 and +0x28; call 0x406B20.
-  Everything else that picks a clip is data (section 8A).
+Hard-coded clips (PROVEN): native code also names clips directly, as  mov reg, <clip record address>; shr/sar reg, 2.
+  That exact pattern occurs at 64 places naming 55 clips (e.g. 2, 4, 5, 9, 13, 183, 301, 305, 310, 527, 587); counting
+  every record-address immediate in .text gives 84 clips. Example at VA 0x42D4B8: mov eax, <record of clip 9>; shr eax, 2;
+  store to object +0x24; call 0x406B20. (An earlier version said "only 9 clips"; that was an incomplete search.)
+  Most clip choices are still data (section 8A).
 Text in the EXE (PROVEN): about 1,500 ASCII strings, essentially no UTF-16. There are NO move, special-move or fatality
   names anywhere in MK4.EXE or FILESYS.DAT; the in-game move list is not stored as text. Useful text tables:
-    fighter names in lower case at file 0xF0BA4-0xF0C34 (stored in reverse order: "noob saibot" ... "scorpion"), with a
-      pointer table near VA 0x4F11E0 (LIKELY)
-    "<Name> Wins" strings at file 0xD1DD0-0xD1F08, referenced from a table near VA 0x4D9D2C. Their order is Scorpion,
-      Raiden, Sonya, Liu Kang, Sub Zero, Fujin, Shinnok, Tanya, Reptile, Quan Chi, Kai, Jarek, Jax, Johnny Cage, Reiko,
-      Goro, Noob Saibot, Kitana = 18 names, which LIKELY is the internal fighter id order (0 = Scorpion, 1 = Raiden,
-      2 = Sonya ...)
-    ending / bio file names e_<name>.ecm / b_<name>.ecm at file ~0xF44D0
+    fighter names in lower case at file 0xF0BA4-0xF0C34, stored in reverse: "noob saibot", "kitana", "goro", "cage",
+      ... "raiden", "scorpion". Their pointer table at VA 0x4F11D8 (18 u32, read by code at VA 0x4A3132) lists them
+      in exactly the internal fighter id order 0-17 of section 8B, ending with 16 = kitana, 17 = noob saibot (PROVEN
+      as data; that code indexes it by fighter id is LIKELY).
+    "<Name> Wins" strings at file 0xD1DD0-0xD1F08, referenced from a table of 16-byte entries starting at
+      VA 0x4D9D0C. Their order is Scorpion, Raiden, Sonya, Liu Kang, Sub Zero, Fujin, Shinnok, Tanya, Reptile, Quan Chi, Kai, Jarek, Jax, Johnny Cage, Reiko,
+      Goro, Noob Saibot, Kitana. This is NOT the internal fighter id order (that one is in section 8B).
+    ending / bio / menu video names (e_jax.ecm, m_komerc.ecm, ...) at file ~0xF44C4
     menu text (SHOW MOVES LIST, button names), cheat "KODE" strings, the dev path c:\source\mk4\win\anim\ + "animdat4"
 Display modes (PROVEN from code): renderers Glide (glide2x.dll, F5), fullscreen software (F7), windowed software (F8).
   DirectDraw SetDisplayMode calls: 640x480x16 at VA 0x4AE8F0, 320x240x16 at VA 0x4AFB20; the Glide path clips to
@@ -285,15 +309,19 @@ the clip order, attacker/victim pairs and launch physics without any live captur
 Starting a script (PROVEN): native code does  push <script VA>; call 0x4594E0. That function stores
   (script address >> 2) in the fighter object at +0x48. There are 449 such call sites.
 Interpreter (PROVEN): loop at VA 0x459500.
-  word = next u32 of the script; opcode = word >> 24; jump to handler table[opcode] (table at VA 0x4E6970, 128 entries).
+  word = next u32 of the script; opcode = word >> 24; jump to handler table[opcode] (table at VA 0x4E6970; opcodes
+  0x00-0x7F, unused ones go to a default handler).
   The low 24 bits of the opcode word are an inline argument (usually only the low byte is used).
   Operand words, if any, follow the opcode word.
-Clip operands are patched at load time (PROVEN): in the file every clip operand is 0. A fixup list of
-  (destination address, clip record address) pairs in .data (roughly VA 0x4D6E80-0x4DCxxx) is applied at start-up and
-  writes the record addresses into the scripts. So to read a script statically, apply the fixup list first; the record
-  address tells you the clip: clip = (record - 0x4FDD6C) / 12.
-  The fixup list also fills single-clip slots in BSS (VA 0x5409xx-0x540Bxx) that native code reads.
-  In total, 801 fixups name 451 of the 612 clips. 161 clips are never named this way (e.g. Sonya's 310, see below).
+Clip operands are patched at load time (PROVEN): in the file every clip operand is 0. At start-up the routine at
+  VA 0x41FCC0 walks two lists of (destination, value) u32 pairs in .data, list A at VA 0x4D6E80 and list B at
+  VA 0x4DC3F8, each ended by a (0, 0) pair, and does  *destination |= value >> 2. So every patched pointer is stored
+  packed (byte address / 4). When value is a clip record address, clip = (value - 0x4FDD6C) / 12. To read a script
+  statically, apply both lists first.
+  The same lists fill the per-fighter command tables (section 8B), goto and op-3C targets, the strike tables and
+  single-clip slots in BSS (VA 0x5409xx-0x540Bxx) that native code reads. No other writer of these tables was found.
+  In total the two lists hold 3,035 pairs; 801 of them name a clip, covering 451 of the 612 clips. 161 clips are never
+  named this way (e.g. 310); some of those are named directly in native code (section 8).
 Numbers (PROVEN by the uppercut check below): velocities and gravity are 16.16 fixed point (0x10000 = 1.0 per tick;
   6553 = 0.1). The raw integers are the same units as the live height/velocity fields in section 9.
 
@@ -315,9 +343,15 @@ Opcodes (number of operand words in brackets; "clip" = a patched clip record add
   22        install the gravity routine (VA 0x457D00) into object +0x4C                          LIKELY
   2F, 36, 3D, 42, 44, 45, 6F  conditional: test something, then goto the operand or skip it     LIKELY
   3F        native end routine (VA 0x46F6A0)                                                     LIKELY
+  3C [16 x script]  FIGHTER_SWITCH: continue at slot[fighter id] (handler 0x45B4F0). Ids 16 and 17 are mapped to
+            2 and 7. This is how one basic-move script gives each fighter its own clip, e.g. high kick = clip 65 for
+            Sonya, 66 for most fighters, 71 for ids 1, 4, 8, 11, 14.                                   PROVEN
+  50 w n / 51 n  hit check with strike record n of table VA 0x540E78                              PROVEN
+  52 n / 53 n / 5E n  same with tables VA 0x540E28 / 0x540D38 / 0x540C80                           PROVEN
+  41 n / 1E n / 70 n  call / jump to / range-gated hit reaction n (table VA 0x4ED4D0)              PROVEN
   03, 04, 4A n  wait / animate variants                                                          GUESS
   5A, 5C [1], 5D [2], 65 [3]  other velocity/physics setters                                     GUESS
-  1E, 20, 25, 26, 27, 2A, 2B, 2C, 41 n  calls with a byte argument: sound, effect, damage (which is which not known) GUESS
+  20, 25, 26, 27, 2A, 2B, 2C n  calls with a byte argument: sound, effect, damage (which is which not known) GUESS
 
 Worked example 1 - Sonya's uppercut, victim side (script near VA 0x4EC754):
   58  vx = -1966, vy = -13107, gravity = 524       launch the victim
@@ -327,10 +361,11 @@ Worked example 1 - Sonya's uppercut, victim side (script near VA 0x4EC754):
   gravity has already been applied; gravity +524 per tick matches exactly.                                    PROVEN
   The follow-up 328 is in the (velocity, clip) table at VA 0x4ED1E0 (pairs with clips 185, 184, 328, 184, 191, 190, 188
   and velocities -2621 / -4587 / -5242): LIKELY the knockdown/fall-continuation table.                      LIKELY
-Worked example 2 - Sonya's Bicycle Kick (special handler 7 = VA 0x47E1D0, script VA 0x4EB5A8):
+Worked example 2 - Sonya's Bicycle Kick (special handler 6 = VA 0x47E1D0, script VA 0x4EB5A8):
   5F vx = 0.1 | 48 play clip 72 to the end | 25 0x0E (sound/effect) | 11 clip 73 | 59 6553, 0, -6553, -131 | 32 -> 0x47E220
   => 72 -> 73, matching the live capture.                                                                     PROVEN
-  The return to 72 after the kicks happens in the native code at 0x47E220, not in the script.                 LIKELY
+  The return to 72 after the kicks happens in native code: the handler names clip 72 directly at VA 0x47E37F and
+  0x47E466 (PROVEN as code; LIKELY that this is the return).
 Worked example 3 - Sonya's throw (script VA 0x4E1848):
   0E clip 156 (opponent) | 0F clip 78 (self) | 4B until frame 0x15 | 41 0x67 | 63 9830 | ...
   => attacker 78 and victim 156 started by the same script, matching the live capture.                        PROVEN
@@ -339,8 +374,10 @@ Worked example 3 - Sonya's throw (script VA 0x4E1848):
 Other checks against live captures: Leg Grab = own 102 + opponent 201 (PROVEN); Square Wave uses 101 through BSS slot
   VA 0x540B24 (PROVEN); sweep 63 script at VA 0x4E9E58 (0F clip 63, 4D, 20 0xAF, sleep 0x16) (PROVEN); victim 195 and 197
   are in adjacent reaction scripts at VA 0x4EC464 / 0x4EC488 (LIKELY 195 -> 197).
-  Clip 310 (start/end of the Square Wave) is referenced nowhere in the EXE: no fixup, no pointer. How the game reaches
-  it is not known.
+  Clip 310 (start/end of the Square Wave) has no fixup, but the Square Wave's native handler (special 05, VA 0x47E6A0)
+  loads it directly: mov ecx, <record of 310>; shr ecx, 2 at VA 0x47E791 and again at VA 0x47EADD (PROVEN as code; that
+  these are the 310 before and after 101 is LIKELY). It is also named at VA 0x480DB3 / 0x480E74 (another special).
+  (An earlier version said 310 was referenced nowhere; that was wrong.)
 
 Static move/clip tables (fixup clusters in .data; PROVEN they exist, meaning LIKELY):
   VA 0x4D6E84  attack clip followed by a 14x-16x victim clip, e.g. 8/164, 30/162, 42/146 -> attack/reaction pairs
@@ -350,28 +387,124 @@ Static move/clip tables (fixup clusters in .data; PROVEN they exist, meaning LIK
   VA 0x4DB67C  BSS slots 0x540F48.. filled with stance/walk clips (439, 265-274, 283-292, 589, 590) -> per-state clip slots
 
 Where fighter-specific moves live (PROVEN for the table, ownership LIKELY):
-  All special moves of all fighters are in one code block, VA 0x478E40-0x481350, dispatched through a 36-entry handler
-  table at VA 0x4EB8F4. Matching the clips each handler's scripts start against live captures gives:
-    handler  6  Sonya Square Wave 101            PROVEN      handler 11  Raiden Body Launch 94          LIKELY
-    handler  7  Sonya Bicycle Kick 72 -> 73      PROVEN      handler 12  Quan Chi Teleport Stomp 87/89  LIKELY
-    handler  8  Sonya Leg Grab 102 + victim 201  PROVEN      handler 27  Quan Chi Dashing Kick 105      LIKELY
-    handler  1  Scorpion Teleport Punch 312      LIKELY      handler 29  Johnny Cage Uppercut 85        LIKELY
-    handler  2  Ice Clone 301 (Sub-Zero)         LIKELY      handler 31  Tanya Corkscrew Kick 109       LIKELY
-    handler  9  Fujin Whirlwind Spin 10/11       LIKELY      handler 32  Reiko Flip Kick 110            LIKELY
-    handler 10  Fujin Jumping Knee 100           LIKELY      handler 33  Reiko, clip 306                LIKELY
-  Handlers 14 (clip 1), 22 and 30 (clip 301 only) and 28 (clip 308) are unassigned (GUESS). The other 18 handlers start
-  no clip directly; projectile specials (clips 14-29: spear, freeze, rings, fireballs) LIKELY go through shared
-  projectile code instead.
-  Per-fighter command lists (in progress): five BSS tables at VA 0x54048C, 0x5404D8, 0x540518, 0x5405A0 and 0x540688,
-  18 entries each (one per fighter id, LIKELY in the "Wins" order of section 8). Each entry points into a command pool
-  at VA 0x4E7340-0x4E7E90 whose records hold joystick sequence bytes and a move word (e.g. 0x33012842). Which bits of the
-  move word select the handler is not decoded yet, so the fighter-to-handler links above come from clips, not from
-  this table.
+  All special moves of all fighters are in one code block, VA 0x478E40-0x481350, dispatched through a 35-entry handler
+  table at VA 0x4EB8F8 ("special" table; an earlier version of this guide said 0x4EB8F4, which shifted every index by
+  one). The command lists (section 8B) now tie each index to a fighter and an input:
+    special 05  Sonya Square Wave (F,B+HP)        PROVEN      special 0A  Raiden Body Launch 94 (F,F+LK)  LIKELY
+    special 06  Sonya Bicycle Kick 72->73 (B,B,D+HK) PROVEN   special 0B  Quan Chi Teleport Stomp 87/89   LIKELY
+    special 07  Sonya Leg Grab 102 + victim 201   PROVEN      special 1A  Quan Chi Dashing Kick 105 (F,F+HK) LIKELY
+    special 13  Sonya Cartwheel 104 (B,D,F+LK)    PROVEN      special 1C  Johnny Cage Shadow Uppercut 85  LIKELY
+    special 00  Scorpion Teleport Punch 312 (D,B+HP) LIKELY   special 1F  Reiko Flip Kick 110 (B,D,F+HK)  LIKELY
+    special 01  Sub-Zero Ice Clone 301 (D,B+LP)   LIKELY      special 20  Reiko, clip 306 (B,F+LK)        LIKELY
+  Projectile specials (clips 14-29: spear, freeze, rings, fireballs) go through the separate projectile table
+  (section 8B).
+
+==========================================================================================
+8B. FROM BUTTON PRESS TO CLIP
+==========================================================================================
+This section follows one input all the way to the clips both fighters play:
+  button press -> command table -> move word -> action table -> handler -> script -> attacker clips
+  -> strike (hit box) -> reaction id -> reaction handler -> victim clips and physics.
+Everything here is static data in MK4.EXE (after the start-up fixups of section 8A).
+
+Step 1 - fighter id (PROVEN for Sonya, names LIKELY for the rest). Each fighter object holds its id at +0x34:
+    id  fighter          id  fighter          id  fighter
+     0  Scorpion          6  Shinnok          12  Jarek
+     1  Raiden            7  Reiko            13  Jax
+     2  Sonya (PROVEN)    8  Quan Chi         14  Johnny Cage
+     3  Liu Kang          9  Tanya            15  Goro
+     4  Sub-Zero         10  Reptile          16  Kitana (LIKELY, hidden/unused slot)
+     5  Fujin            11  Kai              17  Noob Saibot (LIKELY)
+  Names other than Sonya come from matching each command list against the known MK4 inputs (e.g. id 0 has
+  B,B+LP -> clip 14 spear; id 4 has D,F+LP -> clip 16 freeze; id 3 has F,F+HK -> flying kick 92/93). Id 6's moves all
+  carry condition 0x32 and call misc actions 0x13-0x25, which fits Shinnok's impersonations. The EXE's lower-case name
+  pointer table at VA 0x4F11D8 (section 8) has exactly this order and names 16 = kitana, 17 = noob saibot. Op 3C (section
+  8A) maps id 16 to Sonya's basic scripts and id 17 to Reiko's (PROVEN), which fits: Kitana was a planned female
+  fighter, and Noob Saibot is a Reiko-style character in MK4 (LIKELY).
+
+Step 2 - command tables (PROVEN). There are 16 BSS tables of 18 u32 entries (one per fighter id), 0x48 bytes apart,
+  starting at VA 0x540448 (table i = 0x540448 + 0x48*i). Each button's input handler pushes one table, e.g.
+  VA 0x45CAE0 pushes 0x540490. Player 1 tables:
+    HP 0x540490 | LP 0x5404D8 | BL 0x540520 | HK 0x540568 | LK 0x5405B0                  PROVEN (by Sonya's moves)
+    0x540448 = joystick-up event | 0x5405F8 = LK held/released | 0x540688 = RUN              LIKELY
+  Player 2 uses 0x540640 and 0x5406D0-0x540880 (LIKELY the same contents).
+  Entry [fighter id] points to that fighter's list in a command pool at VA 0x4E7340-0x4E7E90; an empty list is
+  VA 0x5408D0.
+  Command record = 3 u32: { sequence, extra, move word }. sequence = 0 ends the list; sequence = 0xFFFFFFFF means
+  "button only" (no joystick motion). Otherwise each byte of sequence is one joystick step, LOW byte = EARLIEST step:
+    0xDD = F (toward the opponent), 0xAA = B, 0x02 = D (PROVEN); 0x01 = U (LIKELY)
+
+Step 3 - move word, bytes b3 b2 b1 b0 (PROVEN):
+  b3  condition index into the check table at VA 0x4E7EA8. A check vetoes the move by clearing bit 0 of [0x54000C].
+      0 = no condition. (0x1A tests [0x53849C] == 8, LIKELY "finish him"; 0x33 tests [0x53849C] == 0.)
+  b2  selects the action table (decided by the dispatcher at VA 0x45F640):
+        bit 0 -> misc table       VA 0x4E9EE0 (72 slots used, some empty; basic moves, throws, weapon draw, finishers)
+        bit 1 -> projectile table VA 0x4F0810 (27 entries, then 0)
+        bit 2 -> special table    VA 0x4EB8F8 (35 entries; the dispatcher loads this base at VA 0x45F7D6)
+        bit 3 -> aux table        VA 0x4E9FF0 (20 slots used, 3 empty; crouching / air moves)
+        bit 5 -> table            VA 0x4E2C78 (47 slots used; run etc.)
+      (Table lengths are the highest index any command list uses; the true sizes are LIKELY the same.)
+        0x10 and 0x40 are flags for the input matcher.
+  b1  input time window in ticks (how fast the sequence must be entered)
+  b0  action index into the selected table
+  The matched move word is written to the fighter object at +0x14 and the 0x45F640 process is started.
+  Every fighter has misc 0x29 = weapon draw; misc 0x40 and 0x43 are LIKELY the two fatalities (their inputs match the
+  published lists, e.g. Scorpion B,F,F,B+BL and B,F,D,U+HP); misc 0x41 and 0x42 appear for every fighter (GUESS: stage
+  fatality and similar).
+
+Step 4 - handler and script: the action table entry is a native handler that starts a move script (section 8A).
+  Basic moves (punches, kicks, sweep, jump attacks) use the same handler for every fighter; op 3C inside the script
+  picks the fighter's own clip.
+
+Step 5 - strike (PROVEN). While the attack plays, the script (or native code) does a hit check with a strike record:
+    script op 51 n / 50 w n -> table VA 0x540E78   op 52 n -> 0x540E28   op 53 n -> 0x540D38   op 5E n -> 0x540C80
+    native code does the same with  mov [0x53FFEC], n ; call 0x48D4x0  (a fifth table, VA 0x540DC8, uses 0x48D460).
+  Strike record, 24 bytes:
+    +0x00..+0x0C  hit box x, y, w, h (16.16)                                         LIKELY
+    +0x10 byte 0  reaction id -> table VA 0x4ED4D0 (0x48D700 reads it and calls 0x480FD0)   PROVEN
+    +0x10 byte 1  alternate reaction (often 0x0A/0x0B; GUESS: used when blocked or airborne)
+    +0x10 byte 2  LIKELY damage
+    +0x10 byte 3  flags; bit 1 sets [0x540008] = 0x10 ("air")                         PROVEN (read)
+    +0x14         GUESS: push-back / knockback
+  Native moves keep their strike data in blocks right after the native op, parsed by 0x470CB0 or 0x470520:
+    ground block = [strike n][strike fn][frames...][-1][next native]; air block = [a][strike n][strike fn][handlers...]
+
+Step 6 - reaction (PROVEN). The reaction table at VA 0x4ED4D0 has 193 slots (ids 0x00-0xC0; 0x71-0x74 empty). Each handler sets the
+  VICTIM's clips and physics with the same script ops (0F/11/02 for clips, 58/59/5A/65 for velocity and gravity).
+  Examples: 0x10 -> 311 (5A 9830), 0x11 -> 134, 254, 0x12 -> 195, 197, 0x1A and 0x22 -> 128 with 58 -1966,-13107,524
+  (the uppercut launch of section 10), 0x57 -> 136, 0x67 -> 176.
+
+Worked example - Sonya (id 2) Bicycle Kick, B,B,D + HK:
+  1. HK pressed: P1's HK handler uses table 0x540568; entry [2] points to Sonya's HK list.
+  2. The list holds { sequence with steps B, B, D, extra, move word 0x00042806 }.
+  3. 0x00042806: b3 = 00 no condition | b2 = 04 special table 0x4EB8F8 | b1 = 0x28 = 40-tick window | b0 = 06.
+  4. special[06] = handler VA 0x47E1D0 -> script VA 0x4EB5A8: 5F vx | 48 play clip 72 | 11 clip 73 | 59 velocities.
+  5. The strike's reaction id is 0x57 -> reaction handler VA 0x4877A0 -> victim clip 136.
+  Live capture: attacker 72 -> 73 -> 72, victim 136 -> 183 -> 185. The static result matches the first part of each
+  chain; 183 -> 185 come from the fall/knockdown logic (LIKELY via the table at VA 0x4ED1E0).
+Worked example - Sonya high kick, HK alone:
+  basic action misc[05] (handler VA 0x46A6D0) -> op 3C picks Sonya's clip 65 -> strike reaction 0x10 -> victim 311
+  with X push 9830. Live capture: 65 -> 311 (PROVEN).
+Sonya check (static vs live capture): the attacker clip matches in 24 of 24 moves; the victim clip matches in 13,
+  does not apply in 8, and is unresolved in 3 (Square Wave victim 305, Ring victim 130 which comes from the projectile
+  object, Cartwheel reaction 0x79). No move mismatches. Other fighters use the same handlers, so their rows are LIKELY.
+
+Tool: netsider's decoder, tools\script_decoder_v2.py in this repo (Python 3 standard library only; no game data
+  inside), reads a retail MK4.EXE given on the command line and prints all of the above (fighters 16/17 are labelled
+  Kitana / Noob Saibot, LIKELY, see above). See tools\README.txt for the other tools:
+    python3 script_decoder_v2.py MK4.EXE lists          all 18 command lists (input -> move word -> table[index])
+    python3 script_decoder_v2.py MK4.EXE fighter 2      one fighter's full move table (attacker clips, strikes,
+                                                        reactions, victim clips, physics)
+    python3 script_decoder_v2.py MK4.EXE table | csv    every fighter, as text or CSV
+    python3 script_decoder_v2.py MK4.EXE script 0x4EB5A8 [fighter id]   decode one script (follows op 3C / goto)
+    python3 script_decoder_v2.py MK4.EXE strikes | reactions | actions  dump the strike, reaction and action tables
 
 ==========================================================================================
 9. RUNTIME MEMORY (MK4.EXE, version studied; static addresses)
 ==========================================================================================
 Read with any memory reader while the game runs (process memory is read-only for observing).
+Tools: tools\mk4_live_log.py logs the fields below read-only (Windows or Wine); tools\mk4_force_clip.py does the
+  forced playback described below (it writes game memory); tools\mk4_input.py sends scripted key presses (Windows).
 Global decoder state (PROVEN):
   0x521A64 u32  pointer to the clip data the decoder last read (global, mixes both players)
   0x521A60 u32  frame
@@ -428,16 +561,20 @@ Playback pattern (LIKELY, strong): e.g. slide clip 95 = frames 1->9, hold frame 
 - UV row byte 0 meaning.
 - Clip table +0x8 bit 0 (set on 27 clips) meaning.
 - Script opcodes marked LIKELY/GUESS in section 8A; which byte-argument calls are sound, effect or damage.
-- Per-fighter command lists: which bits of the move word pick the special-move handler.
-- Clip 310 (Square Wave start/end) is not referenced anywhere in the EXE; how the game reaches it.
-- Chains that continue in native code (e.g. the Bicycle Kick's return to clip 72).
+- Command tables 0x540448, 0x5405F8, 0x540688 (button meaning LIKELY) and the Player 2 tables (contents LIKELY = P1).
+- Most condition checks at 0x4E7EA8 (only 0x1A / 0x33 / range checks looked at).
+- Strike record +0x00..+0x0C (hit box, LIKELY), +0x10 bytes 1-2 and +0x14 meaning.
+- Victims of projectiles (e.g. Ring -> 130) and a few reactions (Square Wave 305, Cartwheel 0x79) not resolved statically.
+- Finisher slots misc 0x40-0x43: no attacker clips resolved statically. Ids 16/17 names (Kitana / Noob Saibot) LIKELY only.
+- Chains that continue in native code (e.g. Square Wave 310 -> 101 -> 310 and the Bicycle Kick's return to 72: the
+  clips are named in the handlers, but the control flow is not traced).
 - ESF flag 0x80.
-- Two unidentified FILESYS.DAT entries (#0, #1).
-- Which fighter owns which clip (Sonya fully mapped; about 15 other specials tied to fighters, LIKELY; the rest of the
-  612 clips unlabeled). The move scripts (section 8A) should make most of this readable without live capture.
+- Action-table sizes (misc, aux, 0x4E2C78) beyond the highest index the command lists use.
+- Which fighter owns which clip: Sonya PROVEN; every other fighter's moves are now readable statically (section 8B) but
+  only LIKELY until checked live. Clips not reached by any script or table are still unlabeled.
 - Unit conversion to metres (LIKELY only); P1 vs P2 position field naming (section 9 note).
 - Unmatched odd clips 386 (6 bones), 422/423, 426/427, 446/447 (3 bones): no skeleton found (GUESS: severed limbs).
-- Fatality scripts not traced back to fighter ids.
+- Fatality scripts: inputs found (misc 0x40/0x43, LIKELY) but their clips are not traced.
 - Arena music location (GUESS: CD audio).
 
 ==========================================================================================
@@ -447,8 +584,8 @@ FILE OFFSETS
   FILESYS.DAT 0x0000          799 x 12-byte directory {hash, offset, size}                     PROVEN
   ANIMDAT4.AP0 +0x000         512-byte decoder table                                           PROVEN
   ANIMDAT4.AP0 +0x200         {u16 id|0x8000, u16 size} x 612, 0xFFFF end                      PROVEN
-  GEO +0x04 / +0x0C           tex_off / block table (16-byte records)                          PROVEN
-  ESF +0x04                   u32 len(24) | flags(8)                                           PROVEN
+  GEO +0x00 / +0x04 / +0x0C   "0.1v" magic / tex_off / block table (16-byte records)           PROVEN
+  ESF +0x04                   u32 len(24) | flags(8); ADPCM len = decoded bytes (~4 x data)     PROVEN
   ECM +0x00                   "ECM" 0x02, u32 count, u32 sizes[]                               LIKELY
   MK4.EXE file 0xFC76C        clip table (VA 0x4FDD6C), 612 x 12                               PROVEN
   MK4.EXE file 0xAFA8D        ESF decoder                                                      PROVEN
@@ -459,16 +596,25 @@ FILE OFFSETS
   MK4.EXE file 0x109DB4       Shinnok hand skeleton                                            LIKELY
   MK4.EXE file 0x11F318       1-bone object                                                    GUESS
 CODE VAs (VA = file + 0x400C00)
-  0x4013A0 frame decompressor | 0x4BCE80 bone rot | 0x4BD070 root rot | 0x41EAAF creature load | 0x4D5E80 script
+  0x4013A0 frame decompressor | 0x4BCE80 bone rot | 0x4BD070 root rot | 0x41EAAF creature load | 0x4D5E80 creature data block
   0x4AE8F0 640x480x16 | 0x4AFB20 320x240x16 | 0x4B3F81 Glide 640x480 clip                     PROVEN
   0x401205-0x40130F anim loader | 0x406B20 start animation                                     PROVEN
+  0x47E6A0 Square Wave handler (names clip 310) | 0x47E1D0 Bicycle Kick handler (names clip 72)  PROVEN
   0x4594E0 start script | 0x459500 interpreter loop | 0x478E40-0x481350 special-move code       PROVEN
+  0x41FCC0 start-up fixups | 0x45F640 move dispatcher | 0x45B4F0 op 3C fighter switch           PROVEN
+  0x48D420/0x48D440/0x48D460/0x48D480/0x48D4A0 hit checks | 0x48D700 strike -> reaction         PROVEN
 DATA VAs (VA = file + 0x401600)
   0x4FDD6C clip table {+0 data ptr (filled at load), +4 frames, +8 nodes<<16 | 0x8000 compressed} PROVEN
   0x5220D8 AP0 table copy | 0x5222D8 AP1 buffer pointer                                        PROVEN
-  0x4E6970 script opcode table (128) | 0x4EB8F4 special-move handler table (36)                 PROVEN
-  0x4ED1E0 knockdown (velocity, clip) table                                                    LIKELY
-  0x4D6E80-0x4DCxxx clip fixup list (dest, record) | 0x54048C.. per-fighter command lists      PROVEN / LIKELY
+  0x4E6970 script opcode table (opcodes 0x00-0x7F)                                             PROVEN
+  0x4D6E80 / 0x4DC3F8 fixup pair lists (*dest |= value >> 2)                                   PROVEN
+  action tables: misc 0x4E9EE0 | projectile 0x4F0810 | special 0x4EB8F8 | aux 0x4E9FF0 | 0x4E2C78  PROVEN
+  0x4E7EA8 move-word condition checks | 0x4E7340-0x4E7E90 command pool                        PROVEN
+  0x4ED4D0 hit-reaction table (0x00-0xC0) | 0x4ED1E0 knockdown (velocity, clip) table         PROVEN / LIKELY
+BSS VAs
+  0x540448 + 0x48*i  command tables [fighter id]; P1 HP 0x540490, LP 0x5404D8, BL 0x540520, HK 0x540568,
+                     LK 0x5405B0                                                               PROVEN
+  strike tables 0x540C80 / 0x540D38 / 0x540DC8 / 0x540E28 / 0x540E78 (24-byte records)         PROVEN
 RUNTIME
   0x521A60 / 0x521A64 / 0x521AA4  global decoder frame / clip ptr / frame count                PROVEN
   0x522514 / 0x522518 / 0x52251C  P1 clip record>>2 / frame / frame ptr>>2                     PROVEN
@@ -480,3 +626,8 @@ CONSTANTS
   60 ticks/s; launch -12583 (script value -13107); gravity +524/tick^2; 48 ticks airborne; peak 157,375 (~2.46 m);
   ~64,000 units/m (LIKELY); script velocities 16.16 fixed point
 SCRIPT OPCODES (PROVEN): 05 sleep | 0E opponent clip | 0F/11 own clip | 12 frame | 32 native | 33 goto | 58 vx,vy,gravity
+  3C fighter switch | 50/51/52/53/5E strike | 41/1E/70 reaction
+MOVE WORD: b3 condition (0x4E7EA8) | b2 action table bits | b1 input window (ticks) | b0 index
+FIGHTER IDS (obj +0x34): 0 Scorpion 1 Raiden 2 Sonya 3 Liu Kang 4 Sub-Zero 5 Fujin 6 Shinnok 7 Reiko 8 Quan Chi 9 Tanya
+  10 Reptile 11 Kai 12 Jarek 13 Jax 14 Johnny Cage 15 Goro 16 Kitana 17 Noob Saibot (Sonya PROVEN, rest LIKELY)
+INPUT BYTES: 0xDD F | 0xAA B | 0x02 D | 0x01 U (LIKELY); low byte = earliest
