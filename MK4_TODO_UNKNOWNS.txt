@@ -395,3 +395,11 @@ K6. Public assembler for fighter parts (GEO parts placed on the skeleton)
     u32 frames, 900 x u32 chunk sizes, 0xE18 + sum = file size, ceil(frames / 15) non-zero chunks (PROVEN). So the
     "offset table" above is the chunk-size table. 16 B_ bios, 225 frames each (15 s at 15 fps); 15 E_ endings,
     223-1144 frames. The A1 decoder (tools\ecm_tool.py) LIKELY works on them unchanged (not run).
+
+[TODO 2026-10-23] Map the fighter state machine and the CPU AI in MK4.EXE (next big phase, after the fighters and the ECM movies).
+    1. Label the per-fighter state block (health, position, current clip, state/move id) by watching it change live.
+    2. Watch the state/move fields in a debugger to find the MK4.EXE code that writes them (the state machine: idle,
+       walk, jump, hit, dazed, ...).
+    3. Run CPU vs CPU, log which routine picks each move, then decompile it (Ghidra) to see what it checks
+       (distance, opponent state, difficulty).
+    Status: UNKNOWN. Label findings PROVEN / LIKELY / GUESS here and in MK4_RE_NOTES_v3.txt.
