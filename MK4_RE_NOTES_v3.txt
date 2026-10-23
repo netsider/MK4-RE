@@ -450,3 +450,46 @@ MK4_TODO_UNKNOWNS.txt. Raw units only.
    ponytail; Fujin's zero-offset), Sub-Zero 19 nodes (zero-offset extras 10, 14, 18). Hair is part of the head mesh (LIKELY).
 6) CD movies (TODO A1 / last TODO entry): all 35 .ECM files in the game CD's DATA folder (bios, endings, menu movies) share
    the decoded A1 header layout (PROVEN by header check); not decoded yet.
+
+==== REIKO (fighter id 7): LIVE PASS, SPECIALS, WEAPON, CLIP LIST (2026-10-23, ~1:50 AM - 3:20 AM ET) ====
+Full clip list with status per clip: REIKO_CLIPS.txt (this repo; 125 clips: 77 PROVEN, 15 LIKELY, 16 GUESS, 17 NOT HIS, 0 UNKNOWN).
+Method as for Sonya / Fujin: P1 Reiko with scripted inputs, live memory log of both clip slots (practice vs an inactive Reiko, and VS vs CPU),
+plus the static decoder (tools\script_decoder_v3.py, fighter 7) and entry f7 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
+Why Reiko: next fighter after Shinnok (id 6) in the game's fighter-id order.
+Raw units only (65536 = 1 game unit = 256 mesh units). Reiko idle 284, standing height -77660, practice start gap 170392.
+
+1) PROVEN live (P1 Reiko):
+   49 round intro (switch 0x4E8EE0 f7; 5 of 5 VS round starts + every practice start) | 113 victory pose "REIKO WINS" (switch 0x4E9A28 f7; 4 of 4 won rounds)
+   80 throw, close LP / F+LP (throw switch 0x4E1784 f7 -> 80 / victim 154) -> victim 154-172-328, dx +232804 (LP) / +236736 (F+LP), rise 72648 (thrown forward)
+   40 close LK special (table 0x4E0FA0 idx 7 -> 0x42BBE0 -> script 0x4E1120: clip 40, opp 148, reaction 132, damage 13762 = 21.0%) -> victim 148, dx +137257
+   263 close HP (table 0x4E9BF8, id mod 3 = 1) -> victim 311 | 314 close HK knee -> victim 134, dx +27510
+   294 LP | 296 HP | 66 HK | 67 LK | 293 uppercut -> 128-328, dx +94962..+96334, rise 157375
+   62 sweep (odd-id switch) -> 192-194, dx +65160 (gap 80000) / +94368 (gap 60000)
+   64 roundhouse -> 142-141-143-328, dx +150696, rise 59294 (gap 55000; no hit at 80000)
+   260 crouch LP -> 134, dx +50763 (gap 70000) | 54 crouch HK -> 311, dx +68187 | 315 crouch LK -> 134, dx +50763 | 257/256 crouch block
+   97 jump HP -> 311 | 96 jump LP -> 186-188, dx +172996 | 61 jump-up kick (LK and HK) | 56 jump-forward HK -> 131-185, dx +203148, rise 89182
+   59 angled jump LK (switch 0x4E93C4 f7 -> 59) -> 186-188, dx +172996
+   Shared locomotion: 267 walk F, 272 walk B, 259/258 crouch, 304 jump, 301 flip, 305 turn, 317-307 run (runs into the opponent and pushes it, +117299).
+2) Specials (PROVEN live):
+   437 D,F+LP throwing stars (proj[18] 0x4F0020) -> victim 182, dx +98248 (gap 200000) / +42713 (gap 350000)
+   110 B,D,F+HK spinning handstand kick (special[1f]) -> victim 128-328, dx +96334 / +136283 (close), rise 157375 (launch)
+   86  D,U teleport (special[0e] 0x4EB2A0): rises 13107/tick to height -274265, reappears at opponent X + 65537 and lands behind it;
+       opponent plays 305 (turn); no hit seen at gaps 60000-350000
+   306 B,F+LK ground dash (special[20] 0x478F30): P1 X -119105 -> +210933 (+330038), dashes past the opponent to its other side (opponent 305; video), no hit (6 runs);
+       at gap 60000 the same input gave LK 67
+   Static only, not seen: 29 (second clip in the star handler), 308 (first clip in the B,D,F+HK handler), 74 / victim 150 (D,U handler). GUESS.
+3) Weapon (PROVEN live; roles from the input that played them, no visual ID by netsider yet):
+   244 draw D,B+HP -> 285 armed stance | 275 / 276 armed walk F / B | 246 armed block
+   232 armed LP (close: victim 205, dx +248911) | 231 armed HP -> victim 319-328, dx +81437, rise 65040
+   217-219 armed crouch (D while armed; also before armed D+HP 293 and armed D+LK 315)
+   208 weapon throw: the draw input again while armed -> victim 131, dx +196590, rise 66945; then unarmed idle 284, and the weapon
+       could not be drawn again in that session (input LIKELY; same pattern as Shinnok's 208).
+   Armed LK / HK / B+LK / B+HK / run keep their normal clips (67, 66, 62, 64, 317-307).
+4) As victim (VS vs CPU): 13 (via 199 after opponent clip 14), 128, 131, 132-328, 153-173-328, 157-586, 158-171-328, 186-188, 189-191,
+   192-194, 311, 328. PROVEN played.
+5) Capture note: in some practice sessions the fighters were missing from the video (stage drawn closer), for the whole session or from
+   a mid-session move on; the memory logs were not affected; VS video was always fine. Cause GUESS (capture-side rendering). Every
+   compare image was checked by eye; moves were re-captured one per session where needed.
+6) Open: 29, 308, 74/150, 295, 297, 261/532/533, 209, 547/548/596; fatalities not attempted (static inputs: fatality A F,D,F+BL,
+   fatality B B,B,D,D+HK, stage arena 8 D,D,B+LP, stage arena 0 F,F,D+LK -> 293); the weapon's identity (GUESS); a clean
+   single-input test for 208. See REIKO_CLIPS.txt "STILL OPEN".
