@@ -178,7 +178,8 @@ D8. Shinnok impersonations and finisher slots
     input -> target table in guide section 8B. Finishers: misc 40 / 43 = fatality slots (clip slot id+1 / id+0x10),
     misc 41 = arena-8 stage fatality, misc 42 = arena-0 stage fatality (uppercut 293) - LIKELY names.
     Open: the clips that end up in the fatality slots at run time.
-    Status: PROVEN (code) / LIKELY (names)
+    Done (2026-10-23): Sonya's Leg Twist plays 558-559-560 (attacker) and 561/562 (victim) in these slots (PROVEN live).
+    Status: PROVEN (code) / LIKELY (names); slot contents PROVEN for one fatality
     Get it: log the slot contents live during a fatality.
 
 ==========================================================================================
@@ -190,11 +191,15 @@ E1. Per-fighter verification
     Get it: repeat the Sonya live procedure per fighter (logger + scripted inputs).
 E2. Sub-Zero: 19 clips he plays but nobody has identified yet
     26, 42, 47, 58, 62, 79, 103, 115, 116, 117, 118, 151, 153, 162, 174, 185, 186, 188, 262
-    Status: UNKNOWN (151/153/162 cannot be forced - check in viewer)
+    Done (2026-10-23, notes "SONYA OPEN ITEMS + SUB-ZERO 19-CLIP PASS"): PROVEN his 47 153 185 186 188; PROVEN not his 62 262;
+    LIKELY other fighters 26 42 103 162; LIKELY 174 (throw landing).
+    Open: 58, 79, 151, 115-118 (GUESS), and his second throw 80/154.
+    Status: partial-LIKELY
     Get it: label from the in-game recordings; fatality runs.
 E3. Fighter ids 16 and 17
     Missing: confirmation of names.
     Status: partial-LIKELY (16 = Kitana, 17 = Noob Saibot from the name table 0x4F11D8; op 3C maps them to Sonya / Reiko scripts)
+    Also (PROVEN code): dispatchers 0x48E4E0 / 0x46BEB4 / 0x46B49A map id 0x10 -> 2 (Sonya) and 0x11 -> 4 (Sub-Zero).
     Get it: unlock/select them in game and read obj+0x34; check which GEO loads.
 E4. Hidden / boss fighters (Goro, Noob, Meat, Shinnok boss form) clip sets
     Status: UNKNOWN
@@ -204,23 +209,27 @@ E4. Hidden / boss fighters (Goro, Noob, Meat, Shinnok boss form) clip sets
 F. VICTIM REACTIONS
 ==========================================================================================
 F1. Square Wave victim 305
-    Status: UNKNOWN (looks like being carried/riding: GUESS)
+    Done (2026-10-23): the Square Wave hit reaction is 186-188 (PROVEN live, vs a jumping opponent); 305 is not a Square Wave
+    hit reaction - LIKELY a turn-around when the attacker crosses over.
+    Status: PROVEN (186-188) / LIKELY (305 meaning)
     Get it: trace Square Wave handler 0x47E6A0; log the victim live during Square Wave.
 F2. Ring (projectile) victim 130
-    Status: partial-LIKELY (130 seen after projectile hits; comes from the projectile object, not resolved statically)
+    Status: PROVEN live (Ring -> 130, on the ground and in the air); static path from the projectile object still open
     Get it: trace the projectile object's hit code (projectile table 0x4F0810).
 F3. Cartwheel reaction 0x79
-    Status: UNKNOWN (victim clip not resolved)
+    Done (2026-10-23): live Cartwheel hit -> victim 131-185 (ground and air).
+    Status: PROVEN live (table decode of 0x79 not done)
     Get it: decode reaction 0x79 in table 0x4ED4D0; log a Cartwheel hit live.
 F4. Sonya clip 43 (round end / vs 163)
-    Status: GUESS
+    Status: LIKELY (close F+LK special from table 0x4E0FA0: Sonya entry -> clip 43, victim 163)
     Get it: more VS logs.
 
 ==========================================================================================
 G. FATALITIES
 ==========================================================================================
 G1. Sonya's Leg Twist
-    Status: UNKNOWN (live attempt failed)
+    Done (2026-10-23): FINISH HIM, gap 160,000 units: hold BL, U,D,D,U, release BL, HK -> 558-559-560 / victim 561-562.
+    Status: PROVEN (live)
     Get it: confirm the input and distance (misc 0x40/0x43 rows); retry with scripted inputs.
 G2. Stage fatalities (Goro's Lair F,D,F+HP close; Prison D,D,B,B+HK close)
     Status: UNKNOWN (not yet run; misc41/misc42 possible stage-fatality slots: GUESS)
@@ -237,10 +246,13 @@ G4. Fatality effect GEOs (ra/sb/sc/fj_fat_g, no 3D blocks)
 H. SONYA LEFTOVERS
 ==========================================================================================
 H1. Clips 25 (spit?) and 26 (arms open?)
-    Status: GUESS (never produced live; 26 seen once at a match start)
+    Done (2026-10-23): 25 = Reptile's spit projectile; 26 = D,F+P projectile throw of Tanya / Kitana / Noob (decoder).
+    Status: LIKELY (not produced live; not Sonya's own moves)
     Get it: find who names them (decoder); try taunt/intro variants.
 H2. Juggle follow-ups and air throw
-    Status: UNKNOWN (not run)
+    Done (2026-10-23): air throw = both airborne + BL -> 77/310, victim 161-198-197 (PROVEN). No juggle found after Ring,
+    Bicycle, air throw or uppercut (LIKELY none).
+    Status: PROVEN (air throw) / LIKELY (no juggle)
     Get it: practice-mode runs with the logger.
 
 ==========================================================================================
@@ -308,8 +320,11 @@ K6. Public assembler for fighter parts (GEO parts placed on the skeleton)
     (codefix.py / fightkit.py) that made the viewer and sim GLBs. It puts part i on bone i: world = parent +
     parentRot * joint offset; root = frame words 0..2 / 256; GEO vertices added in mesh units.
     Missing: only a public, self-contained version in tools\. The private scripts are not generic: they need the
-    MAME RAM skeleton dumps, capture traces and per-fighter JSON files. Also, they scale the arcade joint offsets
-    by 270, while MK4.EXE code gives 256 (guide section 7). Their bones are about 5.5% too long.
+    MAME RAM skeleton dumps, capture traces and per-fighter JSON files.
+    Joint-offset scale: the pipeline now uses 256, as MK4.EXE code gives (guide section 7, PROVEN). This is done
+    through x256 copies of the scripts (fightkit_256.py, codefix_256.py, bake_playback_256.py; setting BONE_SCALE,
+    default 256). The old x270 scripts and their outputs are kept unchanged (their bones are about 5.5% too long).
+    The fighter GLBs were rebuilt into a new fightkit_x256 folder, and Sonya sim v6 uses them.
     tools\export_pc_geo.py itself only writes the parts in their bone-local frames (by design).
     Status: assembly method PROVEN (code); public tool not written. Same work as K1.
     Get it: read the joint offsets from the MK4.EXE skeleton tables (section 7) at x256, place part i on bone i

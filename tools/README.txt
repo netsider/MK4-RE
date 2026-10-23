@@ -20,11 +20,15 @@ export_pc_geo.py      .GEO mesh exporter: GEO parts + texture -> GLB, plus textu
                       mesh units, and 1 game unit (65536 raw = 256 mesh units) = 2.56 export units (PROVEN).
                       FIGHTER PARTS EXPORT UNASSEMBLED, in their bone-local frames: each part's origin is its
                       bone's joint (PROVEN, renderer code, guide section 7). In the default mode the parts overlap
-                      around the origin (a heap about 2.6 export units tall, not the fighter's height; an
-                      assembled fighter is about 5.2-5.5). With ALL each part is its own node, centred on a grid
+                      around the origin (a heap about 2.6 export units tall, not the fighter's height). An
+                      assembled fighter at x256 in the fighting stance (clip 439, lowest to highest vertex) is
+                      4.3-4.7 export units = 1.69-1.85 game units tall for Sonya, and 4.7-5.0 export units =
+                      1.82-1.96 game units for Sub-Zero (measured from the x256 GLBs: PROVEN; that this matches
+                      the in-game height: LIKELY). With ALL each part is its own node, centred on a grid
                       cell for viewing. Assembled, animated fighters come from a separate code-derived export
                       pipeline (codefix.py / fightkit.py). It is not in tools\ because it needs MAME RAM skeleton
-                      dumps (TODO K6). To assemble: joint offsets x 256 / 65536 = mesh units.  Deps: Pillow.
+                      dumps (TODO K6). To assemble: joint offsets x 256 / 65536 = mesh units. That pipeline
+                      used x270 at first; it now uses 256 through its x256 script copies (TODO K6).  Deps: Pillow.
                         python export_pc_geo.py FILESYS.DAT OUTDIR SB_GEO.GEO      (or ALL = every fighter, per-part GLB)
                         python export_pc_geo.py FILESYS.DAT OUTDIR MIDWAY_G.GEO MKLOGO_G.GEO ATTRACT_.GEO
 extract_textures.py   Every RLE-555 texture page of every GEO -> PNG, one contact sheet per GEO, and MENU.TGA
