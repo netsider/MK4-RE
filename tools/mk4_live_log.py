@@ -9,8 +9,9 @@ Usage:
   python mk4_live_log.py OUT.txt SECONDS [--pid PID | --process NAME] [--interval MS]
   default --process MK4.EXE (use the exact name of your game executable); default --interval 2
 Output: one line per change: t  P1clip P1frame P1a P1b P1c  P2clip P2frame P2a P2b P2c
-  clip = ((record_field << 2) - 0x4FDD6C) / 12; a/b/c = record +0x2C/+0x30/+0x34 (P1: 0x522540 vertical,
-  0x522544 X, 0x522548 depth/height).  Addresses are for the 1,182,720-byte MK4.EXE.
+  clip = ((record_field << 2) - 0x4FDD6C) / 12; a/b/c = record +0x2C/+0x30/+0x34 = fighter object +0x50/+0x54/+0x58
+  (P1: 0x522540 camera depth, 0x522544 X, 0x522548 height, negative = up; see mk4_fighter_state.py for the full
+  object).  Addresses are for the 1,182,720-byte MK4.EXE.
 """
 import argparse, struct, subprocess, sys, time
 

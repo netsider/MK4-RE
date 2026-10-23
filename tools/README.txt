@@ -57,12 +57,37 @@ script_decoder_v3.py  v2 plus: opcode reference (all 128 script opcodes, operand
                         python script_decoder_v3.py MK4.EXE ops | conds | sounds | buttons
                         python script_decoder_v3.py MK4.EXE movesounds [fid] | dis 0xADDR [fid]
                         (all v2 commands still work; optional --sounds LIST adds your own per-file notes)
+anim_decode.py        Pure-Python animation frame decoder (no emulator): a re-implementation of the decompressor at
+                      VA 0x4013A0 (guide sections 5-6). Checked against anim_emu.py on every compressed clip:
+                      32,972 frames in 571 clips, 0 mismatches (PROVEN). info also flags the 27 clips with bit 0
+                      of descriptor +0x8 set.  Deps: stdlib.
+                        python anim_decode.py DIR info | dump 293 out.csv | verify   (DIR as for anim_emu.py)
+geo_info.py           .GEO inspector, text/CSV only (guide section 3): block table with renderer type per part, the
+                      decoded 16-byte 2D sprite records (page, on-screen size/offset, texel rectangle, blend mode;
+                      --alpha adds the share of transparent 0x0000 texels in each rectangle) and texture pages.
+                      Documents where sprites sit; it does not cut or write any images.  Deps: stdlib.
+                        python geo_info.py FILESYS.DAT summary ALL --exe MK4.EXE
+                        python geo_info.py FILESYS.DAT sprites SHARED_G.GEO [--csv OUT.csv] [--alpha]
+                        python geo_info.py FILESYS.DAT blocks MIDWAY_G.GEO    (or give one extracted .geo file)
+clip_refs.py          Clip cross-reference: every code immediate and start-up fix-up slot that points at a clip's
+                      descriptor record (VA 0x4FDD6C + 12 * clip); 'all --unused' lists clips nothing refers to.
+                      Feed a fix address to script_decoder_v3.py dis.  Deps: stdlib; uses script_decoder_v3.py.
+                        python clip_refs.py MK4.EXE 293 558         python clip_refs.py MK4.EXE all --unused
+fsys_strace_map.py    Which FILESYS.DAT entries did the game read? Maps strace logs (Linux/Wine, recorded with
+                      strace -f -y) back to directory entries and names (guide sections 1-2).  Deps: stdlib.
+                        python fsys_strace_map.py FILESYS.DAT MK4.EXE fs.log [more.log ...] [--csv OUT.csv]
 
 Live-game tools (your own running copy)
 ---------------------------------------
 mk4_live_log.py       READ-ONLY logger: P1/P2 clip id, frame and position words, one line per change (guide section 9).
                       Windows (ReadProcessMemory) or Linux/Wine (/proc/<pid>/mem).  Deps: stdlib.
                         python mk4_live_log.py log.txt 30 --process MK4.EXE
+mk4_fighter_state.py  READ-ONLY fighter-object reader (guide section 9): P1/P2 clip, frame, X / height / Z,
+                      vx / vy / vz, gravity, standing height, camera depth and VS health, in raw game units
+                      (65536 = 1.0). One snapshot, or --log OUT SECONDS for one line per change. Windows or
+                      Linux/Wine.  Deps: stdlib; uses mk4_live_log.py.
+                        python mk4_fighter_state.py --process MK4.EXE
+                        python mk4_fighter_state.py --log state.txt 30 --process MK4.EXE
 mk4_force_clip.py     WRITES game memory: forces a player to play a clip, optionally frozen on one frame
                       (guide section 9). For capture/inspection.  Windows or Linux/Wine.  Deps: stdlib.
                         python mk4_force_clip.py 293 5 --player 1 [--frame 10] --process MK4.EXE

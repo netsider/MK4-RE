@@ -294,3 +294,63 @@ Method: live practice / VS runs of MK4 PC with a memory logger (P1 clip at 0x522
   GUESS (not produced yet): 58 (jump-kick variant; his jump LK plays 59), 79 / 151 (throw script 0x4E1660, no code reference found), 115-118 (native block 0x443C60, LIKELY boss-related).
   Other Sub-Zero clips PROVEN live: 292 stance, 70 LK -> 134, 314 close HK -> 134, 313 B+HK -> 142-141-143-328 (dx +150,696), 293 uppercut -> 128-328 (dx +96,334, rise 157,375), 63 sweep, 263 close HP -> 311, 296 HP, 294 LP, 260/52/315 crouch LP/HK/LK, 97/96 jump HP/LP, 327 jump-up kick, 56 jump-forward HK -> 131-185, 59 jump LK -> 186-188, 16 Ice Blast, 95 slide, 244 -> 286 weapon draw, 317-307 run.
 - Known issue: in practice mode, after about eight close-range moves both fighters stop accepting input (stuck in stance); a restart fixes it.
+
+==== SUB-ZERO PART 2: LIVE PASS ON THE LEFTOVER CLIPS (2026-10-23, ~12:05 AM - 12:25 AM ET) ====
+Units: raw 16.16 (65536 = 1 game unit = 256 mesh units, PROVEN). No metres here.
+Clip record address = 0x4FDD6C + 12*clip. The live clip slot (fighter object +0x24) holds that record address >> 2.
+
+KEY STATIC FINDING: several shared scripts pick the clip with a per-fighter FIGHTER_SWITCH (opcode 0x3c, 16 entries f0..f15).
+Sub-Zero takes entry f4, Sonya takes entry f2. Both are PROVEN by the live clips below.
+So a clip in Sub-Zero's clip table is only "his" if the switch sends f4 to it.
+
+1) THROW (generic throw handler misc[02] = 0x42c560; switch at script 0x4e1784)
+   f0/f6/f14 -> 75 (victim 152)          f1/f7/f12 -> native 0x42cc00 -> 80 (victim 154), 18% damage
+   f2/f8     -> 78 (victim 156) [Sonya]  f3/f9     -> 79 (victim 151), 15%
+   f4/f10    -> 76 (victim 153) [Sub-Zero]   f5/f11 -> native 0x42cb80 -> 81 (victim 158), 18%
+   f13       -> multi-hit chain 83/145, then 605/607   f15 -> 609/610 and 604/606
+   The bit0-of-0x54000c path (positions swapped) jumps straight to 76/153 at 0x4e16a0.
+   - Sub-Zero throw = 76, victim 153-173-328. PROVEN. Live in practice and VS, every throw:
+     close LP, F+LP, B+LP (pressed together, held, or LP then B) all give 76.
+     P2 dx about -265000 to -310000, P2 rise 75382.
+   - Clip 80 / 154: NOT a Sub-Zero attack. It is the f1/f7/f12 fighters' throw.
+     DISPROVEN as Sub-Zero's second throw (PROVEN by the switch plus the live data above).
+     Sub-Zero DOES play 154 -> 172 -> 328 as the VICTIM of an opponent's 80 throw.
+     PROVEN live in VS (arcade CPU threw him 3 times).
+   - Clip 81 / 158: f5/f11 fighters' throw. Sub-Zero plays 158 -> 171 -> 328 as the victim. PROVEN live in VS (2 times).
+   - Clip 79 / 151: f3/f9 fighters' throw. NOT Sub-Zero's (LIKELY; static only, never produced by Sub-Zero live).
+     If he is thrown by an f3/f9 fighter, 151 would be his victim clip (GUESS, not seen live).
+     The older "Sub-Zero LP/object pickup -> 79/151" labels came from mixed P1/P2 logs and are wrong.
+   - Sub-Zero has no air throw. Air LP vs a jumping opponent gives P1 304 -> 96, P2 304 -> 186 -> 188.
+     PROVEN (3 of 3 timings at 250/350/450 ms; this is a hit, not a throw).
+
+2) CLIP 58 (angled jump kick switch; misc[11] native 0x46dfa0 -> script 0x4e93c0)
+   f0/f3/f6/f9/f12 -> 58      f1/f4/f7/f10/f13 -> 59      f2/f5/f8/f11/f14/f15 -> 60
+   - Sub-Zero's jump kick = 59. PROVEN live: 9 of 9 airborne jump LK tries (forward and back, delays 60-450 ms, and from far away) played 304/301 -> 59 -> 304.
+   - Clip 58 is NOT played by Sub-Zero (LIKELY: switch plus 9 live tries without it).
+     It is played by an opponent (P2 showed 58 in VS). The old label "58 = Sub-Zero crouch LK [PROVEN]" is WRONG.
+   - Clip 58 also appears in a special script at 0x4eb240 (0x47bxxx code; velocity 7864/3932, gravity 65). That is another fighter's move (GUESS which one).
+
+3) CLIPS 115-118 = Sub-Zero ROUND-WIN VICTORY POSE. PROVEN live.
+   Run: VS/arcade as Sub-Zero, opponent HP forced low, close throw for the KO.
+   After every won round (8 of 8 rounds won) P1 plays 76 -> 115 -> 116 -> 117 -> 118, then 47 at the next round start.
+   Static: victory script 0x4e9a28 switch f0/f4 -> 0x4e9abc (ANIM_TO_END 115, SET_CLIP 116, 117, START 118).
+   Sonya f2 -> 114 (her proven win pose).
+   Compare images: SubZero_clip115..118_PROVEN_compare.png (shows the ice raised-arm pose).
+
+4) CLIP 174: NOT produced live (as attacker or victim) in about 10 minutes of practice and VS. Still GUESS.
+   Static: it sits in the shared knockdown/fall reaction chain (script 0x4ecb28, natives 0x485ac0/0x485b20: 171 -> 172 -> 174 path).
+   So it is a shared VICTIM clip, LIKELY reached from a specific knock-down reaction, not a Sub-Zero attack.
+
+5) Other Sub-Zero victim clips seen live in VS this run (PROVEN as clips he plays):
+   154 -> 172 -> 328 (vs 80 throw); 158 -> 171 -> 328 (vs 81 throw); 186 -> 188 (hit in the air); 192 -> 194; 128.
+   Compare images: SubZero_clip171/172_PROVEN_compare.png.
+
+6) Sonya clips 25/26 live: not attempted (not cheap; both need another fighter's special as P2). Still LIKELY from the earlier static work.
+
+Practice lockup workaround: reboot practice every 7 moves. 27 moves in 4 chunks, no lockups.
+   ADDENDUM (12:30 AM ET) to items 1 and 4:
+   - The 79/151 throw uses reaction 0x68 = victim chain 151 -> 174 -> 176 -> 142 -> 141 -> 143 (from the earlier static pass).
+     Fighter f9 = Tanya (earlier per-fighter tables). Old mixed captures of a Tanya session show 79, 151 and 174 together.
+     So 79 = the f3/f9 (Tanya) throw. LIKELY.
+     174 = the victim landing after 151. Sub-Zero would play 151/174 only when Tanya (or f3) throws him. LIKELY, not seen live.
+   - Script 0x4ecb28 (171 -> 172 -> 174 natives) is a second shared fall chain that also references 174. Static only, GUESS.

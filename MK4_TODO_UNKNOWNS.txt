@@ -194,7 +194,11 @@ E2. Sub-Zero: 19 clips he plays but nobody has identified yet
     Done (2026-10-23, notes "SONYA OPEN ITEMS + SUB-ZERO 19-CLIP PASS"): PROVEN his 47 153 185 186 188; PROVEN not his 62 262;
     LIKELY other fighters 26 42 103 162; LIKELY 174 (throw landing).
     Open: 58, 79, 151, 115-118 (GUESS), and his second throw 80/154.
-    Status: partial-LIKELY
+    Done (2026-10-23, notes "SUB-ZERO PART 2"): PROVEN 115-118 = his round-win victory pose (live VS, 8 of 8 rounds won).
+    PROVEN his throw is only 76/153 (per-fighter switch at script 0x4E1784, f4); 80/154 = f1/f7/f12 throw (he plays 154-172-328 as victim, live).
+    LIKELY not his: 58 (angled jump kick for f0/3/6/9/12; his = 59, live), 79/151 (f3/f9 Tanya throw). 174 LIKELY victim landing after 151 (not seen live).
+    Still open: 174 live.
+    Status: mostly done (PROVEN/LIKELY); 174 GUESS-live
     Get it: label from the in-game recordings; fatality runs.
 E3. Fighter ids 16 and 17
     Missing: confirmation of names.
@@ -329,3 +333,6 @@ K6. Public assembler for fighter parts (GEO parts placed on the skeleton)
     Status: assembly method PROVEN (code); public tool not written. Same work as K1.
     Get it: read the joint offsets from the MK4.EXE skeleton tables (section 7) at x256, place part i on bone i
     (rest pose, or a frame from anim_emu.py), write one node per bone with the parent links.
+
+
+[TODO 2026-10-23] Decode the PC CD's .ECM movie files (DATA\*.ECM, 35 files): B_<fighter> = bios (~3 MB), E_<fighter> = endings (3-18 MB), M_EURO / M_INTRO / M_KOMERC / M_MIDWAY = main movies (LIKELY, from names). Header 'ECM' + 0x02, then uint32 count (B_SCORPN: 225, PROVEN), then a uint32 offset table (LIKELY one per frame). Codec, resolution, fps and audio unknown. Output plan: MP4s, personal use only, no game data in this repo.

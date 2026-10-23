@@ -1,0 +1,197 @@
+SONYA (fighter id 2) - CLIP LIST AND STATUS
+Mortal Kombat 4 PC (retail MK4.EXE). netsider's MK4-RE project. Built 2026-10-23 ET from the live memory logs,
+the MK4.EXE static reading and netsider's visual IDs. Full detail: MK4_RE_NOTES_v3.txt (this repo).
+
+WHAT IS LISTED
+Every clip number Sonya's fighter object plays (as attacker OR as victim), every clip her own move scripts and
+per-fighter tables point at, and clips that turned up in her clip sets but belong to someone else.
+Clip number = index into the game's 612-entry clip table (record address 0x4FDD6C + 12*clip).
+Some shared move scripts pick the clip per fighter with a 16-entry FIGHTER_SWITCH (script opcode 0x3C, entries
+f0..f15 = fighter id). Sonya takes entry f2 (PROVEN). Only the f2 entry is hers; the other 15 entries are other
+fighters' clips (see "OTHER FIGHTERS' ENTRIES" at the end). Victim / reaction clips are shared by all fighters.
+
+STATUS LABELS
+ PROVEN       = seen live in the running game (memory log of the clip slot while pressing the input), or read
+                directly in the game code and matched live.
+ NETSIDER-ID  = netsider identified it by eye (his description is the label) but no live input/code link yet.
+ LIKELY       = strong static (code) or indirect evidence, not seen live on Sonya.
+ GUESS        = weak evidence (static listing only, or an old mixed log).
+ NOT HERS     = belongs to another fighter (or is another fighter's version of a shared move). The evidence
+                column says how sure (PROVEN or LIKELY).
+ UNKNOWN      = in her set, purpose not known.
+ "netsider: ..." in a name = netsider's own description of the animation.
+
+UNITS (raw game units only)
+ Positions are 16.16 fixed point: 65536 = 1 game unit = 256 mesh units (PROVEN). No metres are used.
+ dx   = victim X net displacement over the reaction (last - first). + = pushed away from the attacker,
+        - = thrown behind the attacker.
+ rise = victim standing height minus its lowest height (how high it went).
+ Speeds are units/tick (1 tick ~ 1/60 s, PROVEN). Sonya standing height -73629 (negative = up).
+ Sequences like 558-559-560 are the clips in the order they play.
+
+clip | status      | name / description                                    | evidence / notes
+-----+-------------+-------------------------------------------------------+------------------
+   8 | PROVEN      | continue screen: loser falls down the well, part 1 | every live VS continue screen; netsider ID. Shared by all fighters
+   9 | PROVEN      | continue screen: well fall, part 2 (loops) | follows 8 live; netsider ID. Shared
+  13 | PROVEN      | dazed/stagger at FINISH HIM (loser) | live per-player log: victim plays 13 while dizzy; Death Kiss victim alternates 13<->206. Shared
+  15 | PROVEN      | Energy Ring throw (D,F+LP); netsider: two-arm forward lunge | live input; static proj[05]. Victim 130
+  16 | NOT HERS    | projectile clip in the shared projectile handler (Sub-Zero Ice Blast) | LIKELY not hers: static proj[05] lists 15 16; Sub-Zero plays 16 live (PROVEN), Sonya never did
+  25 | NOT HERS    | netsider: spitting something from her mouth = Reptile acid spit | LIKELY not hers: projectile entry 0x0C is in Reptile's command list; never produced live by Sonya
+  26 | NOT HERS    | netsider: stance to wide arms-open stance = D,F+P projectile-throw pose | LIKELY not hers natively: proj[0a] of fighters 9 (Tanya), 16 (Kitana), 17 (Noob); Kitana id 16 is mapped to Sonya id 2 by the dispatchers (PROVEN code), so the clip sits in her set. Never produced live
+  27 | NOT HERS    | netsider: straight punch | LIKELY not hers: no Sonya input produces it; slot belongs to Jarek
+  28 | NOT HERS    | netsider: most likely an uppercut | LIKELY not hers: no Sonya input produces it; Cage Green Orb slot. Her real uppercut is 293
+  43 | LIKELY      | close F+LK special (attacker) | static: close F+LK table 0x4E0FA0 Sonya entry -> 43, victim 163; old VS log showed "43 vs 163" at round end. Not produced on demand yet
+  44 | NETSIDER-ID | pre-fight bow (shared by all fighters) | netsider ID; never decoded in this build's intros
+  46 | PROVEN      | round-start intro pose (Sonya/Tanya) | live VS 3/3 rounds; static intro switch 0x4E8EE0 f2 -> 46
+  50 | NOT HERS    | netsider: fist flourish = opponent intro (Reptile) | PROVEN not hers in VS (opponent plays it at round start; intro switch: id 10 -> 50). Sonya plays it only at practice start
+  52 | NOT HERS    | crouch kick variant (Sub-Zero D+HK) | LIKELY not hers: Sub-Zero plays 52 live (PROVEN); appears after her 53/54 in the crouch-kick script, never played by her live
+  53 | PROVEN      | crouch high kick (D+HK) | live input; static crouch-kick switch 0x4E9008 f2 -> 53
+  54 | GUESS       | crouch-kick follow-on clip | static only: in her crouch-kick script after 53; never seen live
+  55 | NOT HERS    | angled jump HK variant (other fighters) | LIKELY not hers: in the shared angled-jump-HK list (57 55 56); her live jump HK is 57
+  56 | NOT HERS    | angled jump HK variant (Sub-Zero) | LIKELY not hers: Sub-Zero plays 56 live (PROVEN); hers is 57
+  57 | PROVEN      | jump forward/back high kick (U+F/B then HK); netsider: squat -> sit back on elbows, knees up | live input; victim 131-185 dx +203148, rise 89182. netsider's description kept, it does not look like a kick to him
+  60 | PROVEN      | jump forward low kick (U+F then LK) | live input; static angled-jump-LK switch 0x4E93C4 f2 -> 60 (58 = ids 0/3/6/9/12, 59 = 1/4/7/10/13). Victim 186-188
+  63 | PROVEN      | leg sweep (B+LK); netsider: fighting pose into leg sweep | live input; sweep switch 0x4E9780: 63 even ids / 62 odd ids. Victim 195-197 dx ~+114600 (LIKELY: back-computed, log lost; Sub-Zero same clip live +114028)
+  65 | PROVEN      | high kick (HK) | live input; HK switch 0x4E8C88 f2 -> 65 (66/71 = other fighters). Victim 311 dx +48349 (close +37972)
+  72 | PROVEN      | Bicycle Kick start (B,B,D+HK); netsider: stance into on-ground kick | live 72-73-72; static special[06] script. Victim 136-183-185 dx +207019, rise 141000
+  73 | PROVEN      | Bicycle Kick kicking part; netsider: on her back doing a bicycle-kick motion | live 72-73-72; static 72 -> 73
+  77 | PROVEN      | air throw (attacker), both in the air, BL | live: P1 77 then 310; victim 161-198-197
+  78 | PROVEN      | throw (close LP or F+LP); netsider: bear hug -> backward body slam | live input; throw switch 0x4E1784 f2 -> 78 / victim 156. Victim dx -301598 (F+LP -276768)
+  96 | PROVEN      | jump punch LP (U then LP) | live input; victim 186-188 dx +172996
+  97 | PROVEN      | jump punch HP (U then HP) | live input
+ 101 | PROVEN      | Square Wave middle (F,B+HP); netsider: crouch/ball to horizontal flying-punch pose | live 310-101-310; static special[05] handler. Hit on a jumping opponent -> 186-188 dx +133678
+ 102 | PROVEN      | Leg Grab (D+LP+BL); netsider: handstand leg grab | live input + netsider; static special[07]. Victim 201-328 dx -218734, rise 33209
+ 104 | PROVEN      | Cartwheel / handstand flip (B,D,F+LK); netsider: forward handstand flip | live input; static special[13]. Victim 131-185 dx +289641, rise 89182 (airborne victim +355171)
+ 114 | PROVEN      | round-win pose; netsider: military salute, hands behind back | live VS after every won round; victory switch 0x4E9A28 f2 -> 114. Also at practice start
+ 127 | PROVEN      | hit reaction to opponent clip 17 | live VS 4x (clip PROVEN, LIKELY a projectile hit)
+ 128 | PROVEN      | uppercut launch; netsider: knocked from stance onto her back | live 6/6 after 293: 128-328, dx +96334, rise 157375, launch vy -12583, gravity +524/tick. Shared knockdown
+ 130 | PROVEN      | Ring / projectile hit reaction; netsider: hard, unnatural hit | live after 15: dx +98950 .. +127475 (far Ring -16384). Shared
+ 131 | PROVEN      | knockdown (jump HK, Cartwheel, thrown weapon) | live: 131-185 after 57 / 104; 131 after weapon throw 208
+ 134 | PROVEN      | low/body hit reaction; netsider: stomach (mid) hit | live after LK: dx +29729 (close +19322). Shared
+ 136 | PROVEN      | Bicycle Kick victim (juggled) | live 136-183-185, dx +207019, rise 141000 (airborne victim dx ~+165000)
+ 137 | PROVEN      | loser timber fall at round end; netsider: stiff fall straight onto back | live VS: loser plays 137 after the KO. Shared
+ 141 | LIKELY      | roundhouse victim, part 2 | static B+HK reaction 142-141-143; seen live on Sub-Zero's roundhouse victim, not yet on Sonya's 313
+ 142 | LIKELY      | roundhouse victim, part 1 | as 141 (static 142-141-143)
+ 143 | LIKELY      | roundhouse victim, part 3 | as 141; Sub-Zero 313 victim 142-141-143-328 dx +150696 (PROVEN on his move)
+ 151 | LIKELY      | thrown by an id 3/9 fighter (opponent clip 79) | static throw switch: f3/f9 -> 79, victim 151; not seen on Sonya
+ 152 | LIKELY      | thrown by an id 0/6/14 fighter (opponent clip 75) | static throw switch: f0/f6/f14 -> 75, victim 152; not seen on Sonya
+ 153 | PROVEN      | thrown by opponent clip 76; netsider: slides forward, flipped onto her head | live VS 153-173-328
+ 154 | PROVEN      | thrown by opponent clip 80; netsider: like 153, ends upside-down legs up | live VS 154-172-328 (2x)
+ 156 | PROVEN      | thrown by Sonya clip 78 (victim start); netsider: stance -> slide -> fall backwards | live 156-176-191, dx -301598, rise 38296; same script as 78
+ 157 | UNKNOWN     | (131 frames) seen in an old mixed VS log | no input or code link yet; may not be hers
+ 158 | LIKELY      | thrown by an id 5/11 fighter (opponent clip 81) | static throw switch f5/f11 -> 81 / 158; Sub-Zero plays 158-171-328 live; not seen on Sonya
+ 161 | PROVEN      | air-throw victim, start | live 161-198-197, dx -210570 (-197123 .. -230540), rise 131760 .. 145479
+ 163 | LIKELY      | victim of the close F+LK special 43 | static table 0x4E0FA0 (Sonya 43 / victim 163); old VS log
+ 171 | LIKELY      | landing after being thrown by clip 81 | Sub-Zero 158-171-328 live; LIKELY same for Sonya
+ 172 | PROVEN      | throw landing; netsider: on her back, bounces up, lands flat | live VS 154-172-328
+ 173 | PROVEN      | throw landing (after 153) | live VS 153-173-328
+ 176 | PROVEN      | thrown, landing; netsider: upside down head on ground -> lying arms out | live 156-176-191
+ 182 | GUESS       | second hit-reaction clip after 311 | static LP/HP reaction r25 -> 311-182; seen in an old mixed VS log only
+ 183 | PROVEN      | knocked down (air hit / weapon HP / Bicycle) | live: air HP dx +188052/+178224, air LK +211002 (183-185); weapon HP 230 dx +283967, rise 92443
+ 185 | PROVEN      | get-up after 131 / 183 | live 131-185, 183-185, 136-183-185
+ 186 | PROVEN      | jump-attack / Square Wave hit | live 186-188: jump LP dx +172996; Square Wave vs jumper +133678. (305 is NOT this hit)
+ 188 | PROVEN      | recover after 186 | live 186-188
+ 189 | PROVEN      | air hit by HK | live 189-191, dx +244417 / +212308
+ 191 | PROVEN      | get-up from lying arms-out; netsider: physically odd recovery | live 156-176-191 and 189-191
+ 192 | PROVEN      | knockdown forward; netsider: falls forward onto her face | live VS 192-194 after opponent clip 62
+ 194 | PROVEN      | get-up from upside-down; netsider: head down, legs over -> stance | live VS 192-194
+ 195 | PROVEN      | sweep fall; netsider: fighting pose -> landing on her back | live 195-197 after 63
+ 196 | GUESS       | run-collision victim, end | static run reaction rb5 -> 549-550-196; never seen live
+ 197 | PROVEN      | sweep get-up; netsider: lying on back -> stance in a physically odd way | live 195-197. Separately keyed clip, not 195 reversed (keyframe check)
+ 198 | PROVEN      | air-throw victim, middle | live 161-198-197
+ 199 | UNKNOWN     | (17 frames) seen in an old mixed VS log around the Leg Twist | no input or code link yet
+ 201 | PROVEN      | Leg Grab victim; netsider: riding pose -> flip -> lands on ground | live 201-328 dx -218734, rise 33209; started by the Leg Grab script
+ 206 | PROVEN      | Death Kiss victim death fall; netsider: dazed -> falls dead | live VS: victim alternates 13 <-> 206. Shared
+ 208 | PROVEN      | weapon throw (F,F+LK while armed) | live; victim 131
+ 209 | GUESS       | RUN-button action clip | static only: generic RUN action misc[03] starts 209
+ 217 | PROVEN      | weapon-held crouch, start; netsider: arms-apart pose into 219 | live with weapon: D -> 217-219-...-259
+ 219 | PROVEN      | weapon-held crouch, held; netsider: ~1 s shoot-or-pull pose | live with weapon (217-219)
+ 227 | NETSIDER-ID | netsider: arms-apart stance into low spinning fist strike | seen live in an old weapon-throw try; exact input not proven (LIKELY a weapon-held attack)
+ 229 | PROVEN      | weapon low swing (LP armed); netsider: left-fist punch from arms-spread stance | live input
+ 230 | PROVEN      | weapon high swing (HP armed) | live; victim 183-185 dx +283967, rise 92443
+ 244 | PROVEN      | weapon draw (F,F+LK) | live -> 285; static misc[29]
+ 246 | PROVEN      | weapon block (BL armed) | live input
+ 254 | GUESS       | low-hit reaction follow-on after 134 | static LK / crouch LP reaction 134-254; never seen live (live LK showed 134 only)
+ 256 | PROVEN      | crouch block held | live D+BL: 259-258-257-256-257-258-259
+ 257 | PROVEN      | crouch block start | live D+BL; static aux[0f]
+ 258 | PROVEN      | crouch held | live D
+ 259 | PROVEN      | crouch going down (reversed = standing up) | live D, 5 ticks
+ 260 | PROVEN      | crouch low punch (D+LP) | live input
+ 261 | GUESS       | close-strike clip | static only: misc[09] close strike lists 66 261 532 533; owner per fighter not resolved
+ 264 | PROVEN      | close high punch; netsider: stance into elbow strike | live HP at gap ~45000 (victim 324); close-HP table 0x4E9BF8: 264 for ids 2,5,8,11,14
+ 267 | PROVEN      | walk forward | live F; 3932 units/tick
+ 272 | PROVEN      | walk back | live B; 2754 units/tick
+ 275 | PROVEN      | weapon-held walk forward; netsider: walking forward fists apart | live F while armed
+ 276 | PROVEN      | weapon-held walk back; netsider: walking back fists apart | live draw test (weapon held)
+ 284 | NOT HERS    | stance (Jarek/Jax/Reiko) | LIKELY not hers: other fighters' idle; came from an old mixed VS log
+ 285 | PROVEN      | weapon-held stance; netsider: idle with fists far apart | live after 244
+ 287 | UNKNOWN     | stance clip (catalogue says Liu Kang idle) | in her group-A movie set (old mixed VS log: finish-him wait / round end); ownership conflict not resolved
+ 293 | PROVEN      | uppercut (D+HP) | live input; victim 128-328 dx +96334, rise 157375
+ 294 | PROVEN      | low punch (LP, not touching) | live input. 5% damage (static)
+ 295 | GUESS       | low-punch follow-on clip | static only: LP handler lists 294 295; never seen live
+ 296 | PROVEN      | high punch (HP mid/far); netsider: shared high punch | live input; victim 324 / 311
+ 297 | GUESS       | high-punch follow-on clip | static only: HP handler lists 297 296; never seen live
+ 301 | PROVEN      | jump forward/back flip; netsider: jump pose tucks into a ball | live U+F / U+B
+ 304 | PROVEN      | jump straight up / landing; netsider: straight-up jump | live U. P1 min height -185748 (rise 112119)
+ 305 | LIKELY      | turn-around / re-face after P1 crosses over; netsider: upright "riding" pose, hands at chest | 3 frames; seen when 310/101 crosses P2. CORRECTED: NOT the Square Wave hit (that is 186-188)
+ 307 | PROVEN      | run loop | live F,F+RUN hold (267-317-307)
+ 308 | PROVEN      | low kick (LK / F+LK); netsider: shared standing low kick | live input; LK switch 0x4E8D78 f2 -> 308 (67/70 = other fighters). Victim 134
+ 310 | PROVEN      | Square Wave start/end + air-throw follow; netsider: jump variant with drifting root | live 310-101-310 and 77-310. netsider's "jump variant" reading is his visual ID
+ 311 | PROVEN      | high hit reaction; netsider: head snaps back | live after HP/HK/LP hits; HK dx +48349, HP 0
+ 313 | PROVEN      | roundhouse (B+HK) | live input; B+HK switch 0x4E97E8 f2 -> 313 (64 = other fighters). 18% damage (static)
+ 314 | NETSIDER-ID | netsider: knee strike from stance (LIKELY close knee) | listed in her crouch-kick handler (static); not produced by a Sonya input yet. Sub-Zero plays 314 as close HK (PROVEN)
+ 315 | PROVEN      | crouch low kick (D+LK) | live input
+ 316 | GUESS       | sweep-fall variant, start | static sweep reaction r13 -> 316-320-192-194; never seen live
+ 317 | PROVEN      | run start | live 267-317-307
+ 320 | GUESS       | sweep-fall variant, middle | static as 316
+ 322 | NETSIDER-ID | netsider: fists far apart, then back to fighting stance | LIKELY weapon-held stance -> normal stance; not isolated live
+ 323 | PROVEN      | standing block held | live BL
+ 324 | PROVEN      | close-HP / face (high) hit reaction | live after 264; netsider: face hit. Shared LIKELY
+ 327 | PROVEN      | jump-up kick (U then HK or LK); netsider: kick that starts mid-air | live input; switch 0x4E91E0 f2 -> 327 (61 = other fighters)
+ 328 | PROVEN      | flip get-up recovery; netsider: shared get-up | live 128-328, 201-328, 153-173-328, 154-172-328
+ 388 | PROVEN      | Death Kiss fatality (blows kiss) | live VS per-player log: P1 388, victim 13 <-> 206. Old viewer listed it under Liu Kang (catalogue conflict)
+ 439 | PROVEN      | idle / fighting stance | all live logs
+ 547 | GUESS       | run-related clip | static Run handler lists 547 548 596 307 317; seen in an old mixed VS log (opponent side)
+ 548 | GUESS       | run-related clip | as 547
+ 549 | GUESS       | run-collision victim, start | static run reaction rb5 -> 549-550-196; old mixed VS log
+ 550 | GUESS       | run-collision victim, middle | static only (549-550-196)
+ 558 | PROVEN      | Leg Twist fatality, part 1 | live: at FINISH HIM, victim dizzy, gap 160000: hold BL, U,D,D,U, release BL, HK -> 558-559-560. Run-time fatality slot (reused by other fatalities LIKELY)
+ 559 | PROVEN      | Leg Twist fatality, part 2 | live 558-559-560
+ 560 | PROVEN      | Leg Twist fatality, part 3 | live 558-559-560, then 114
+ 561 | PROVEN      | Leg Twist victim (alternates with 562) | live; victim pulled to attacker X
+ 562 | PROVEN      | Leg Twist victim (alternates with 561) | live
+ 586 | UNKNOWN     | (131 frames) seen in an old mixed VS log | no input or code link yet
+ 596 | GUESS       | run-related clip | static Run handler only
+
+SUMMARY (131 clips listed)
+ PROVEN       88
+ NETSIDER-ID   4
+ LIKELY       10
+ GUESS        15
+ NOT HERS     10
+ UNKNOWN       4
+
+MOVES WITH NO CLIP OF THEIR OWN
+ Juggles: none found (LIKELY). After Ring, Bicycle, air throw and uppercut the victim lands while Sonya is still in
+   her recovery clip (15 / 72-73-72-310-304 / 310 / 293).
+ Second fatality / stage fatalities: fatality A (D,D,D,U+RUN, misc 40), stage fatalities misc 41 / 42 (42 = uppercut
+   293, arena 0): input words read statically (LIKELY), clips are filled at run time; not produced live.
+
+STILL OPEN
+ - 43 / 163 close F+LK special: produce it live (close LK / F+LK at gap ~45000).
+ - 314 knee and 227 spinning strike: find the Sonya input that plays them (close LK? armed attack?).
+ - 54, 295, 297, 261, 209, 547, 548, 596: static-only clips in her handlers; never seen live.
+ - Static-only victim clips: 141-142-143 (her roundhouse 313 victim), 254, 182, 316-320, 549-550-196, and the
+   other fighters' throw victims 151 / 152 / 158-171 on Sonya.
+ - 157, 199, 586, 287: seen only in an old mixed P1/P2 log; owner and purpose unknown.
+ - Sweep 63 -> 195-197 push (~114600) is back-computed (old log lost); re-measure live.
+ - 25 / 26: confirm by running Reptile's spit and a Tanya / Kitana / Noob projectile against Sonya.
+ - Fatality A and the stage fatalities (see above).
+
+OTHER FIGHTERS' ENTRIES IN THE SAME PER-FIGHTER TABLES (NOT HERS, PROVEN from the switch tables)
+ (Throw pairs are attacker/victim; Sonya plays the victim clip when one of those fighters throws her.)
+ throw 0x4E1784:          75/152 (ids 0,6,14), 80/154 (1,7,12), 79/151 (3,9), 76/153 (4,10), 81/158 (5,11), 83/145 then 605/607 (13), 609/610 + 604/606 (15)
+ round-start intro 0x4E8EE0: 44, 45, 47, 48, 49, 50, 51
+ high kick 0x4E8C88: 66, 71    low kick 0x4E8D78: 67, 70    jump-up kick 0x4E91E0: 61
+ angled jump LK 0x4E93C4: 58, 59    sweep 0x4E9780: 62    roundhouse 0x4E97E8: 64
+ close HP 0x4E9BF8 (id mod 3): 262, 263    victory 0x4E9A28: 111, 113, 115-125, 594
