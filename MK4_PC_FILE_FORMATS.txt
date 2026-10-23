@@ -5,7 +5,8 @@ INTRO
 This file explains how to get from the retail game files to meshes, textures, sounds, animations and live game
 state. It is self-contained and follows the order you would work in:
   1 open FILESYS.DAT -> 2 extract files -> 3 meshes/textures -> 4 sounds -> 5 videos -> 6 animations ->
-  7 skeletons (link animations to meshes) -> 8 MK4.EXE code/tables -> 9 runtime memory -> 10 physics -> 11 gaps -> 12 quick reference.
+  7 skeletons (link animations to meshes) -> 8 MK4.EXE code/tables -> 8A move scripts (which clips a move plays, in what
+  order, with what velocities) -> 9 runtime memory -> 10 physics -> 11 gaps -> 12 quick reference.
 Every claim is tagged:
   PROVEN = checked against the game's code, data or a live run
   LIKELY = strong evidence, not fully traced
@@ -165,11 +166,25 @@ AP0 = index (PROVEN):
   Sum of sizes == AP1 size exactly.
 AP1 = clip data, concatenated in id order (clip k starts at sum of sizes of clips 0..k-1).  PROVEN
 
-Clip descriptor table in MK4.EXE (PROVEN): file offset 0xFC76C = VA 0x4FDD6C, 612 x 12-byte records.
-  +0x0 u32  ?
-  +0x4 u32  ?        (one of these is the clip data pointer at runtime, LIKELY)
-  +0x8 u32  frame count in the low 16 bits, node (word) count in the high 16 bits
-  Record address for clip k = 0x4FDD6C + 12*k. Uncompressed sizes match 4*frames*nodes for all 41 raw clips.
+Clip descriptor table in MK4.EXE (PROVEN): file offset 0xFC76C = VA 0x4FDD6C, 612 x 12-byte records, followed by a
+  13th record whose +0x0 is 0xFFFFFFFF (end marker). Record address for clip k = 0x4FDD6C + 12*k.
+  +0x0 u32  clip data pointer. 0 in the file; at load time the game fills it with the address of the clip's data in the
+            loaded ANIMDAT4.AP1 buffer. This is the pointer the frame decompressor (VA 0x4013A0) reads.        PROVEN
+  +0x4 u32  frame count. Equals the decoded frame count for all 612 of 612 clips (e.g. intro clip 46 = 90 frames,
+            win pose 114 = 100, Sonya's uppercut 293 = 20).                                                     PROVEN
+  +0x8 u32  high 16 bits = node (word) count per frame: 18 for the 575 human clips; 24, 6, 4, 20, 9 and 13 for
+            the rest. Uncompressed sizes match 4 * frames(+0x4) * nodes for all 41 raw clips.                  PROVEN
+            bit 15 (0x8000) = "compressed" flag, copied in at load time from the AP0 list.                      PROVEN
+            bit 0 (0x0001) is set on 27 clips: 43, 144-165, 535, 539, 606, 607. Meaning unknown. Most of them
+            (144-165) are victim hit-reaction clips (GUESS: a "reaction"/"don't loop" flag).
+  How the loader fills the table (PROVEN, code VA 0x401205-0x40130F):
+    1. Walk the table until +0x0 == 0xFFFFFFFF and set every +0x0 to 0.
+    2. Read ANIMDAT4.AP1 into one buffer (pointer kept at VA 0x5222D8).
+    3. Walk the AP0 list at +0x200, {u16 id|0x8000, u16 size} until 0xFFFF. For each entry:
+         rec+0x0 = current buffer position;  rec+0x8 = (rec+0x8 & ~0x8000) | (id & 0x8000);  position += size.
+  Engine note (PROVEN): the PC code is a port of the arcade's TMS34010 code, so objects store "bit addresses"
+    (address >> 2) and read fields as [reg*4 + offset]. Example: a fighter's current clip is stored as
+    (record address >> 2), see section 9.
 Frame layout (PROVEN):
   each frame = node_count s32 words. For human clips node_count = 18 -> 72 bytes/frame:
     word 0..2  root translation (signed, /256)
@@ -192,12 +207,13 @@ Playback rate: 1 frame per game tick, ~60 frames/s.  PROVEN (measured 61.3/s on 
 Worked example (pseudocode):
   ap0 = file("ANIMDAT4.AP0"); ap1 = file("ANIMDAT4.AP1"); exe = file("MK4.EXE")
   offs = cumulative sizes from ap0[0x200:]; rec = exe[0xFC76C + 12*k : +12]
-  frames = u32(rec,8) & 0xFFFF; nodes = u32(rec,8) >> 16
+  frames = u32(rec,4); nodes = u32(rec,8) >> 16
   if not compressed(k): F = s32 array(ap1[offs[k]:], frames*nodes)  else: F = emulate(0x4013A0, k)
   for f in frames: root = F[f][0:3]/256; for i in 0..14: (x,y,z) = unpack(F[f][3+i]) -> bone order[i]
 Game-driven motion (LIKELY, strong): for travelling and airborne moves the clip gives only the pose; the game plays
   frames forward, holds one, may play them in reverse, and moves the body itself (section 10). So a clip exported
-  "as is" can look short or odd. Clips are short pieces that game code chains together.
+  "as is" can look short or odd. Clips are short pieces that game code chains together. The chaining, the
+  attacker/victim pairing and the launch velocities are mostly data: see section 8A.
 
 ==========================================================================================
 7. SKELETONS - LINKING ANIMATIONS TO MESHES
@@ -234,10 +250,123 @@ Sonya has one extra head bone at (0, -17, 26.2) (PROVEN from arcade RAM; GUESS: 
   file 0xAFA8D sound (ESF) decoder                                                          PROVEN
   file ~0xF3918 model-name table                                                            PROVEN
   VA 0x41EAAF  loads the scorpion-creature object; started from a script at VA 0x4D5E80      PROVEN
+  VA 0x401205-0x40130F  animation loader: reads ANIMDAT4.AP1, fills clip table +0x0/+0x8     PROVEN
+  VA 0x406B20  start the current clip's animation on an object                               PROVEN
+  VA 0x4594E0  start a move script on a fighter (449 call sites); interpreter loop VA 0x459500 PROVEN (section 8A)
+  VA 0x4E6970  script opcode handler table, 128 entries                                      PROVEN
+  VA 0x478E40-0x481350  special-move code block; its handler table at VA 0x4EB8F4 (36 entries) PROVEN
+  VA 0x4ED1E0  knockdown / fall-continuation table, (velocity, clip) pairs                    LIKELY
+Hard-coded clips (PROVEN): only 9 clips appear as immediates in code (0, 8, 9, 13, 39, 183, 301, 527, 587). Example at
+  VA 0x42D4B8: mov eax, <record of clip 9>; shr eax, 2; store to object +0x24 and +0x28; call 0x406B20.
+  Everything else that picks a clip is data (section 8A).
+Text in the EXE (PROVEN): about 1,500 ASCII strings, essentially no UTF-16. There are NO move, special-move or fatality
+  names anywhere in MK4.EXE or FILESYS.DAT; the in-game move list is not stored as text. Useful text tables:
+    fighter names in lower case at file 0xF0BA4-0xF0C34 (stored in reverse order: "noob saibot" ... "scorpion"), with a
+      pointer table near VA 0x4F11E0 (LIKELY)
+    "<Name> Wins" strings at file 0xD1DD0-0xD1F08, referenced from a table near VA 0x4D9D2C. Their order is Scorpion,
+      Raiden, Sonya, Liu Kang, Sub Zero, Fujin, Shinnok, Tanya, Reptile, Quan Chi, Kai, Jarek, Jax, Johnny Cage, Reiko,
+      Goro, Noob Saibot, Kitana = 18 names, which LIKELY is the internal fighter id order (0 = Scorpion, 1 = Raiden,
+      2 = Sonya ...)
+    ending / bio file names e_<name>.ecm / b_<name>.ecm at file ~0xF44D0
+    menu text (SHOW MOVES LIST, button names), cheat "KODE" strings, the dev path c:\source\mk4\win\anim\ + "animdat4"
 Display modes (PROVEN from code): renderers Glide (glide2x.dll, F5), fullscreen software (F7), windowed software (F8).
   DirectDraw SetDisplayMode calls: 640x480x16 at VA 0x4AE8F0, 320x240x16 at VA 0x4AFB20; the Glide path clips to
   640x480 at VA 0x4B3F81. Maximum = 640x480, 16-bit colour. (ESC toggles windowed mode; colours break on a 16-bit desktop.)
 Dev paths left in the EXE (PROVEN): c:\source\mk4\win\geogfx\, c:\source\mk4\win\anim\, c:\source\mk4\win\sound\pcmk, menu.tga.
+
+==========================================================================================
+8A. MOVE SCRIPTS - HOW THE GAME CHAINS CLIPS
+==========================================================================================
+Moves are not hard-coded. Each move runs a small bytecode "script" stored in MK4.EXE's data section (most of them in
+VA 0x4D5000-0x4F0FFF). The script sets the fighter's clip, sets the OPPONENT's clip (reactions, throws), sleeps,
+sets velocities and gravity, and jumps to other scripts or back into native code. Reading these scripts gives you
+the clip order, attacker/victim pairs and launch physics without any live capture.                          PROVEN
+
+Starting a script (PROVEN): native code does  push <script VA>; call 0x4594E0. That function stores
+  (script address >> 2) in the fighter object at +0x48. There are 449 such call sites.
+Interpreter (PROVEN): loop at VA 0x459500.
+  word = next u32 of the script; opcode = word >> 24; jump to handler table[opcode] (table at VA 0x4E6970, 128 entries).
+  The low 24 bits of the opcode word are an inline argument (usually only the low byte is used).
+  Operand words, if any, follow the opcode word.
+Clip operands are patched at load time (PROVEN): in the file every clip operand is 0. A fixup list of
+  (destination address, clip record address) pairs in .data (roughly VA 0x4D6E80-0x4DCxxx) is applied at start-up and
+  writes the record addresses into the scripts. So to read a script statically, apply the fixup list first; the record
+  address tells you the clip: clip = (record - 0x4FDD6C) / 12.
+  The fixup list also fills single-clip slots in BSS (VA 0x5409xx-0x540Bxx) that native code reads.
+  In total, 801 fixups name 451 of the 612 clips. 161 clips are never named this way (e.g. Sonya's 310, see below).
+Numbers (PROVEN by the uppercut check below): velocities and gravity are 16.16 fixed point (0x10000 = 1.0 per tick;
+  6553 = 0.1). The raw integers are the same units as the live height/velocity fields in section 9.
+
+Opcodes (number of operand words in brackets; "clip" = a patched clip record address):
+  05        sleep n ticks (n = inline argument)                                                 PROVEN
+  0E [clip] set the OPPONENT's clip, frame 0 (object +0x38 points to the opponent)               PROVEN
+  0F [clip] set own clip, frame = inline argument                                                PROVEN
+  11 [clip] set own clip and start the animation (0x406B20)                                      PROVEN
+  12        set own frame = inline argument                                                      PROVEN
+  32 [code] hand control to native code at the operand address (ends the script)                 PROVEN
+  33 [script] goto                                                                               PROVEN
+  46, 47, 48, 49, 68  animate own clip. If byte 1 of the opcode word is 2, the next word is a new clip. PROVEN (operand rule)
+                      48 = play the clip to its last frame. Exact difference between the others:  LIKELY
+  01, 02, 09, 17, 71 [1]  animate with a clip/word operand; 02 is used with victim reaction clips   LIKELY
+  4B n, 4C n  step self and opponent together each tick until own frame >= n (throw sync)        LIKELY
+  58 [vx vy grav]  set X velocity, Y velocity and gravity                                        PROVEN (uppercut)
+  59 [vx ? vy grav]  4-word velocity set (used by the Bicycle Kick)                               LIKELY
+  5F [vx]   set X velocity                                                                       LIKELY
+  22        install the gravity routine (VA 0x457D00) into object +0x4C                          LIKELY
+  2F, 36, 3D, 42, 44, 45, 6F  conditional: test something, then goto the operand or skip it     LIKELY
+  3F        native end routine (VA 0x46F6A0)                                                     LIKELY
+  03, 04, 4A n  wait / animate variants                                                          GUESS
+  5A, 5C [1], 5D [2], 65 [3]  other velocity/physics setters                                     GUESS
+  1E, 20, 25, 26, 27, 2A, 2B, 2C, 41 n  calls with a byte argument: sound, effect, damage (which is which not known) GUESS
+
+Worked example 1 - Sonya's uppercut, victim side (script near VA 0x4EC754):
+  58  vx = -1966, vy = -13107, gravity = 524       launch the victim
+  02  0x35, clip 128                               victim plays the launch/fall clip 128
+  ...  32 -> native 0x483980
+  Check against the live run (section 10): the first velocity seen in memory is -12583 = -13107 + 524, i.e. one tick of
+  gravity has already been applied; gravity +524 per tick matches exactly.                                    PROVEN
+  The follow-up 328 is in the (velocity, clip) table at VA 0x4ED1E0 (pairs with clips 185, 184, 328, 184, 191, 190, 188
+  and velocities -2621 / -4587 / -5242): LIKELY the knockdown/fall-continuation table.                      LIKELY
+Worked example 2 - Sonya's Bicycle Kick (special handler 7 = VA 0x47E1D0, script VA 0x4EB5A8):
+  5F vx = 0.1 | 48 play clip 72 to the end | 25 0x0E (sound/effect) | 11 clip 73 | 59 6553, 0, -6553, -131 | 32 -> 0x47E220
+  => 72 -> 73, matching the live capture.                                                                     PROVEN
+  The return to 72 after the kicks happens in the native code at 0x47E220, not in the script.                 LIKELY
+Worked example 3 - Sonya's throw (script VA 0x4E1848):
+  0E clip 156 (opponent) | 0F clip 78 (self) | 4B until frame 0x15 | 41 0x67 | 63 9830 | ...
+  => attacker 78 and victim 156 started by the same script, matching the live capture.                        PROVEN
+  The victim then goes 156 -> 176 -> 191: 176 is started by the script at VA 0x4ECB70 (47 with a new clip 176, then
+  velocities 13107 / 6553); 191 is in the 0x4ED1E0 table.                                                     LIKELY
+Other checks against live captures: Leg Grab = own 102 + opponent 201 (PROVEN); Square Wave uses 101 through BSS slot
+  VA 0x540B24 (PROVEN); sweep 63 script at VA 0x4E9E58 (0F clip 63, 4D, 20 0xAF, sleep 0x16) (PROVEN); victim 195 and 197
+  are in adjacent reaction scripts at VA 0x4EC464 / 0x4EC488 (LIKELY 195 -> 197).
+  Clip 310 (start/end of the Square Wave) is referenced nowhere in the EXE: no fixup, no pointer. How the game reaches
+  it is not known.
+
+Static move/clip tables (fixup clusters in .data; PROVEN they exist, meaning LIKELY):
+  VA 0x4D6E84  attack clip followed by a 14x-16x victim clip, e.g. 8/164, 30/162, 42/146 -> attack/reaction pairs
+  VA 0x4D7CB4  clips 44-51 each paired with script 0x4E8FA8 -> intro and win poses
+  VA 0x4D8284  271 entries, including repeating 262, 263, 264 -> loop chains
+  VA 0x4D8BD4  clips 226-250 -> one fighter's set (weapon moves, GUESS)
+  VA 0x4DB67C  BSS slots 0x540F48.. filled with stance/walk clips (439, 265-274, 283-292, 589, 590) -> per-state clip slots
+
+Where fighter-specific moves live (PROVEN for the table, ownership LIKELY):
+  All special moves of all fighters are in one code block, VA 0x478E40-0x481350, dispatched through a 36-entry handler
+  table at VA 0x4EB8F4. Matching the clips each handler's scripts start against live captures gives:
+    handler  6  Sonya Square Wave 101            PROVEN      handler 11  Raiden Body Launch 94          LIKELY
+    handler  7  Sonya Bicycle Kick 72 -> 73      PROVEN      handler 12  Quan Chi Teleport Stomp 87/89  LIKELY
+    handler  8  Sonya Leg Grab 102 + victim 201  PROVEN      handler 27  Quan Chi Dashing Kick 105      LIKELY
+    handler  1  Scorpion Teleport Punch 312      LIKELY      handler 29  Johnny Cage Uppercut 85        LIKELY
+    handler  2  Ice Clone 301 (Sub-Zero)         LIKELY      handler 31  Tanya Corkscrew Kick 109       LIKELY
+    handler  9  Fujin Whirlwind Spin 10/11       LIKELY      handler 32  Reiko Flip Kick 110            LIKELY
+    handler 10  Fujin Jumping Knee 100           LIKELY      handler 33  Reiko, clip 306                LIKELY
+  Handlers 14 (clip 1), 22 and 30 (clip 301 only) and 28 (clip 308) are unassigned (GUESS). The other 18 handlers start
+  no clip directly; projectile specials (clips 14-29: spear, freeze, rings, fireballs) LIKELY go through shared
+  projectile code instead.
+  Per-fighter command lists (in progress): five BSS tables at VA 0x54048C, 0x5404D8, 0x540518, 0x5405A0 and 0x540688,
+  18 entries each (one per fighter id, LIKELY in the "Wins" order of section 8). Each entry points into a command pool
+  at VA 0x4E7340-0x4E7E90 whose records hold joystick sequence bytes and a move word (e.g. 0x33012842). Which bits of the
+  move word select the handler is not decoded yet, so the fighter-to-handler links above come from clips, not from
+  this table.
 
 ==========================================================================================
 9. RUNTIME MEMORY (MK4.EXE, version studied; static addresses)
@@ -272,18 +401,24 @@ Tick rate: 60 game ticks per second, 1 animation frame per tick.                
 Measured jump-launch (Sonya's uppercut, D+HP = clip 293; victim plays 128 -> 328 -> stance, 6/6 runs):  PROVEN
   P2 height  0x5225CC, ground value -77660, negative = up
   P2 vertical velocity 0x5225E4
-  launch velocity  -12583 units/tick (upward)
-  gravity          +524 units/tick per tick (added to velocity each tick)
+  launch velocity  -12583 units/tick (upward). The move script sets -13107 (= -0.2 in 16.16) and gravity 524; the
+                   first tick you can observe already includes one tick of gravity (section 8A, worked example 1).  PROVEN
+                   The script also sets an X velocity of -1966 (push-back direction LIKELY).
+  gravity          +524 units/tick per tick (added to velocity each tick). 524 (0x20C) is also written as an
+                   immediate at ~20 places in the code, e.g. VA 0x40DC45 and VA 0x41E416 (stores into object +0x4C)
   airborne         48 ticks = 0.80 s at 60/s (0.73 s measured wall-clock under emulation timing)
   peak height      157,375 units above ground at ~0.37 s  (check: 12583^2 / (2*524) ~ 151,000, consistent)
-Scale: ~238,800 units = 1 metre (LIKELY, from walk speed vs a human stride).
-  -> peak ~0.66 m; gravity 524 * 60^2 / 238,800 ~ 7.9 m/s^2 per pure tick math, ~9.5 m/s^2 from the measured
-     wall-clock arc. Reported figure: ~9.5 m/s^2 (LIKELY).
-  Push-back on hit ~0.67 m measured at the stage edge (LIKELY; open-floor distance unconfirmed).
+Scale: ~64,000 units = 1 metre (LIKELY). Derivation: 64,000 = 256 x 250, the same divisor that turns exported model
+  coordinates into metres. Checks: live hit gap ~45k units = 0.70 m vs a measured fist reach of 0.92 m on the exported
+  model; practice start gap ~170k = 2.66 m; stage edge ~640k = ~10 m vs the Shaolin room radius of 9.6 m.
+  (An earlier estimate of ~238,800 units/m from walk speed was off by ~x3.73 and is withdrawn.)
+  -> peak 157,375 / 64,000 ~ 2.46 m; launch 12583 * 60 / 64,000 ~ 11.8 m/s; gravity 524 * 60^2 / 64,000 ~ 29.5 m/s^2
+     per pure tick math (~35 m/s^2 from the measured wall-clock arc). Game gravity is not real-world gravity (LIKELY).
+  Push-back on hit ~2.5 m measured at the stage edge (LIKELY; open-floor distance unconfirmed).
 Floor travel (from arcade per-tick captures, same engine logic, units = arcade world units):  LIKELY
   walk forward +0.059/tick, walk back -0.042/tick, slide constant 0.150/tick; flying kick gravity ~+0.004/tick^2.
 Playback pattern (LIKELY, strong): e.g. slide clip 95 = frames 1->9, hold frame 9 ~17 ticks, then 9->0, while game code
-  moves the body. Hit range: a gap of ~30-45k units between fighters (LIKELY).
+  moves the body. Hit range: a gap of ~30-45k units (~0.47-0.70 m) between fighters (LIKELY).
 
 ==========================================================================================
 11. GAPS - NOT YET UNDERSTOOD
@@ -291,10 +426,15 @@ Playback pattern (LIKELY, strong): e.g. slide clip 95 = frames 1->9, hold frame 
 - ECM video codec (only the outer header is known; M_INTRO.ECM header differs).
 - GEO block types 0x100, 0x2 and the 128..640 "2D set" table; sprite cut-out rectangles; transparency key.
 - UV row byte 0 meaning.
-- Clip table words +0x0/+0x4 exact meaning.
+- Clip table +0x8 bit 0 (set on 27 clips) meaning.
+- Script opcodes marked LIKELY/GUESS in section 8A; which byte-argument calls are sound, effect or damage.
+- Per-fighter command lists: which bits of the move word pick the special-move handler.
+- Clip 310 (Square Wave start/end) is not referenced anywhere in the EXE; how the game reaches it.
+- Chains that continue in native code (e.g. the Bicycle Kick's return to clip 72).
 - ESF flag 0x80.
 - Two unidentified FILESYS.DAT entries (#0, #1).
-- Which fighter owns which clip (only Sonya fully mapped; most of the 612 clips unlabeled).
+- Which fighter owns which clip (Sonya fully mapped; about 15 other specials tied to fighters, LIKELY; the rest of the
+  612 clips unlabeled). The move scripts (section 8A) should make most of this readable without live capture.
 - Unit conversion to metres (LIKELY only); P1 vs P2 position field naming (section 9 note).
 - Unmatched odd clips 386 (6 bones), 422/423, 426/427, 446/447 (3 bones): no skeleton found (GUESS: severed limbs).
 - Fatality scripts not traced back to fighter ids.
@@ -321,8 +461,14 @@ FILE OFFSETS
 CODE VAs (VA = file + 0x400C00)
   0x4013A0 frame decompressor | 0x4BCE80 bone rot | 0x4BD070 root rot | 0x41EAAF creature load | 0x4D5E80 script
   0x4AE8F0 640x480x16 | 0x4AFB20 320x240x16 | 0x4B3F81 Glide 640x480 clip                     PROVEN
+  0x401205-0x40130F anim loader | 0x406B20 start animation                                     PROVEN
+  0x4594E0 start script | 0x459500 interpreter loop | 0x478E40-0x481350 special-move code       PROVEN
 DATA VAs (VA = file + 0x401600)
-  0x4FDD6C clip table | 0x5220D8 AP0 table copy                                                PROVEN
+  0x4FDD6C clip table {+0 data ptr (filled at load), +4 frames, +8 nodes<<16 | 0x8000 compressed} PROVEN
+  0x5220D8 AP0 table copy | 0x5222D8 AP1 buffer pointer                                        PROVEN
+  0x4E6970 script opcode table (128) | 0x4EB8F4 special-move handler table (36)                 PROVEN
+  0x4ED1E0 knockdown (velocity, clip) table                                                    LIKELY
+  0x4D6E80-0x4DCxxx clip fixup list (dest, record) | 0x54048C.. per-fighter command lists      PROVEN / LIKELY
 RUNTIME
   0x521A60 / 0x521A64 / 0x521AA4  global decoder frame / clip ptr / frame count                PROVEN
   0x522514 / 0x522518 / 0x52251C  P1 clip record>>2 / frame / frame ptr>>2                     PROVEN
@@ -331,4 +477,6 @@ RUNTIME
   0x5225C8 P2 X | 0x5225CC P2 height (ground -77660) | 0x5225E4 P2 vertical velocity            PROVEN
 CONSTANTS
   612 clips; 18 words/frame (72 bytes) for human clips; 15 animated bones; angle 2048 = 360 deg
-  60 ticks/s; launch -12583; gravity +524/tick^2; 48 ticks airborne; peak 157,375; ~238,800 units/m (LIKELY)
+  60 ticks/s; launch -12583 (script value -13107); gravity +524/tick^2; 48 ticks airborne; peak 157,375 (~2.46 m);
+  ~64,000 units/m (LIKELY); script velocities 16.16 fixed point
+SCRIPT OPCODES (PROVEN): 05 sleep | 0E opponent clip | 0F/11 own clip | 12 frame | 32 native | 33 goto | 58 vx,vy,gravity

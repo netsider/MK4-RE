@@ -176,13 +176,13 @@ MK4 RE NOTES v3 - live capture under Wine (2026-10-21, times ET). Tags: PROVEN /
 - Death Kiss attacker clip is 388 (PROVEN in Sonya's per-player log) - conflicts with viewer listing 388 under Liu Kang.
 - sonya_sim.html: AI vs AI endless fight in Shaolin arena (arenas\shaolin_.glb, from SHAOLIN_.GEO PROVEN; in-game Shaolin stage LIKELY). HP locked 100%, no rounds. 8 basic moves: 296, 27, 65, 308, 314, 28, 293, 63, plus block 323 and crouch block 257->256.
 - netsider feedback on sim: the backward fall after UPPERCUT (128->328) is the wrong clip; sweep fall 63->195->197 is right but her GET-UP after the sweep fall is wrong. Fixes + left-click camera orbit in progress as sonya_sim_v2.html.
-- Bicycle Kick (netsider): it juggles the victim in the air while she keeps kicking, and they fall when the kicks stop. ON HOLD, not added yet.
+- Bicycle Kick (netsider): it juggles the victim in the air while she keeps kicking, and they fall when the kicks stop. Now added in sonya_sim_v5.html (72 -> 73 -> 72, victim 136 -> 183 -> 185, replayed from the live log).
 - Reactions still needing a live catch (only logged against the dummy): 294, 27, 264, 28, 15, 101, 104, 102, 72/73, 78, 310/301/327, 229, 227, 315, 260, and all block pairings.
 
 == UPPERCUT MEASURED LIVE (2026-10-22, Wine copy) ==
 - Sonya's real uppercut is 293 (down+HP). Victim 128 -> 328 -> stance, 6/6 PROVEN. 128 lasts 1.24 s (frames 0-52 at 1/tick, then ~2/tick).
 - P2 height at 0x5225cc (ground -77660, negative=up), vertical velocity at 0x5225e4 (PROVEN). Velocity -12583, +524/tick, 48 ticks airborne (0.73 s), peak 157,375 units at ~0.37 s (PROVEN).
-- ~238,800 units = 1 m (LIKELY, from walk speed): peak 0.66 m, gravity ~9.5 m/s^2. Push-back ~0.67 m measured at stage edge (LIKELY; open-floor distance unconfirmed).
+- ~64,000 units = 1 m (LIKELY; 256 x 250, same divisor as the model export; hit gap 45k = 0.70 m vs 0.92 m fist reach; stage edge ~640k = ~10 m vs 9.6 m Shaolin room). Earlier ~238,800 units/m withdrawn (off by ~x3.73). Peak ~2.46 m, launch ~11.8 m/s, gravity ~29.5 m/s^2 tick math (~35 from wall-clock). Push-back ~2.5 m at stage edge (LIKELY; open-floor distance unconfirmed).
 - Clips 27 and 28: no Sonya input produces them; in those slots they are Jarek (27) and Cage's Green Orb (28) (LIKELY not Sonya's moves). netsider's labels kept, flagged.
 - Crouch: 259 down (5 ticks), 258 hold, stand = 259 reversed (PROVEN). Stance 439, walk fwd 267, back 272 (PROVEN).
 - sonya_sim_v4.html (27/28 removed, crouch fixed) and sonya_sim_v4b.html (+ measured launch).
@@ -190,7 +190,25 @@ MK4 RE NOTES v3 - live capture under Wine (2026-10-21, times ET). Tags: PROVEN /
 ==== SONYA LIVE CLIP CONFIRMATION (20261022_1925 ET) ====
 Full table: capture_v3\final\SONYA_PROVEN_TABLE.txt
 PROVEN by live input (P1 Sonya): 439 267 272 259 258 257 256 304 301 317 307 323 296 264 294 78 65 308 293 260 53 315 63 313 97 96 327 57 60
- specials: 15 Ring (D,F+LP); 102 Leg Grab (D+LP+BL); 310-101-310 Square Wave (F,B+HP); 72-73-72 Bicycle (B,B,D+HK, not in sim); 104 Cartwheel (B,D,F+LK)
+ specials: 15 Ring (D,F+LP); 102 Leg Grab (D+LP+BL); 310-101-310 Square Wave (F,B+HP); 72-73-72 Bicycle (B,B,D+HK, in sim v5); 104 Cartwheel (B,D,F+LK)
  weapon: 244 draw (F,F+LK) -> 285 stance, 275 walk, 230 HP, 229 LP, 246 block, 217/219 crouch
 PROVEN defender (P2 Sonya): 311 324 134 130 305; 156-176-191 thrown; 186-188; 131-185; 183-185; 136-183-185; 201-328; 195-197; 128-328
 NOT HERS (LIKELY): 27, 28. Not triggered (GUESS): 25 26 153 154 172 192 194, air throw, taunt. 50/114 victory LIKELY from vs.txt; 388 Death Kiss PROVEN earlier.
+
+==== MK4.EXE STATIC FINDINGS: CLIP RECORD + MOVE SCRIPTS (2026-10-22 ET) ====
+Full write-up: MK4_PC_FILE_FORMATS.txt sections 6, 8, 8A, 10.
+- Clip record (VA 0x4FDD6C, 12 bytes): +0 = clip data pointer filled at load by 0x401205-0x40130F (PROVEN); +4 = frame count, 612/612 (PROVEN); +8 = node count << 16 (18 for human clips, PROVEN) | 0x8000 compressed (PROVEN); bit 0 set on 27 clips (43, 144-165, 535, 539, 606, 607), meaning GUESS.
+- Earlier guide text said "+8 low 16 bits = frame count"; that was wrong and is corrected (frames are in +4).
+- Move script VM (PROVEN): push script; call 0x4594E0 (449 sites); interpreter 0x459500; opcode = word >> 24; handler table 0x4E6970 (128). Clip operands are 0 in the file and patched at load by a (dest, record) fixup list. Velocities/gravity 16.16.
+- Opcodes PROVEN: 05 sleep, 0E opponent clip, 0F/11 own clip, 12 frame, 32 native, 33 goto, 58 vx/vy/gravity. LIKELY: 46-49/68 animate, 4B/4C throw step, 59, 5F.
+- Uppercut victim script: vy -13107, gravity 524, clip 128 -> first live tick -12583 (PROVEN match).
+- Sonya from the EXE alone: Bicycle 72 -> 73 (PROVEN), throw 78 + victim 156 (PROVEN), Leg Grab 102 + victim 201 (PROVEN), Square Wave 101 (PROVEN). Clip 310 is not referenced anywhere in the EXE.
+- Special-move code VA 0x478E40-0x481350, handler table 0x4EB8F4 (36). About 15 specials tied to Raiden, Fujin, Quan Chi, Cage, Tanya, Reiko, Scorpion, Sub-Zero (LIKELY).
+- No move-name text in the EXE or FILESYS.DAT. "<Name> Wins" order gives LIKELY fighter ids (0 Scorpion, 1 Raiden, 2 Sonya ...).
+- In progress: per-fighter command lists at 0x54048C (5 tables x 18 fighters) to tie every handler to its fighter.
+
+== LIVE VS CONFIRMATION (2026-10-22) ==
+- 46 = Sonya round-start intro; 114 = Sonya round-win pose (loser 137); 50 = opponent intro, not hers (PROVEN).
+- Death Kiss 388, victim alternates 13 <-> 206 (PROVEN). Weapon throw (F,F+LK armed) 208, victim 131 (PROVEN).
+- Thrown reactions: 154-172-328 (by opponent clip 80), 153-173-328 (by 76); 192-194 after opponent clip 62; 127 hit by opponent clip 17 (PROVEN clips, context LIKELY).
+- Not yet produced: 25, 26, Leg Twist. Bicycle victim height: ~2.1 m by 0.4 s, holds ~2.2 m (LIKELY scale).
