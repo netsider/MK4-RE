@@ -132,6 +132,7 @@ MK4 RE NOTES v3 - live capture under Wine (2026-10-21, times ET). Tags: PROVEN /
  50 = DONE: fist flourish [netsider]. ROUND START vs WIN check (per-player log): at VS round start Sonya (P1) plays 46 then idle 439, while the OPPONENT (P2, Reptile in those runs) plays 50 then 289; Sonya plays 50 only at practice start. 114 (salute) never appears at round start - only after a round/match win. => 46 = Sonya round-start intro [PROVEN]; 114 = Sonya win pose [PROVEN, LIVE VS]; 50 = the opponent's intro, not Sonya's [PROVEN, LIVE VS].
  57 = DONE, SHARED: squat -> sit back onto elbows, knees up (reclined) [netsider]; LIKELY sit-down fall; GUESS easter egg. Old 'jump-forward kick' label REMOVED (it was only decoded during jump_f_HK in practice).
  57 addendum: netsider - maybe an easter egg OR just a normal in-game pose; kept as recorded.
+ 57 RESOLVED [netsider 2026-10-23]: 57 = centerfold pose (reclining on the ground) = DONE / PROVEN-by-netsider. The on-hold "find the centerfold pose clip" item is resolved = clip 57. 57 also plays live on jump forward/back HK.
  15 = DONE, Sonya-specific: two-arm forward lunge = Energy Ring fire [PROVEN by live input D,F+LP; SONYA_PROVEN_TABLE].
  206 = DONE: fatality victim death fall (dazed -> falls dead) [netsider]; Death Kiss victim, P2 alternates 13 <-> 206 [PROVEN, LIVE VS]; probably shared. Sonya_TODO is now EMPTY (all live-seen Sonya clips reviewed).
 15. UNIDENTIFIED LISTS (netsider 2026-10-22: no more compare images/TODO image folders; plain clip lists only) -> forced\UNIDENTIFIED_v3.txt
@@ -984,3 +985,39 @@ Frame sheets (8 frames per clip) of the captured video were checked by eye for 6
    D,B+LP in the re-run); the frozen moves were re-run in fresh boots. GUESS: the same capture-side bug seen on other fighters.
 7) Open: 27, 105, 438/126, 295, 297, 192/194, 196/549/550, 153/154/158 (LIKELY); 9, 261, 532, 547, 548, 596 (GUESS);
    stage fatalities; armed block / armed jump attacks not tried. See CAGE_CLIPS.txt "STILL OPEN".
+
+==== NOOB SAIBOT (fighter id 17): CLIP PASS (2026-10-23) ====
+Noob is a hidden fighter: not on the select grid, and the practice menu cycles fighter ids 0..14 only (0x4F11CC P1 / 0x4F11D0 P2).
+Name table 0x4F11D8 (18 names): 17 = NOOB (PROVEN static). Opcode 0x3C (FIGHTER_SWITCH) maps 17 to Reiko's entry f7 (PROVEN static;
+live idle 284, HK 66, LK 67, sweep 62, jump-up kick 61, jump LK 59, intro 49, victory 113 all match Reiko's entries).
+ROUTE USED: FORCED FIGHTER ID IN MEMORY (as for Goro).
+  Practice: 17 written to 0x4F11CC and 0x4F11D0 (were 3 / 3) with the practice menu open -> menu reads "PLAYER 1 NOOB SAIBOT" /
+  "PLAYER 2 NOOB SAIBOT"; fight is Noob vs Noob (all-black ninjas in the frames). PROVEN.
+  VS: Arcade, P1 picks Shinnok (grid 2), then 0x535EC8 = 6 overwritten with 17 for 3 s -> HUD "NOOB SAIBOT" vs "REPTILE",
+  "NOOB SAIBOT WINS". He beat Reptile, Scorpion and Kai and reached Reiko. PROVEN.
+  Game's own route (static, 0x4A0180): Hidden + flags 0x5416AC / 0x5416B0 + pick 7 (Reiko) -> 0x11. Not tried.
+Noob idle 284, standing height -77660 (same as Reiko), walk F 267 / B 272, run 267-317-307, block 323, crouch 259/258,
+  crouch block 257/256, jump 304 / 301. RUN tap: nothing.
+Basics (PROVEN live): LP 294, HP 296, close HP 263 (P2 311), HK 66 (gap 90000, P2 311, dx +67946), LK 67 (P2 134, dx +67281),
+  close LK 41 (P2 165-200, dx +75893; Reiko plays 40), close HK 314 (P2 134, dx +27447), uppercut 293 (P2 128-328, dx +86583,
+  rise 149577), sweep 62 (P2 192-194), roundhouse 64, crouch LP 260 / HK 54 / LK 315, jump HP 97 / LP 96, jump-up kick 61,
+  jump F/B HK 56 / LK 59.
+Throw (PROVEN): close LP or F+LP 80 -> P2 154-172-328, dx +232804 / +236736 (gap 40000); VS vs Reptile the same. VS vs Scorpion
+  the throw played 76 -> P2 153-173 (once). Why it changed: not known (GUESS: opponent id or position).
+Specials (PROVEN live): shadow ball D,F+LP 26 (purple ball; P2 130, dx +127475 at gaps 200000 / 60000, +50704 at 350000);
+  air shadow ball (jump forward, D,F+LP) 24-310 (P2 130, dx +127475); teleport D,U 86 (rises 13107 per tick to height -274265,
+  lands at P2 X + 65536; P2 plays 305; no hit at gaps 60000 / 150000 / 300000). Static teleport hit 74 -> 150 and air throw
+  (misc[20]) 74/77 -> 150/161 not seen (LIKELY).
+Weapon (PROVEN live; scythe-like blade in the frames, LIKELY): draw F,F+HK 244 -> armed stance 286; armed walk 277 / 278;
+  armed LP 229 (P2 132-328, dx +64218); armed HP 239 (P2 189-328, dx +112357, rise 188927); armed D+HP 218-219-293 (P2 128-328,
+  dx +96334); armed B+LK 278-62 (P2 192-194, dx +94368); armed BL 246; armed jump-up HP 252; F,F+HK while armed throws it: 208
+  (P2 131, dx +196590 at gap 150000 / +211662 at 60000, rise 59147), then he is unarmed again (284).
+Round: intro 49 every round, victory 113 (PROVEN, VS).
+Fatalities: none - no misc40 / misc43 rows for fighter 17 (PROVEN static), so there was nothing to try with hold-Block.
+  Stage-fatality rows exist (arena 0 F,D,F+HK -> 293; arena 8 D,B,B+HK, clip not resolved) - LIKELY static, not attempted.
+Clip list: NOOB_CLIPS.txt lists 111 clips: 78 PROVEN, 6 LIKELY, 18 GUESS, 9 NOT HIS. Detail: NOOB_PROVEN_TABLE.txt.
+Open: teleport hit 74 / 150 and 183; air throw; throw 76 vs 80; stage fatalities; 22, 295 / 297, 52, 55 / 57 / 58 / 60 / 327, 209,
+  261 / 532 / 533, 547 / 548 / 596, 549 / 550 / 196 static only; the game's own hidden-select route not tried.
+Run notes: no crashes or input stalls in this pass. After the teleport both fighters are invisible in the capture renderer
+  (as on Reiko), so the teleport frames are blank; the memory logs are fine.
+Clip list file: NOOB_CLIPS.txt (this repo).

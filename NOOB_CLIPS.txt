@@ -1,0 +1,194 @@
+NOOB SAIBOT (fighter id 17) - CLIP LIST AND STATUS
+Mortal Kombat 4 PC (retail MK4.EXE). netsider's MK4-RE project. Built 2026-10-23 ET from the live memory logs
+and the MK4.EXE static reading. Full detail: MK4_RE_NOTES_v3.txt (this repo), NOOB SAIBOT section.
+
+WHAT IS LISTED
+Every clip number Noob's fighter object played live (as attacker OR as victim), every clip his own move scripts and
+per-fighter tables point at, and clips that turned up in shared clip sets but belong to someone else.
+Clip number = index into the game's 612-entry clip table (record address 0x4FDD6C + 12*clip).
+Shared move scripts pick the clip per fighter with a 16-entry FIGHTER_SWITCH (script opcode 0x3C, entries f0..f15).
+Noob has id 17, past the 16 entries: the switch maps 17 to Reiko's entry f7 (PROVEN static; live HK 66, LK 67, sweep 62,
+jump-up kick 61, jump LK 59, idle 284, intro 49, victory 113 all match Reiko's entries). His own clips differ from Reiko's in
+the specials and in the close LK (Noob 41, Reiko 40). Victim / reaction clips are shared by all fighters.
+Live sources: practice mode P1 Noob vs P2 Noob (inactive dummy) and one VS run vs the CPU, memory logs; see HOW NOOB WAS SELECTED.
+
+HOW NOOB WAS SELECTED (he is a hidden fighter, not on the normal grid or practice menu)
+ Name table 0x4F11D8 has 18 names; 15 = GORO, 16 = KITANA, 17 = NOOB (PROVEN static).
+ The practice menu cycles fighter ids 0..14 only in 0x4F11CC (P1) and 0x4F11D0 (P2); at practice start the code at
+ 0x4A3620 copies 0x4F11CC into the fight-time P1 fighter id 0x535EC8 (PROVEN static + live).
+ Route used: FORCED FIGHTER ID IN MEMORY. With the practice menu open, 17 was written to 0x4F11CC and 0x4F11D0 (they read 3 / 3);
+ the menu rows then read "PLAYER 1 NOOB SAIBOT" / "PLAYER 2 NOOB SAIBOT" and the fight started as Noob vs Noob (frames show two
+ all-black ninjas; PROVEN). VS: see VS MODE below.
+ The game's own route (static, code 0x4A0180, P1 select): with Hidden chosen ([0x53FD54] != 0), two buttons held (input bits
+ 0x4D30A4&0x20 and 0x4D30A8&4 clear), Noob unlocked ([0x5416AC] != 0), pick 7 (Reiko) and once-flag [0x5416B0] == 0, the id
+ becomes 0x11 (17). Not tried live (LIKELY matches the public code: Hidden, then Reiko with RUN+BL).
+
+STATUS LABELS
+ PROVEN       = seen live in the running game (memory log of the clip slot while pressing the input), or read
+                directly in the game code and matched live.
+ LIKELY       = strong static (code) or indirect evidence, not seen live on Noob.
+ GUESS        = weak evidence (static listing only).
+ NOT HIS      = belongs to another fighter (or is another fighter's version of a shared move). The evidence
+                column says how sure (PROVEN or LIKELY).
+ UNKNOWN      = in his set, purpose not known.
+
+UNITS (raw game units only)
+ Positions are 16.16 fixed point: 65536 = 1 game unit = 256 mesh units (PROVEN). No metres are used.
+ gap  = X distance between the fighters when the input starts.
+ dx   = victim X net displacement over the reaction (last - first). + = pushed away from the attacker,
+        - = pulled toward / thrown behind the attacker.
+ rise = victim standing height minus its lowest height (how high it went).
+ Noob standing height -77660 (negative = up; the same as Reiko). Practice start X -85196 / +85196.
+ Sequences like 154-172-328 are the clips in the order they play.
+
+clip | status      | name / description                                    | evidence / notes
+-----+-------------+-------------------------------------------------------+------------------
+  13 | PROVEN      | dazed / pulled-in stance (shared) | live VS: P1 199-13 after CPU Scorpion spear 14
+  22 | GUESS       | second projectile clip (proj[0b] list) | static 0x4F02D0 only; not seen live
+  24 | PROVEN      | shadow ball in the air (jump forward, then D,F+LP) | live 304-301-24-310 -> P2 130, dx +127475; static proj[0a]/proj[0b] -> 24
+  26 | PROVEN      | shadow ball D,F+LP (ground) | live 259-258-259-284-26 -> P2 130, dx +127475 at gaps 200000 and 60000, +50704 at 350000; static proj[0a] -> 26 (purple ball in the frames)
+  41 | PROVEN      | close low kick (LK at close range) | live LK_close 284-41-284 -> P2 165-200, dx +75893 (Reiko plays 40 here)
+  49 | PROVEN      | round intro (intro switch -> 49, Reiko entry) | live VS every round start (7 times); practice has no intro
+  52 | GUESS       | crouch kick, other entry in the crouch-kick lists | static 0x4E9008 / 0x4E8FB8 only; not seen live
+  54 | PROVEN      | crouch HK | live 259-258-54-258-259; static crouch-kick lists 54/52/315
+  55 | GUESS       | angled-jump HK list entry | static 0x4E9540.. lists only; not seen live
+  56 | PROVEN      | jump forward/back HK | live 301-56-304 (JfHK, JbHK)
+  57 | GUESS       | angled-jump HK list entry | static 0x4E95D0.. lists only; not seen live
+  58 | GUESS       | angled-jump LK list entry | static 0x4E9438 list only; not seen live
+  59 | PROVEN      | jump forward/back LK | live 301-59-304 (JfLK, JbLK); switch 0x4E93C0 -> 59
+  60 | GUESS       | angled-jump LK list entry (Goro plays this one) | static 0x4E94A8 list only; not seen live on Noob
+  61 | PROVEN      | jump-up kick (U then LK or HK) | live 304-61; jump-up switch 0x4E91E0 -> 61 (Reiko entry; 327 is another entry)
+  62 | PROVEN      | sweep (B+LK); also armed B+LK | live 272-62 -> P2 192-194; sweep switch 0x4E9780 -> 62
+  64 | PROVEN      | roundhouse (B+HK); also armed B+HK | live 272-64 (no hit at that gap); 0x4E97E8 -> 64
+  66 | PROVEN      | high kick (HK) | live gap 90000 -> P2 311, dx +67946; HK switch 0x4E8C88 -> 66; also armed HK
+  67 | PROVEN      | low kick (LK) | live -> P2 134, dx +67281; LK switch 0x4E8D78 -> 67; also armed LK
+  74 | LIKELY      | teleport hit (attacker) / air-throw part | static special[0e] 0x4EB2C8 -> 74 (opp 150) and misc[20] 0x4E8E60 -> 74 (opp 150); not seen live
+  75 | NOT HIS     | throw of another fighter (CPU Scorpion played it on Noob in VS) | PROVEN live as P2 Scorpion 75 -> P1 Noob 152
+  76 | PROVEN      | throw vs Scorpion (VS) | live VS round vs Scorpion: P1 76 -> P2 153-173, opponent HP 400 -> 0; 0x4E1698 / 0x4E16A0 = 76/153. Why the throw changed with the opponent: GUESS (opponent id or position)
+  77 | LIKELY      | air throw (BL in the air, misc[20]) | static 0x4E8EA8 -> 77 (opp 161); not tried live (needs both fighters in the air)
+  80 | PROVEN      | throw (close LP or F+LP) vs Noob and vs Reptile | live 284-80-284 -> P2 154-172-328, dx +232804 (LP) / +236736 (F+LP) at gap 40000; VS vs Reptile 80 -> 154-172 (2 times); throw switch entry 0x4E1628 = 80/154
+  81 | NOT HIS     | throw switch entry of another fighter | static 0x4E15F8 81/158
+  83 | NOT HIS     | throw switch entry of another fighter | static 0x4E14D8 83/145
+  86 | PROVEN      | teleport D,U (rises out of the screen, reappears behind P2) | live 259-258-259-86-284; rises 13107 per tick to height -274265, lands at P2 X + 65536 (75000 -> 140536); no hit at gaps 60000 / 150000 / 300000; frames show the fighters invisible after it (renderer oddity in the capture setup, also seen on Reiko)
+  96 | PROVEN      | jump LP; also D,F+LP during a straight-up jump | live 304-96-304; JuBall_DF_LP gave 96, not a ball
+  97 | PROVEN      | jump HP (straight up and angled) | live 304-97-304; JfHP 301-97 -> P2 311; VS 16 times
+ 113 | PROVEN      | victory pose | live VS "NOOB SAIBOT WINS" banner with 113 (9 log lines over the won rounds)
+ 128 | PROVEN      | uppercut victim, launched (shared) | live P2 128-328 after 293 / armed D+HP; VS P1 128 after CPU 293
+ 130 | PROVEN      | hit by shadow ball (shared projectile reaction) | live P2 130 after 26 and 24
+ 131 | PROVEN      | hit by thrown weapon (shared) | live P2 131 after 208; VS P1 131 when the CPU threw its weapon (208)
+ 132 | PROVEN      | hit by armed LP (shared) | live P2 132-328 after 229; VS P1 132 (14 lines)
+ 134 | PROVEN      | low / mid hit reaction (shared) | live P2 134 after LK and close HK
+ 145 | NOT HIS     | victim of 83 | as 83
+ 150 | LIKELY      | victim of teleport hit / air throw | static, as 74; not seen live
+ 152 | PROVEN      | thrown by Reptile/Goro type throw, part 1 (shared victim) | live VS: P1 152-173-328 after CPU 75 (Scorpion throw)
+ 153 | PROVEN      | thrown by Noob (76 version), part 1 | live VS: P2 Scorpion 153-173 after P1 76
+ 154 | PROVEN      | thrown by Noob, part 1 (vs 80) | live P2 154-172-328 (practice and VS Reptile)
+ 157 | PROVEN      | hit reaction (shared) | live VS: P1 157 (3 lines) after CPU 37
+ 158 | NOT HIS     | victim of 81 | as 81
+ 161 | LIKELY      | air-throw victim | static, as 77
+ 165 | PROVEN      | hit by close LK, part 1 (shared) | live P2 165-200 after 41
+ 172 | PROVEN      | thrown, part 2 (shared) | live after 154 and after 153
+ 173 | PROVEN      | thrown, part 2 (shared victim) | live VS: P1 173 after 152; P2 173 after 153
+ 179 | PROVEN      | hit reaction (shared) | live VS: P1 179 after CPU 22 (projectile)
+ 182 | PROVEN      | hit reaction (shared) | live VS: P1 182 after CPU 448 (Kai)
+ 183 | GUESS       | teleport follow-on (r58 in the D+U script) | static decoder only
+ 185 | PROVEN      | hit reaction (shared) | live VS: P1 185 after CPU 208 (weapon throw)
+ 186 | PROVEN      | knocked down / falling (shared) | live VS: P1 186-188 after CPU 60
+ 188 | PROVEN      | knocked down part 2 (shared) | as 186
+ 189 | PROVEN      | hit by armed HP, launched (shared) | live P2 189-328 after 239
+ 192 | PROVEN      | swept, part 1 (shared) | live P2 192-194 after 62; VS P1 192 after CPU 62
+ 194 | PROVEN      | swept, part 2 (shared) | as 192
+ 195 | PROVEN      | hit reaction (shared) | live VS: P1 195 after CPU 63 (sweep)
+ 196 | GUESS       | run-collision victim list entry | as 549
+ 197 | PROVEN      | hit reaction (shared) | live VS: P1 197 once
+ 199 | PROVEN      | pulled in by spear (shared) | live VS: P1 199 when P2 Scorpion played 14
+ 200 | PROVEN      | hit by close LK, part 2 (shared) | as 165
+ 208 | PROVEN      | weapon throw (F,F+HK while armed) | live 286-277-286-277-286-208-284 -> P2 131, dx +196590 (gap 150000) / +211662 (gap 60000), rise 59147; back to unarmed 284 afterwards (next LP / HP were 294 / 296)
+ 209 | GUESS       | RUN action (misc[03]) | static decoder only; RUN tap played nothing live
+ 218 | PROVEN      | armed D+HP part 1 (crouch with weapon) | live 286-218-219-293 -> P2 128-328, dx +96334; D hold 218-219-259
+ 219 | PROVEN      | armed D+HP part 2 / armed crouch | as 218
+ 229 | PROVEN      | armed LP (weapon swing) | live 286-229-286 -> P2 132-328, dx +64218 (far) / +28476 (close)
+ 239 | PROVEN      | armed HP (weapon swing) | live 286-239-286 -> P2 189-328, dx +112357, rise 188927 (close range: no hit)
+ 244 | PROVEN      | weapon draw (F,F+HK) | live 267-284-267-284-244-286; static 0x4E92A8 -> 244
+ 246 | PROVEN      | armed block | live A_BL 286-246-286
+ 252 | PROVEN      | armed jump-up HP | live 304-252-304
+ 256 | PROVEN      | crouch block release | as 257
+ 257 | PROVEN      | crouch block | live D+BL 259-258-257-256-257-258-259
+ 258 | PROVEN      | crouch held | live D
+ 259 | PROVEN      | crouch going down / coming up | live D (uppercut, crouch moves, shadow-ball and teleport inputs)
+ 260 | PROVEN      | crouch LP | live 259-258-260-258-259
+ 261 | GUESS       | close-strike list entry | static 0x4E9998 only
+ 263 | PROVEN      | close high punch (HP at close range) | live HP_close 284-263-284 -> P2 311; VS 263 (2 times)
+ 267 | PROVEN      | walk forward | live F (WalkF_B; F inputs before throw F+LP, run, weapon draw)
+ 272 | PROVEN      | walk back | live B (warm-up, WalkF_B, before sweep 62 and roundhouse 64)
+ 277 | PROVEN      | armed walk forward | live A_walk 286-277-286; armed run 277-317-307
+ 278 | PROVEN      | armed walk back | live A_walk 286-278-286; before armed B+LK / B+HK
+ 284 | PROVEN      | idle / fighting stance (Reiko entry f7) | all live logs, P1 and P2; practice start and every reset; VS between moves
+ 286 | PROVEN      | armed stance (scythe out) | live after 244 in all four weapon boots; weapon looks like a scythe/curved blade in the frames (LIKELY)
+ 293 | PROVEN      | uppercut (D+HP); also end of armed D+HP | live 259-258-293 -> P2 128-328, dx +86583, rise 149577; static 0x4E9288 -> 293
+ 294 | PROVEN      | low punch (LP) | live 294 close (P2 311) and far; LP,LP played 294 once
+ 295 | LIKELY      | low-punch follow-on clip | static LP 294-295; not seen live
+ 296 | PROVEN      | high punch (HP) | live 296 far (no hit at that gap); HP,HP played 296 once
+ 297 | LIKELY      | high-punch follow-on clip | static HP code[297,296]; not seen live
+ 301 | PROVEN      | jump forward/back | live U+F / U+B; VS
+ 304 | PROVEN      | jump straight up / landing | live U (jump HP / LP / up kicks); VS
+ 305 | PROVEN      | opponent reaction while Noob teleports (shared clip) | live P2 284-305-284 on every teleport; VS P1 305 during jump kicks (8 log lines); purpose LIKELY a generic airborne / turn clip
+ 307 | PROVEN      | run loop | as 317; static Run handler code[307]
+ 310 | PROVEN      | air shadow ball recovery / landing (after 24) | live JfBall_DF_LP 24-310-284
+ 311 | PROVEN      | high hit reaction (shared) | live P2 311 after HP_close / LP / HK / JfHP; VS P1 311 (23 lines)
+ 314 | PROVEN      | close high kick (HK at close range) | live HK_close 284-314-284 -> P2 134, dx +27447
+ 315 | PROVEN      | crouch LK | live 259-258-315-258-259
+ 317 | PROVEN      | run start | live F,F+RUN hold 267-317-307; armed run 277-317-307
+ 323 | PROVEN      | standing block (shared) | live BL 284-323-284 (Block, BL_tap)
+ 327 | GUESS       | jump-up kick list entry (Goro plays this one) | static 0x4E9258 list only; not seen live on Noob
+ 328 | PROVEN      | getting up / landing after a knockdown (shared) | live P2 after throws, uppercut, armed LP / HP; VS P1 328
+ 532 | GUESS       | close-strike list entry | static 0x4E99B0 only
+ 533 | GUESS       | close-strike list entry | static 0x4E9A10 only
+ 547 | GUESS       | run list entry | static 0x4E2DB8 547-548 only
+ 548 | GUESS       | run list entry | as 547
+ 549 | GUESS       | run-collision victim list entry | static decoder (run, victim rb5 -> 549-550-196) only
+ 550 | GUESS       | run-collision victim list entry | as 549
+ 586 | PROVEN      | hit reaction (shared) | live VS: P1 586 after CPU 282
+ 596 | GUESS       | run list entry | static 0x4E2850.. only
+ 605 | NOT HIS     | Goro throw part 2 (switch entry 0x4E17D0) | PROVEN live on Goro; not played by Noob
+ 607 | NOT HIS     | thrown by Goro part 2 | as 605
+ 609 | NOT HIS     | throw switch entry of another fighter | PROVEN static (0x4E1708 609/610); not played by Noob
+ 610 | NOT HIS     | victim of 609 | as 609
+
+SUMMARY (111 clips listed)
+ PROVEN        78
+ LIKELY         6
+ GUESS         18
+ NOT HIS        9
+ UNKNOWN        0
+
+FATALITIES
+ Noob has no fatality entries: the decoder found no misc40 / misc43 (fatality A / B) rows for fighter 17 (PROVEN static),
+ so there was nothing to try with the hold-Block method. Static stage-fatality rows exist: arena 0 (misc42) F,D,F+HK -> uppercut 293,
+ and arena 8 (misc41) D,B,B+HK (clip not resolved) - LIKELY; not attempted (stage fatalities are on the deferred list for all fighters).
+VS MODE
+ VS route: FORCED FIGHTER ID IN MEMORY at the select screen. P1 picked Shinnok (grid index 2) in Arcade 1-player; for 3 s after
+ the pick every value 6 in 0x535EC8 was overwritten with 17. The fight loaded as Noob Saibot: VS HUD "NOOB SAIBOT" vs "REPTILE",
+ round banner "NOOB SAIBOT WINS" (PROVEN, frames).
+ Result, one VS run (~245 s): Noob beat Reptile, Scorpion and Kai and reached Reiko (HUD names read from the frames, PROVEN).
+ Round start: intro 49 every round (7 times, PROVEN). Round win: victory pose 113 (PROVEN).
+ Throw: vs Reptile 80 -> P2 154-172 (2 times); vs Scorpion 76 -> P2 153-173 (once, round won). Both PROVEN live; why the throw
+ clip changed with the opponent is not known (GUESS: picked by opponent id or by position).
+ Noob as victim (VS): 199-13 (Scorpion spear 14), 152-173-328 (Scorpion throw 75), 131 / 185 (weapon throw 208), 128 (uppercut),
+ 192-194 (sweep), 311, 132, 157, 179, 182, 186-188, 195, 197, 586 (PROVEN, shared reaction clips).
+ The VS driver keeps both fighters alive and sets the opponent HP to 400 before each throw, so rounds end on a throw or a hit.
+
+STILL OPEN
+ - Teleport hit 74 / victim 150 (special[0e]) and the r58 follow-on 183: not seen; the teleport D,U never hit at gaps 60000,
+   150000 or 300000 (it lands behind P2 at P2 X + 65536). GUESS: 74 needs the opponent in the air, as for the air throw.
+ - Air throw (misc[20], BL in the air, 74 / 77 -> 150 / 161): not tried (needs both fighters in the air).
+ - Teleport frames: after 86 both fighters are invisible in the capture renderer (also seen on Reiko); the logs are fine.
+ - 22 (second projectile list), 295 / 297, 52, 55 / 57 / 58 / 60 / 327, 209, 261 / 532 / 533, 547 / 548 / 596, 549 / 550 / 196: static only.
+ - Why the throw was 76/153 vs Scorpion but 80/154 vs Noob and Reptile: not known.
+ - Stage fatalities (arena 0 / arena 8): static only, not attempted.
+ - The game's own hidden-select route (Reiko + flags 0x5416AC / 0x5416B0) was not tried.
+ - Clips outside the logs and his handlers were not surveyed (no full scan of all 612 clips for Noob).
+
+OTHER FIGHTERS' ENTRIES IN THE SAME PER-FIGHTER TABLES (NOT HIS, PROVEN from the switch tables)
+ throw list 0x4E1708..0x4E16A0: 609/610, 605/607, 75/152, 83/145, 81/158 (80/154 and 76/153 = played by him)
+ high kick 0x4E8C88: 71 (66 = his)    jump-up kick 0x4E91E0: 327 (61 = his)    sweep 0x4E9780: 63 (62 = his)
