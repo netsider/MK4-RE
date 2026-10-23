@@ -10,7 +10,7 @@ Some shared move scripts pick the clip per fighter with a 16-entry FIGHTER_SWITC
 f0..f15 = fighter id). Tanya takes entry f9 (PROVEN: intro 46, victory 124, throw 79/151, angled jump LK 58 all matched live).
 Only the f9 entry is hers; the other 15 entries are other fighters' clips. Victim / reaction clips are shared by all fighters.
 Live sources: practice mode P1 Tanya vs P2 Tanya (inactive dummy) and VS mode P1 Tanya vs CPU opponents (memory logs).
-Frame sheets (8 frames per clip) of the captured video were checked by eye for 53 clips.
+Frame sheets (8 frames per clip) of the captured video were checked by eye for 58 clips.
 
 STATUS LABELS
  PROVEN       = seen live in the running game (memory log of the clip slot while pressing the input), or read
@@ -31,7 +31,7 @@ UNITS (raw game units only)
 
 clip | status      | name / description                                    | evidence / notes
 -----+-------------+-------------------------------------------------------+------------------
-  13 | PROVEN      | dazed / stagger (shared) | live VS: P2 13 at FINISH HIM before her fatality; Tanya plays 199-13 after opponent clip 14
+  13 | PROVEN      | dazed / stagger (shared) | live VS: P2 13 at FINISH HIM before her fatalities; Tanya plays 199-13 after opponent clip 14
   22 | GUESS       | D,B+LP projectile handler second clip | static only: proj[0b] 0x4F02D0 -> 22; ground D,B+LP gave plain LP 294 (4 input timings), air D,B+LP gave 24-310
   24 | PROVEN      | air fireball (U, then D,B+LP in the air; proj[0b]) | live 304-24-310 and 304-301-24-310 (5x); victim 130, dx +127475; P1 min height -183219
   26 | PROVEN      | fireball (D,F+HP; proj[0a]) | live 259-258-259-439-26; victim 130, dx +127475 (gap 60000/200000), +42989 (gap 350000); static proj[0a] 0x4F0250 -> 26
@@ -146,6 +146,11 @@ clip | status      | name / description                                    | evi
  324 | PROVEN      | face (high) hit reaction | live P2 324 after HP at gap 60000
  327 | NOT HERS    | jump-up kick of Sonya | PROVEN not hers: switch 0x4E91E0
  328 | PROVEN      | flip get-up recovery (shared) | live 128-328, 179-328, 142-141-143-328; VS
+ 389 | PROVEN      | fatality A victim, part 1 | live VS: P2 389 right at the fatality A input (Tanya still idle), then 397
+ 395 | PROVEN      | fatality A, part 1 (hold BL, D,D,U,D, then BL pressed again while HP is held; close) | live VS at X distance 60000 with P2 dazed: P1 395-396, P2 389-397-409, FATALITY on screen
+ 396 | PROVEN      | fatality A, part 2 (opponent explodes, FATALITY / TANYA WINS on screen) | as 395
+ 397 | PROVEN      | fatality A victim, part 2 | live P2 with 395 / 396
+ 409 | PROVEN      | fatality A victim, part 3 (explodes) | live P2 after 397; frames show the explosion and FATALITY
  439 | PROVEN      | idle stance (Tanya) | live, every session
  532 | GUESS       | close-strike clip | static only (0x4E99B0)
  533 | GUESS       | close-strike clip | static only (0x4E9A10)
@@ -153,7 +158,7 @@ clip | status      | name / description                                    | evi
  548 | GUESS       | run-related clip | as 547
  549 | GUESS       | run-collision victim, start | static run reaction 549-550-196; never seen live
  550 | GUESS       | run-collision victim, middle | as 549
- 564 | PROVEN      | fatality B (D,F,D,F+HK), part 1 | live VS at X distance 52775 with P2 dazed: P1 564-565-566, P2 567-568-569, then 124
+ 564 | PROVEN      | fatality B (D,F,D,F+HK), part 1 | live VS at X distance 60000 with P2 dazed: P1 564-565-566, P2 567-568-569, then 124
  565 | PROVEN      | fatality B, part 2 | as 564 (close-up of Tanya in the frames)
  566 | PROVEN      | fatality B, part 3 (TANYA WINS on screen) | as 564
  567 | PROVEN      | fatality B victim, part 1 | live P2 with 564
@@ -166,25 +171,28 @@ clip | status      | name / description                                    | evi
  609 | NOT HERS    | throw (id 15) - attacker | PROVEN not hers (throw switch). Victim 610
  610 | LIKELY      | thrown by the id 15 fighter | static throw switch; not seen on Tanya
 
-SUMMARY (134 clips listed)
- PROVEN        93
+SUMMARY (139 clips listed)
+ PROVEN        98
  LIKELY         9
  GUESS         12
  NOT HERS      20
  UNKNOWN        0
 
 MOVES WITH NO CLIP OF THEIR OWN
- Fatality A (misc40, static input D,D,U,D+BL): tried live in VS 5 times with P2 dazed (FINISH HIM), all at the same distance
-   (P1-P2 X difference 52775 at the input; the script's gap setting did not take effect): D,D,U,D+BL twice, D,D,U,D+BL+HP, and fast
-   versions (25-30 ms taps) of both. Each time the Up started a jump (304; once a jump punch 97) and no fatality clip played; the
-   round then ended with P2 137. NOT REACHED; input stays LIKELY (static); the clips are filled at run time.
- Fatality B (misc43, D,F,D,F+HK): REACHED live, clips 564-566 / victim 567-569 (PROVEN, see the table).
+ Fatality A (misc40, BL list, D,D,U,D + condition 0x2B): REACHED live, clips 395-396 / victim 389-397-409 (PROVEN, see the table).
+   Condition 0x2B (fn 0x45E2F0, PROVEN by reading the code and by the live result): X distance <= 65536 (fn 0x45E5C0), and at the BL press
+   HP + BL must be held with Up, HK, LP, LK and RUN not held (mask list 0x4E70E0). Working input (VS, P2 dazed, distance 60000):
+   hold BL, D,D,U,D (the held BL stops the Up from starting a jump), press and hold HP, release BL, press BL again (HP still held).
+   Failed live: the 5 earlier tries (no HP held at the BL press; the Up started a jump), hold-BL variants without HP held at the
+   BL press (distances 35000 / 60000 / 150000), and the working input at distance 150000 (too far).
+   Correction: the earlier "distance 52775" was P2's X before the script set the gap, not the distance; the gap write works
+   (60000 measured after the write), so fatality B was done at distance 60000 too (condition 0x1B: distance <= 65536).
+ Fatality B (misc43, D,F,D,F+HK, condition 0x1B close): REACHED live, clips 564-566 / victim 567-569 (PROVEN, see the table).
  Stage fatalities: arena 8 (misc41, B,F,D+HP) and arena 0 (misc42, F,F,F+LP -> uppercut 293, static): not attempted (need those
    arenas in VS). LIKELY (static input).
  Juggles: none produced on purpose. 293 launches (rise 157375); no juggle clip of her own found.
 
 STILL OPEN
- - Fatality A (see above): find the missing condition (distance, or the Up must not start a jump) and reach it live.
  - 22 (second clip of the D,B+LP handler): ground D,B+LP always gave LP 294 (4 timings); in the air it is 24-310. Static only.
  - 295, 297, 261, 532, 533, 209, 547, 548, 596: static-only clips in her handlers; LP,LP / HP,HP / run+attack / RUN tap gave nothing new.
  - 208: seen once (armed F,F+HK). A clean single-input repeat would firm up the input.

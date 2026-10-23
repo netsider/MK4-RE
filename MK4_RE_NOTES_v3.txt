@@ -536,12 +536,12 @@ Raw units only (65536 = 1 game unit = 256 mesh units). Quan Chi idle 283, armed 
 7) Open: 77/161, 94, 295, 297, 261/532/533, 209, 547/548/596; fatality clips; F,B+HP effect; armed jump / run. See QUANCHI_CLIPS.txt "STILL OPEN".
 
 ==== TANYA (fighter id 9): LIVE PASS, SPECIALS, WEAPON, FATALITY, CLIP LIST (2026-10-23, ~3:20 AM - 5:30 AM ET) ====
-Full clip list with status per clip: TANYA_CLIPS.txt (this repo; 134 clips: 93 PROVEN, 9 LIKELY, 12 GUESS, 20 NOT HERS).
+Full clip list with status per clip: TANYA_CLIPS.txt (this repo; 139 clips: 98 PROVEN, 9 LIKELY, 12 GUESS, 20 NOT HERS).
 Method as for Reiko / Quan Chi: P1 Tanya with scripted inputs, live memory log of both clip slots (practice vs an inactive Tanya, and VS vs CPU),
 plus the static decoder (script_decoder_v3.py, fighter 9) and entry f9 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
 Why Tanya: next fighter after Quan Chi (id 8) in the game's fighter-id order. Name from the select screen and "TANYA WINS".
 Raw units only (65536 = 1 game unit = 256 mesh units). Tanya idle 439, armed stance 285, standing height -71100, practice start gap 170392.
-Frame sheets (8 frames per clip) of the captured video were checked by eye for 53 clips (victim clips included).
+Frame sheets (8 frames per clip) of the captured video were checked by eye for 58 clips (victim clips included).
 
 1) PROVEN live (P1 Tanya):
    46 round intro (switch 0x4E8EE0 f9; every VS round start + every practice start) | 124 victory pose "TANYA WINS" (switch 0x4E9A28 f9)
@@ -567,11 +567,14 @@ Frame sheets (8 frames per clip) of the captured video were checked by eye for 5
    Armed LK / HK / B+LK / B+HK keep their normal clips (308, 66, 62, 64); armed D+HP -> 217-219-293.
 4) As victim (VS vs CPU): 13 (via 199 after opponent clip 14), 128, 131, 132, 137, 148, 152-173, 153, 157-586, 158-171, 159-177, 180, 182,
    183-185, 186-188, 189-191, 192-194, 311, 328. PROVEN played.
-5) Fatalities (VS, opponent dazed at FINISH HIM; the P1-P2 X distance at the input was 52775 every time):
-   Fatality B D,F,D,F+HK (misc43): REACHED. Tanya 564-565-566, victim 567-568-569, then victory 124. PROVEN.
-   Fatality A D,D,U,D+BL (misc40, static): NOT REACHED in 5 tries (plain, +HP, fast 25-30 ms taps); the Up always started a jump (304,
-   once 97) and the round ended with victim 137. Input LIKELY (static). Stage fatalities (arena 8 B,F,D+HP; arena 0 F,F,F+LP -> 293) not attempted.
+5) Fatalities (VS, opponent dazed at FINISH HIM, X distance 60000):
+   Fatality B D,F,D,F+HK (misc43, condition 0x1B: distance <= 65536): Tanya 564-565-566, victim 567-568-569, then victory 124. PROVEN.
+   Fatality A (misc40 in the BL list, D,D,U,D, condition 0x2B): Tanya 395-396, victim 389-397-409 (opponent explodes, FATALITY). PROVEN.
+   Condition 0x2B (fn 0x45E2F0): distance <= 65536, and at the BL press HP + BL held with Up, HK, LP, LK, RUN not held (masks 0x4E70E0).
+   Working input: hold BL, D,D,U,D (held BL stops the Up from starting a jump), press and hold HP, release BL, press BL again.
+   Without HP held, or at distance 150000, no fatality came out. (An earlier note gave the distance as 52775: that was P2's X before
+   the gap was set, not the distance.) Stage fatalities (arena 8 B,F,D+HP; arena 0 F,F,F+LP -> 293) not attempted.
 6) Capture note: some practice sessions recorded blank video while the memory log was fine (capture-side rendering bug, cause GUESS);
    315 has no frame sheet for that reason.
-7) Open: fatality A; 22; 295, 297 (LP/HP follow-ons; LP,LP and HP,HP gave only 294/296); 261/532/533; 209; 547/548/596; 208 clean repeat;
+7) Open: 22; 295, 297 (LP/HP follow-ons; LP,LP and HP,HP gave only 294/296); 261/532/533; 209; 547/548/596; 208 clean repeat;
    static-only victim clips 145, 154, 156, 195-197, 316-320, 549-550, 607, 610. See TANYA_CLIPS.txt "STILL OPEN".
