@@ -619,3 +619,41 @@ Raw units only (65536 = 1 game unit = 256 mesh units). Scorpion idle 290, armed 
    practice reset); one VS fatality run lost the game process during the FINISH HIM
    placement. Every lost practice move was re-run and logged.
 7) Open: 43/163, 295, 297, 261/532/533, 209, 547/548/596, 52; fatality clips; armed jump / run. See SCORPION_CLIPS.txt "STILL OPEN".
+
+==== RAIDEN (fighter id 1): LIVE PASS, SPECIALS, WEAPON, FATALITIES, CLIP LIST (2026-10-23, ~5:45 AM - 6:55 AM ET) ====
+Full clip list with status per clip: RAIDEN_CLIPS.txt (this repo; 124 clips: 80 PROVEN, 23 LIKELY, 8 GUESS, 13 NOT HIS).
+Method as for Reiko / Quan Chi / Tanya: P1 Raiden with scripted inputs, live memory log of both clip slots (practice vs an inactive Raiden,
+and VS vs CPU), plus the static decoder (script_decoder_v3.py, fighter 1) and entry f1 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
+Name from "RAIDEN WINS". Raw units only (65536 = 1 game unit = 256 mesh units). Raiden idle 291, armed stance 286, standing height -75497.
+Frame sheets (8 frames per clip) of the captured video were checked by eye for 50 clips (victim clips included).
+
+1) PROVEN live (P1 Raiden):
+   47 round intro (switch 0x4E8EE0 f1; every VS round start) | 123 victory pose "RAIDEN WINS" (switch 0x4E9A28 f1; opponent plays 137)
+   80 throw, close LP / F+LP (throw switch 0x4E1784 f1 -> 80 / victim 154) -> victim 154-172-328, dx +227804..+232804, rise 72648
+   33 close LK special -> victim 149-169, dx +151096, rise 51595 | 263 close HP (table 0x4E9BF8, id mod 3 = 1) -> 311
+   532 close HP,HP follow-on (263-532) -> 311 | 314 close HK knee -> 134, dx +27510
+   294 LP | 296 HP | 71 HK | 70 LK | 293 uppercut -> 128-328, dx +96334, rise 157375 | 62 sweep -> 192-194, dx +94368 | 64 roundhouse
+   260 crouch LP | 52 crouch HK -> 128-328 | 315 crouch LK -> 134, dx +50763 | 257/256 crouch block | 323 block
+   97 jump HP -> 311 | 96 jump LP | 61 jump-up kick | 56 jump forward/back HK -> 131-185, dx +203148, rise 89182
+   59 jump forward/back LK (switch 0x4E93C0 f1) -> 186-188, dx +172996
+   Shared locomotion: 267 walk F, 272 walk B, 259/258 crouch, 304 jump, 301 flip, 317-307 run (pushes the opponent +105504).
+2) Specials (PROVEN live):
+   17  D,B+LP lightning bolt (proj[03] 0x4F05D8 -> 17-17-17-19) -> victim 127, dx +159820 (gap 60000/200000), +16832 (gap 350000)
+   94  F,F+LK torpedo (special[0a]) -> 94-301-304, victim 135-182, dx +462812..+593880; in the air 304-94-301-304, victim 135-183-185, dx +520862
+   D,U teleport (special[0c]): no clip of its own; Raiden lands 65536 behind the opponent (X -75000 -> +140536), the opponent turns (305).
+   Static only, not seen: 19 (lightning end), 95 (torpedo end). LIKELY. B,B,F+LK = plain LK 70.
+3) Weapon (hammer, PROVEN live): 244 draw F,B+HP -> 286 armed stance | 277 / 278 armed walk F / B | 246 armed block | 218-219 armed crouch
+   234 armed LP -> victim 205, dx -28905 | 233 armed HP | armed D+HP -> 218-219-293; armed LK / HK / B+LK / B+HK / run keep 70, 71, 62, 64, 317-307.
+   Not resolved: weapon put-away and armed jump-up HP (the clip slot froze during those moves).
+4) Fatalities (VS, opponent dazed at FINISH HIM). Both have condition 0x1B (X distance <= 65536). The Up in the inputs starts a jump unless
+   BL is held, so: hold BL through the whole directional part, release BL, then press the attack.
+   Fatality A (misc40) hold BL, F,B,U,U, release BL, HK: Raiden 392-401-392-401-392-401-392-443, victim 389-393-394 (lightning, opponent
+     explodes, FATALITY). PROVEN 2x (distance 40000 and 33106).
+   Fatality B (misc43) hold BL, D,U,U,U, release BL, HP: Raiden 570-571-572-573, victim 574-575-576, FATALITY. PROVEN 2x (40000 and 33106).
+   No fatality: the plain inputs (no BL hold) at 40000 (B started a jump, 304), and BL-held at 90000 (sweep distance) and 150000 (jump distance).
+   A requested gap of 20000 ended at 33106 (the game pushes the fighters apart). Stage fatalities (arena 0 F,F,D+LP; arena 8 D,F,B+BL) not attempted.
+5) As victim (practice, P2 Raiden): 127, 128-328, 131-185, 134, 135-182, 135-183-185, 149-169, 154-172-328, 186-188, 192-194, 205, 311. PROVEN.
+6) Capture note: many sessions recorded blank video while the memory log was fine (capture-side rendering bug, cause GUESS); 15 PROVEN clips
+   have no frame sheet for that reason (70, 96, 205, 218, 219, 233, 234, 246, 277, 278, 305, 532, 56, 183, 185).
+7) Open: 19, 95, 295, 297 (LIKELY); 261/533, 209, 547/548/596, 179, 9 (GUESS); static-only victim clips 141-143, 145, 152, 153, 158, 171,
+   195-197, 254, 316, 320, 324, 549, 550, 607, 610. See RAIDEN_CLIPS.txt "STILL OPEN".
