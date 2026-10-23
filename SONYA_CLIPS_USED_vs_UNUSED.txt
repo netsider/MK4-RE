@@ -1,0 +1,183 @@
+SONYA (fighter id 2) - CLIPS USED vs UNUSED IN THE GAME   (built 2026-10-23 ~19:45 ET, read-only from SONYA_CLIPS.txt, a box copy of MK4.EXE, live-capture lists)
+Columns: clip | used? | label | name | where used / why not
+Rules: USED = PROVEN live (seen played in the running game) or LIKELY (in her static move/reaction tables).
+       UNUSED = another fighter's clip (NOT HERS rows), or no clip-record reference anywhere in MK4.EXE (byte scan of 0x4FDD6C+12*clip and >>2: LIKELY unused,
+                because a computed index could still reach it), or only a viewer export that is not in her tables/captures.
+       UNKNOWN = referenced in MK4.EXE but never seen live and not tied to her.
+
+CLIP 57 (netsider's "centerfold" pose): USED - PROVEN. It is the jump forward/back HK clip: live input U+F/B then HK played 304-301-57 (victim 131-185);
+  MK4.EXE angled-jump-HK switch (fixups 0x4E95D0/0x4E9604) points at 57; 2 clip-record references in the EXE. The reclined pose is part of that clip.
+  (Same clip, same moves, PROVEN for Johnny Cage too.)
+  CORRECTION 2026-10-23 ~19:45 ET: corrected name = jump_fwd_back_HK_air [PROVEN]; the viewer file name 'fall_knockdown_lying_torso_horizontal' was an auto
+  pose-shape default (glb not renamed). 60 fps game video checked against the viewer side view.
+
+TOTALS (all 494 Sonya rows = her clip list + every viewer .glb exported for her): USED 98  UNUSED 237  UNKNOWN 159
+  of the 132 clips in SONYA_CLIPS.txt: USED 98  UNUSED 11  UNKNOWN 23
+  viewer-only exports (in fightkit_x256/sonya, not in her list): 362 - these are why the viewer shows "tons" of anims she never plays.
+
+===== USED (from her clip list) =====
+   8 | USED    | PROVEN | loser falls down the well, continue screen (part 1) [PROVEN: netsider I | every live VS continue screen; netsider ID. Shared by all fighters | MK4.EXE clip-record refs=4
+   9 | USED    | PROVEN | loser falls down the well, continue screen (part 2, loops) [PROVEN: ne | follows 8 live; netsider ID. Shared | MK4.EXE clip-record refs=1
+  13 | USED    | PROVEN | other hit reactions (each 1 obs after a specific special) [GUESS] | live per-player log: victim plays 13 while dizzy; Death Kiss victim alternates 13<->206. Shared | MK4.EXE clip-record refs=6
+  15 | USED    | PROVEN | SONYA-SPECIFIC: lunge with both arms thrust forward = LIKELY firing th | live input; static proj[05]. Victim 130 | MK4.EXE clip-record refs=1
+  43 | USED    | LIKELY | close F+LK special (attacker) | static: close F+LK table 0x4E0FA0 Sonya entry -> 43, victim 163; old VS log showed "43 vs 163" at round end. Not produced on demand yet | MK4.EXE clip-record refs=1
+  46 | USED    | PROVEN | round-start intro pose (Sonya, Tanya; also Sub-Zero session) [PROVEN l | live VS 3/3 rounds; static intro switch 0x4E8EE0 f2 -> 46 | MK4.EXE clip-record refs=1
+  53 | USED    | PROVEN | crouch high kick [PROVEN live] | live input; static crouch-kick switch 0x4E9008 f2 -> 53 | MK4.EXE clip-record refs=2
+  57 | USED    | PROVEN | SHARED: netsider: starts squatting, then sits back on the ground proppe | DONE, PROVEN-by-netsider 2026-10-23 (viewer screenshot); live input: victim 131-185 dx +203148, rise 89182. Resolves the on-hold "find the centerfold pose" item | MK4.EXE clip-record refs=2
+  60 | USED    | PROVEN | jump forward low kick (U+F then LK) | live input; static angled-jump-LK switch 0x4E93C4 f2 -> 60 (58 = ids 0/3/6/9/12, 59 = 1/4/7/10/13). Victim 186-188 | MK4.EXE clip-record refs=2
+  63 | USED    | PROVEN | SHARED: fighting pose into leg sweep (B+LK sweep) [DONE: netsider 2026- | live input; sweep switch 0x4E9780: 63 even ids / 62 odd ids. Victim 195-197 dx ~+114600 (LIKELY: back-computed, log lost; Sub-Zero same clip live +114028) | MK4.EXE clip-record refs=1
+  65 | USED    | PROVEN | high kick (fighter-dependent sets) [PROVEN] | live input; HK switch 0x4E8C88 f2 -> 65 (66/71 = other fighters). Victim 311 dx +48349 (close +37972) | MK4.EXE clip-record refs=1
+  72 | USED    | PROVEN | SONYA-SPECIFIC: fighting pose into on-ground bicycle-kick motion = sta | live 72-73-72; static special[06] script. Victim 136-183-185 dx +207019, rise 141000 | MK4.EXE clip-record refs=3
+  73 | USED    | PROVEN | SONYA-SPECIFIC: netsider: lying on her back doing a bicycle-kick motion | live 72-73-72; static 72 -> 73 | MK4.EXE clip-record refs=1
+  77 | USED    | PROVEN | air throw (attacker), both in the air, BL | live: P1 77 then 310; victim 161-198-197 | MK4.EXE clip-record refs=1
+  78 | USED    | PROVEN | SONYA throw (attacker side), LIKELY: netsider: bear hug, then backward  | live input; throw switch 0x4E1784 f2 -> 78 / victim 156. Victim dx -301598 (F+LP -276768) | MK4.EXE clip-record refs=1
+  96 | USED    | PROVEN | jump punch LP (U then LP) | live input; victim 186-188 dx +172996 | MK4.EXE clip-record refs=2
+  97 | USED    | PROVEN | jump punch [PROVEN live] | live input | MK4.EXE clip-record refs=2
+ 101 | USED    | PROVEN | Square Wave middle (F,B+HP); netsider: crouch/ball to horizontal flying | live 310-101-310; static special[05] handler. Hit on a jumping opponent -> 186-188 dx +133678 | MK4.EXE clip-record refs=1
+ 102 | USED    | PROVEN | SONYA-SPECIFIC: handstand Leg Grab special (D+LP+BL) [PROVEN: live + v | live input + netsider; static special[07]. Victim 201-328 dx -218734, rise 33209 | MK4.EXE clip-record refs=1
+ 104 | USED    | PROVEN | Cartwheel / handstand flip (B,D,F+LK); netsider: forward handstand flip | live input; static special[13]. Victim 131-185 dx +289641, rise 89182 (airborne victim +355171) | MK4.EXE clip-record refs=1
+ 114 | USED    | PROVEN | SONYA-SPECIFIC: netsider: military salute, then hands behind her back;  | live VS after every won round; victory switch 0x4E9A28 f2 -> 114. Also at practice start | MK4.EXE clip-record refs=3
+ 127 | USED    | PROVEN | hit by projectile (after 17, 19) [GUESS] | live VS 4x (clip PROVEN, LIKELY a projectile hit) | MK4.EXE clip-record refs=4
+ 128 | USED    | PROVEN | uppercut launch; netsider: knocked from stance onto her back | live 6/6 after 293: 128-328, dx +96334, rise 157375, launch vy -12583, gravity +524/tick. Shared knockdown | MK4.EXE clip-record refs=2
+ 130 | USED    | PROVEN | SHARED: netsider: hard hit but unnatural (electrified / special-project | live after 15: dx +98950 .. +127475 (far Ring -16384). Shared | MK4.EXE clip-record refs=6
+ 131 | USED    | PROVEN | opponent hit by thrown weapon [LIKELY] | live: 131-185 after 57 / 104; 131 after weapon throw 208 | MK4.EXE clip-record refs=14
+ 134 | USED    | PROVEN | SHARED: hit reaction to a stomach (mid/body) hit; pairs with 324 (face | live after LK: dx +29729 (close +19322). Shared | MK4.EXE clip-record refs=5
+ 136 | USED    | PROVEN | Bicycle Kick victim (juggled) | live 136-183-185, dx +207019, rise 141000 (airborne victim dx ~+165000) | MK4.EXE clip-record refs=4
+ 137 | USED    | PROVEN | SHARED: stiff fall straight onto back, body kept straight (timber fall | live VS: loser plays 137 after the KO. Shared | MK4.EXE clip-record refs=1
+ 141 | USED    | LIKELY | roundhouse victim, part 2 | static B+HK reaction 142-141-143; seen live on Sub-Zero's roundhouse victim, not yet on Sonya's 313 | MK4.EXE clip-record refs=6
+ 142 | USED    | LIKELY | roundhouse victim, part 1 | as 141 (static 142-141-143) | MK4.EXE clip-record refs=6
+ 143 | USED    | LIKELY | roundhouse victim, part 3 | as 141; Sub-Zero 313 victim 142-141-143-328 dx +150696 (PROVEN on his move) | MK4.EXE clip-record refs=6
+ 151 | USED    | LIKELY | thrown by an id 3/9 fighter (opponent clip 79) | static throw switch: f3/f9 -> 79, victim 151; not seen on Sonya | MK4.EXE clip-record refs=1
+ 152 | USED    | LIKELY | stunned/held (after Scorpion spear 75) [LIKELY] | static throw switch: f0/f6/f14 -> 75, victim 152; not seen on Sonya | MK4.EXE clip-record refs=1
+ 153 | USED    | PROVEN | thrown by opponent clip 76; netsider: slides forward, flipped onto her  | live VS 153-173-328 | MK4.EXE clip-record refs=1
+ 154 | USED    | PROVEN | thrown by opponent clip 80; netsider: like 153, ends upside-down legs u | live VS 154-172-328 (2x) | MK4.EXE clip-record refs=1
+ 156 | USED    | PROVEN | SHARED: netsider: regular fighting pose, slides/moves, then falls backw | live 156-176-191, dx -301598, rise 38296; same script as 78 | MK4.EXE clip-record refs=1
+ 158 | USED    | LIKELY | other hit reactions (each 1 obs after a specific special) [GUESS] | static throw switch f5/f11 -> 81 / 158; Sub-Zero plays 158-171-328 live; not seen on Sonya | MK4.EXE clip-record refs=1
+ 161 | USED    | PROVEN | air-throw victim, start | live 161-198-197, dx -210570 (-197123 .. -230540), rise 131760 .. 145479 | MK4.EXE clip-record refs=1
+ 163 | USED    | LIKELY | other hit reactions (each 1 obs after a specific special) [GUESS] | static table 0x4E0FA0 (Sonya 43 / victim 163); old VS log | MK4.EXE clip-record refs=1
+ 171 | USED    | LIKELY | other hit reactions (each 1 obs after a specific special) [GUESS] | Sub-Zero 158-171-328 live; LIKELY same for Sonya | MK4.EXE clip-record refs=1
+ 172 | USED    | PROVEN | throw landing; netsider: on her back, bounces up, lands flat | live VS 154-172-328 | MK4.EXE clip-record refs=1
+ 173 | USED    | PROVEN | stunned/held (after Scorpion spear 75) [LIKELY] | live VS 153-173-328 | MK4.EXE clip-record refs=3
+ 176 | USED    | PROVEN | SHARED: netsider: starts upside down (head on ground, feet in air), end | live 156-176-191 | MK4.EXE clip-record refs=1
+ 183 | USED    | PROVEN | knocked down (air hit / weapon HP / Bicycle) | live: air HP dx +188052/+178224, air LK +211002 (183-185); weapon HP 230 dx +283967, rise 92443 | MK4.EXE clip-record refs=14
+ 185 | USED    | PROVEN | get-up after 131 / 183 | live 131-185, 183-185, 136-183-185 | MK4.EXE clip-record refs=4
+ 186 | USED    | PROVEN | jump-attack / Square Wave hit | live 186-188: jump LP dx +172996; Square Wave vs jumper +133678. (305 is NOT this hit) | MK4.EXE clip-record refs=3
+ 188 | USED    | PROVEN | recover after 186 | live 186-188 | MK4.EXE clip-record refs=1
+ 189 | USED    | PROVEN | air hit by HK | live 189-191, dx +244417 / +212308 | MK4.EXE clip-record refs=7
+ 191 | USED    | PROVEN | SHARED: netsider: from lying on the floor with arms out back to fightin | live 156-176-191 and 189-191 | MK4.EXE clip-record refs=2
+ 192 | USED    | PROVEN | knockdown forward; netsider: falls forward onto her face | live VS 192-194 after opponent clip 62 | MK4.EXE clip-record refs=1
+ 194 | USED    | PROVEN | get-up from upside-down; netsider: head down, legs over -> stance | live VS 192-194 | MK4.EXE clip-record refs=1
+ 195 | USED    | PROVEN | SHARED: netsider: fighting pose -> landing on her back (knockdown fall) | live 195-197 after 63 | MK4.EXE clip-record refs=3
+ 197 | USED    | PROVEN | SHARED: netsider: forward goes from lying on her back to the fighting p | live 195-197. Separately keyed clip, not 195 reversed (keyframe check) | MK4.EXE clip-record refs=3
+ 198 | USED    | PROVEN | air-throw victim, middle | live 161-198-197 | MK4.EXE clip-record refs=2
+ 201 | USED    | PROVEN | SHARED (all fighters): netsider: starts in a 'riding' pose, fists forwa | live 201-328 dx -218734, rise 33209; started by the Leg Grab script | MK4.EXE clip-record refs=1
+ 206 | USED    | PROVEN | SHARED (probably): fatality victim's death fall - starts dazed/subdued | live VS: victim alternates 13 <-> 206. Shared | MK4.EXE clip-record refs=10
+ 208 | USED    | PROVEN | weapon throw (Sonya F,F+LK with weapon drawn) [PROVEN: draw test 2026- | live; victim 131 | MK4.EXE clip-record refs=1
+ 217 | USED    | PROVEN | SHARED (all fighters, netsider 2026-10-22): arms-apart pose transitioni | live with weapon: D -> 217-219-...-259 | MK4.EXE clip-record refs=1
+ 219 | USED    | PROVEN | SHARED (all fighters, netsider 2026-10-22): held pose of shooting OR pu | live with weapon (217-219) | MK4.EXE clip-record refs=4
+ 229 | USED    | PROVEN | SHARED (all fighters, netsider 2026-10-22): netsider: left-fist punch st | live input | MK4.EXE clip-record refs=6
+ 230 | USED    | PROVEN | weapon high swing (HP armed) | live; victim 183-185 dx +283967, rise 92443 | MK4.EXE clip-record refs=7
+ 244 | USED    | PROVEN | weapon draw (Sonya F,F+LK; Tanya same) [PROVEN: draw test 2026-10-22] | live -> 285; static misc[29] | MK4.EXE clip-record refs=1
+ 246 | USED    | PROVEN | weapon block (BL armed) | live input | MK4.EXE clip-record refs=1
+ 256 | USED    | PROVEN | crouch-block held (39f) [PROVEN live] | live D+BL: 259-258-257-256-257-258-259 | MK4.EXE clip-record refs=1
+ 257 | USED    | PROVEN | crouch-block going down (5f) [PROVEN live] | live D+BL; static aux[0f] | MK4.EXE clip-record refs=2
+ 258 | USED    | PROVEN | crouch HELD (39 frames) [PROVEN live; was mislabelled crouch down] | live D | MK4.EXE clip-record refs=5
+ 259 | USED    | PROVEN | crouch going DOWN (5 frames) [PROVEN live; was mislabelled crouch hold | live D, 5 ticks | MK4.EXE clip-record refs=2
+ 260 | USED    | PROVEN | crouch low punch [PROVEN live] | live input | MK4.EXE clip-record refs=1
+ 264 | USED    | PROVEN | SHARED (all fighters, netsider 2026-10-22): netsider: regular fighting s | live HP at gap ~45000 (victim 324); close-HP table 0x4E9BF8: 264 for ids 2,5,8,11,14 | MK4.EXE clip-record refs=5
+ 267 | USED    | PROVEN | walk forward (variants per fighter; 267 most fighters, 266 Liu Kang, 2 | live F; 3932 units/tick | MK4.EXE clip-record refs=10
+ 272 | USED    | PROVEN | walk back (272 most, 271 Liu Kang, 273 Reptile, 274 Scorpion, 270 Jax/ | live B; 2754 units/tick | MK4.EXE clip-record refs=10
+ 275 | USED    | PROVEN | SHARED (all fighters, netsider 2026-10-22): netsider: walking forward wi | live F while armed | MK4.EXE clip-record refs=6
+ 276 | USED    | PROVEN | SHARED (all fighters, netsider 2026-10-22): netsider: walking backwards  | live draw test (weapon held) | MK4.EXE clip-record refs=6
+ 285 | USED    | PROVEN | SHARED (all fighters, netsider 2026-10-22): netsider: idle with fists he | live after 244 | MK4.EXE clip-record refs=6
+ 293 | USED    | PROVEN | crouch high punch / uppercut [PROVEN live, C_ runs] | live input; victim 128-328 dx +96334, rise 157375 | MK4.EXE clip-record refs=4
+ 294 | USED    | PROVEN | low punch (jab) [PROVEN] | live input. 5% damage (static) | MK4.EXE clip-record refs=2
+ 296 | USED    | PROVEN | SHARED high punch [PROVEN: live + verified by netsider 2026-10-22] | live input; victim 324 / 311 | MK4.EXE clip-record refs=2
+ 301 | USED    | PROVEN | SHARED jump flip tuck (angled jump) - netsider: starts already in a jum | live U+F / U+B | MK4.EXE clip-record refs=13
+ 304 | USED    | PROVEN | SHARED straight-up jump (root X/Z locked, no travel) - near-identical  | live U. P1 min height -185748 (rise 112119) | MK4.EXE clip-record refs=2
+ 305 | USED    | LIKELY | SHARED (all fighters, netsider 2026-10-22): UNKNOWN - netsider: stance i | 3 frames; seen when 310/101 crosses P2. CORRECTED: NOT the Square Wave hit (that is 186-188) | MK4.EXE clip-record refs=3
+ 307 | USED    | PROVEN | SHARED run loop [PROVEN: verified by netsider 2026-10-22] | live F,F+RUN hold (267-317-307) | MK4.EXE clip-record refs=4
+ 308 | USED    | PROVEN | SHARED standing low kick (fighting stance into full low kick) [PROVEN: | live input; LK switch 0x4E8D78 f2 -> 308 (67/70 = other fighters). Victim 134 | MK4.EXE clip-record refs=2
+ 310 | USED    | PROVEN | SHARED jump variant: same as 304 but root drifts (travels X/Z and back | live 310-101-310 and 77-310. netsider's "jump variant" reading is his visual ID | MK4.EXE clip-record refs=4
+ 311 | USED    | PROVEN | SHARED head snaps back: punch hit reaction or lean-back dodge (NOT an  | live after HP/HK/LP hits; HK dx +48349, HP 0 | MK4.EXE clip-record refs=11
+ 313 | USED    | PROVEN | roundhouse (B+HK) | live input; B+HK switch 0x4E97E8 f2 -> 313 (64 = other fighters). 18% damage (static) | MK4.EXE clip-record refs=1
+ 315 | USED    | PROVEN | crouch low kick [PROVEN live] | live input | MK4.EXE clip-record refs=1
+ 317 | USED    | PROVEN | SHARED run START (going into the run) [PROVEN: verified by netsider 202 | live 267-317-307 | MK4.EXE clip-record refs=2
+ 323 | USED    | PROVEN | SHARED standing block HELD (idle loop while holding block) [PROVEN: ve | live BL | MK4.EXE clip-record refs=1
+ 324 | USED    | PROVEN | SHARED (all fighters, netsider 2026-10-22): hit reaction to a face (hig | live after 264; netsider: face hit. Shared LIKELY | MK4.EXE clip-record refs=1
+ 327 | USED    | PROVEN | SHARED jump kick that starts mid-air (in-air transition into the kick  | live input; switch 0x4E91E0 f2 -> 327 (61 = other fighters) | MK4.EXE clip-record refs=2
+ 328 | USED    | PROVEN | SHARED flip get-up recovery, used by every fighter [PROVEN: verified b | live 128-328, 201-328, 153-173-328, 154-172-328 | MK4.EXE clip-record refs=2
+ 388 | USED    | PROVEN | CONFLICT: netsider's viewer shows it only for Liu Kang, BUT the per-pla | live VS per-player log: P1 388, victim 13 <-> 206. Old viewer listed it under Liu Kang (catalogue conflict) | MK4.EXE clip-record refs=2
+ 439 | USED    | PROVEN | idle / fighting stance | all live logs | MK4.EXE clip-record refs=2
+ 558 | USED    | PROVEN | Leg Twist fatality, part 1 | live: at FINISH HIM, victim dizzy, gap 160000: hold BL, U,D,D,U, release BL, HK -> 558-559-560. Run-time fatality slot (reused by other fatalities LIKELY) | MK4.EXE clip-record refs=1
+ 559 | USED    | PROVEN | Leg Twist fatality, part 2 | live 558-559-560 | MK4.EXE clip-record refs=1
+ 560 | USED    | PROVEN | Leg Twist fatality, part 3 | live 558-559-560, then 114 | MK4.EXE clip-record refs=2
+ 561 | USED    | PROVEN | Leg Twist victim (alternates with 562) | live; victim pulled to attacker X | MK4.EXE clip-record refs=2
+ 562 | USED    | PROVEN | Leg Twist victim (alternates with 561) | live | MK4.EXE clip-record refs=2
+
+===== UNUSED (from her clip list) =====
+  16 | UNUSED  | LIKELY | Sub-Zero freeze [LIKELY] | NOT THIS FIGHTER (other fighter's clip): LIKELY not hers: static proj[05] lists 15 16; Sub-Zero plays 16 live (PROVEN), Sonya never did | MK4.EXE clip-record refs=1
+  25 | UNUSED  | LIKELY | netsider: spitting something from her mouth = Reptile acid spit | NOT THIS FIGHTER (other fighter's clip): LIKELY not hers: projectile entry 0x0C is in Reptile's command list; never produced live by Sonya | MK4.EXE clip-record refs=1
+  26 | UNUSED  | LIKELY | netsider: stance to wide arms-open stance = D,F+P projectile-throw pose | NOT THIS FIGHTER (other fighter's clip): LIKELY not hers natively: proj[0a] of fighters 9 (Tanya), 16 (Kitana), 17 (Noob); Kitana id 16 is mapped to Sonya id 2 by the dispatchers (PROVEN code), so the clip sits in her set. Never p
+  27 | UNUSED  | LIKELY | netsider: straight punch | NOT THIS FIGHTER (other fighter's clip): LIKELY not hers: no Sonya input produces it; slot belongs to Jarek | MK4.EXE clip-record refs=2
+  28 | UNUSED  | LIKELY | netsider: most likely an uppercut | NOT THIS FIGHTER (other fighter's clip): LIKELY not hers: no Sonya input produces it; Cage Green Orb slot. Her real uppercut is 293 | MK4.EXE clip-record refs=1
+  50 | UNUSED  | PROVEN | netsider: small show-off flourish with the fists; per-player log: ROUND | NOT THIS FIGHTER (other fighter's clip): PROVEN not hers in VS (opponent plays it at round start; intro switch: id 10 -> 50). Sonya plays it only at practice start | MK4.EXE clip-record refs=1
+  52 | UNUSED  | LIKELY | crouch kick variant (Sub-Zero D+HK) | NOT THIS FIGHTER (other fighter's clip): LIKELY not hers: Sub-Zero plays 52 live (PROVEN); appears after her 53/54 in the crouch-kick script, never played by her live | MK4.EXE clip-record refs=4
+  55 | UNUSED  | LIKELY | angled jump HK variant (other fighters) | NOT THIS FIGHTER (other fighter's clip): LIKELY not hers: in the shared angled-jump-HK list (57 55 56); her live jump HK is 57 | MK4.EXE clip-record refs=2
+  56 | UNUSED  | LIKELY | angled jump HK variant (Sub-Zero) | NOT THIS FIGHTER (other fighter's clip): LIKELY not hers: Sub-Zero plays 56 live (PROVEN); hers is 57 | MK4.EXE clip-record refs=2
+ 284 | UNUSED  | LIKELY | stance/idle (Jarek, Jax, Reiko) [PROVEN] | NOT THIS FIGHTER (other fighter's clip): LIKELY not hers: other fighters' idle; came from an old mixed VS log | MK4.EXE clip-record refs=4
+ 467 | UNUSED  | LIKELY | swim [netsider visual ID] | no clip-record reference anywhere in MK4.EXE; netsider ID on Sonya. One clip in the shared 612-clip table, so every fighter can play it; nothing in MK4.EXE points at clip 467 (no clip-record pointer, fixup or script), LIKELY unused
+
+===== UNKNOWN (from her clip list) =====
+  44 | UNKNOWN | GUESS  | pre-fight bow, shared by all fighters [netsider ID; not decoded live in | netsider ID; never decoded in this build's intros | MK4.EXE clip-record refs=2
+  54 | UNKNOWN | GUESS  | crouch-kick follow-on clip | referenced in MK4.EXE (MK4.EXE clip-record refs=2) but never seen live: static only: in her crouch-kick script after 53; never seen live
+ 157 | UNKNOWN | GUESS  | (131 frames) seen in an old mixed VS log | seen in some live log but not tied to an input: no input or code link yet; may not be hers | MK4.EXE clip-record refs=1
+ 182 | UNKNOWN | GUESS  | knockdown fall (after specials 25, 107, 301) [LIKELY] | referenced in MK4.EXE (MK4.EXE clip-record refs=10) but never seen live: static LP/HP reaction r25 -> 311-182; seen in an old mixed VS log only
+ 196 | UNKNOWN | GUESS  | run-collision victim, end | referenced in MK4.EXE (MK4.EXE clip-record refs=1) but never seen live: static run reaction rb5 -> 549-550-196; never seen live
+ 199 | UNKNOWN | GUESS  | other hit reactions (each 1 obs after a specific special) [GUESS] | seen in some live log but not tied to an input: no input or code link yet | MK4.EXE clip-record refs=2
+ 209 | UNKNOWN | GUESS  | RUN-button action clip | referenced in MK4.EXE (MK4.EXE clip-record refs=1) but never seen live: static only: generic RUN action misc[03] starts 209
+ 227 | UNKNOWN | GUESS  | SHARED (all fighters, netsider 2026-10-22): starts in arms-apart stance | seen in some live log but not tied to an input: seen live in an old weapon-throw try; exact input not proven (LIKELY a weapon-held attack) | MK4.EXE clip-record refs=1
+ 254 | UNKNOWN | GUESS  | low-hit reaction follow-on after 134 | referenced in MK4.EXE (MK4.EXE clip-record refs=2) but never seen live: static LK / crouch LP reaction 134-254; never seen live (live LK showed 134 only)
+ 261 | UNKNOWN | GUESS  | close-strike clip | referenced in MK4.EXE (MK4.EXE clip-record refs=1) but never seen live: static only: misc[09] close strike lists 66 261 532 533; owner per fighter not resolved
+ 287 | UNKNOWN | GUESS  | stance/idle (Liu Kang) [PROVEN] | in her group-A movie set (old mixed VS log: finish-him wait / round end); ownership conflict not resolved | MK4.EXE clip-record refs=1
+ 295 | UNKNOWN | GUESS  | low-punch follow-on clip | referenced in MK4.EXE (MK4.EXE clip-record refs=2) but never seen live: static only: LP handler lists 294 295; never seen live
+ 297 | UNKNOWN | GUESS  | high-punch follow-on clip | referenced in MK4.EXE (MK4.EXE clip-record refs=2) but never seen live: static only: HP handler lists 297 296; never seen live
+ 314 | UNKNOWN | GUESS  | SHARED knee strike from fighting stance (stance into knee kick); LIKEL | seen in some live log but not tied to an input: listed in her crouch-kick handler (static); not produced by a Sonya input yet. Sub-Zero plays 314 as close HK (PROVEN) | MK4.EXE clip-record refs=2
+ 316 | UNKNOWN | GUESS  | sweep-fall variant, start | referenced in MK4.EXE (MK4.EXE clip-record refs=1) but never seen live: static sweep reaction r13 -> 316-320-192-194; never seen live
+ 320 | UNKNOWN | GUESS  | sweep-fall variant, middle | referenced in MK4.EXE (MK4.EXE clip-record refs=1) but never seen live: static as 316
+ 322 | UNKNOWN | GUESS  | SHARED (all fighters, netsider 2026-10-22): UNKNOWN - netsider: fists fa | seen in some live log but not tied to an input: LIKELY weapon-held stance -> normal stance; not isolated live | MK4.EXE clip-record refs=1
+ 547 | UNKNOWN | GUESS  | run-related clip | referenced in MK4.EXE (MK4.EXE clip-record refs=1) but never seen live: static Run handler lists 547 548 596 307 317; seen in an old mixed VS log (opponent side)
+ 548 | UNKNOWN | GUESS  | run-related clip | referenced in MK4.EXE (MK4.EXE clip-record refs=1) but never seen live: as 547
+ 549 | UNKNOWN | GUESS  | run-collision victim, start | referenced in MK4.EXE (MK4.EXE clip-record refs=1) but never seen live: static run reaction rb5 -> 549-550-196; old mixed VS log
+ 550 | UNKNOWN | GUESS  | run-collision victim, middle | referenced in MK4.EXE (MK4.EXE clip-record refs=1) but never seen live: static only (549-550-196)
+ 586 | UNKNOWN | GUESS  | (131 frames) seen in an old mixed VS log | seen in some live log but not tied to an input: no input or code link yet | MK4.EXE clip-record refs=1
+ 596 | UNKNOWN | GUESS  | run-related clip | referenced in MK4.EXE (MK4.EXE clip-record refs=1) but never seen live: static Run handler only
+
+===== VIEWER-ONLY EXPORTS (not in her clip list) =====
+ UNUSED GUESS - not in this fighter's tables/captures (86): 1 2 3 4 5 6 10 11 14 19 24 29 35 37 38 42 58 61 62 64 66 67 70 71 75 76 79 80 81 86 92 93 95 98 100 103 106 107 109 110 132 133 145 147 160 162 167 168 174 179 203 218 226 228 231 237 239 240 242 245 248 249 250 262 263 265 266 268 269 270 271 273 274 277 278 279 286 299 302 303 312 319 389 437 438 448
+ UNUSED LIKELY - no clip-record reference anywhere in MK4.EXE | MK4.EXE clip-record refs=0 (140): 69 207 241 281 318 329 330 331 332 333 334 335 336 337 338 339 340 341 342 343 344 345 346 347 348 349 350 351 352 353 354 355 356 357 358 359 360 361 362 363 364 365 366 367 368 369 370 371 372 373 374 375 376 377 378 379 380 381 382 383 433 449 450 451 452 453 454 455 456 457 458 459 460 461 462 463 464 465 466 468 469 470 471 472 473 474 475 476 477 478 479 480 481 482 483 484 485 488 489 490 491 492 494 495 496 497 498 499 500 501 502 503 504 505 506 507 508 509 510 511 512 513 514 515 516 517 518 519 520 521 522 523 524 525 526 528 529 530 531 611
+ UNKNOWN GUESS - referenced in MK4.EXE (136): 0 7 17 18 20 21 22 23 30 31 32 33 34 36 39 40 41 45 47 48 49 51 59 68 74 82 83 84 85 87 88 89 90 91 94 99 105 108 111 112 113 115 116 117 118 119 120 121 122 123 124 125 126 129 135 138 139 140 144 146 148 149 150 155 159 164 165 166 169 170 175 177 178 180 181 184 187 190 193 200 202 205 211 214 215 216 220 221 222 223 224 225 232 233 234 235 236 238 243 247 251 252 253 255 280 282 283 288 289 290 291 292 298 300 306 309 321 325 326 527 532 533 534 535 536 552 553 554 577 582 583 584 585 606 607 610
+
+===== CORRECTED CLIP NAMES - Sonya-relevant (added 2026-10-23 ~19:45 ET; full list in MK4_MASTER_ANIM_LIST.csv) =====
+Old viewer auto name 'fall_knockdown_lying_torso_horizontal' is not evidence; corrected names (glb files not renamed):
+  55 | PROVEN | jump_fwd_back_HK_air (variant set)
+  56 | PROVEN | jump_fwd_back_HK_air (variant set; Raiden jump-in HK, Sub-Zero)
+  57 | PROVEN | jump_fwd_back_HK_air
+  58 | PROVEN | jump_fwd_back_LK_air (variant set)
+  59 | PROVEN | jump_fwd_back_LK_air (variant set; Raiden jump-in LK)
+  60 | PROVEN | jump_fwd_back_LK_air (variant set; Sonya)
+  61 | PROVEN | jump_up_kick (straight-up jump kick)
+ 301 | PROVEN | jump_fwd_back_flip_lead_in (angled jump tuck)
+  43 | LIKELY | attack move (attacker side) [Sonya]
+  72 | PROVEN | SONYA-SPECIFIC: fighting pose into on-ground bicycle-kick motion = sta | attack move (attacker side) [Sonya]
+  73 | PROVEN | SONYA-SPECIFIC: netsider: lying on her back doing a bicycle-kick motion | attack move (attacker side) [Sonya]
+  77 | PROVEN | air throw (attacker)
+  78 | PROVEN | throw (attacker, Sonya)
+ 102 | PROVEN | SONYA-SPECIFIC: handstand Leg Grab special (D+LP+BL) | attack move (attacker side) [Sonya]
+ 104 | LIKELY | attack move (attacker side) [Sonya]
+ 131 | PROVEN | hit reaction: jump-kick / weapon hit
+ 163 | LIKELY | other hit reactions (each 1 obs after a specific special) | hit reaction / victim clip [Sonya]
+ 171 | LIKELY | other hit reactions (each 1 obs after a specific special) | hit reaction / victim clip [Fujin, Kai, Quan Chi, Raiden, Reiko, Reptile, Shinnok, Sonya]
+ 176 | PROVEN | SHARED: netsider: starts upside down (head on ground, feet in air), end | hit reaction / victim clip [Quan Chi, Sonya, Sub-Zero]
+ 198 | LIKELY | hit reaction / victim clip [Sonya]
+ 201 | PROVEN | SHARED (all fighters): netsider: starts in a 'riding' pose, fists forwa | hit reaction / victim clip [Sonya]

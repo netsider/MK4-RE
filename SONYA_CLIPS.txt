@@ -50,6 +50,8 @@ clip | status      | name / description                                    | evi
   55 | NOT HERS    | angled jump HK variant (other fighters) | LIKELY not hers: in the shared angled-jump-HK list (57 55 56); her live jump HK is 57
   56 | NOT HERS    | angled jump HK variant (Sub-Zero) | LIKELY not hers: Sub-Zero plays 56 live (PROVEN); hers is 57
   57 | PROVEN      | centerfold pose (reclining on the ground), netsider's ID; also plays on jump forward/back HK (U+F/B then HK) | DONE, PROVEN-by-netsider 2026-10-23 (viewer); live input: victim 131-185 dx +203148, rise 89182. Resolves the on-hold "find the centerfold pose" item
+      CORRECTION 2026-10-23 ~19:45 ET: 57 = jump_fwd_back_HK_air (Sonya and Cage) [PROVEN: 4 of 4 live U+F/B then HK runs 304-301-57-304; viewer clip numbers = EXE
+      clip ids (frame counts 477/477); 60 fps video shows her airborne leaning back with the leg level, which the viewer shows on the floor as the reclined pose].
   60 | PROVEN      | jump forward low kick (U+F then LK) | live input; static angled-jump-LK switch 0x4E93C4 f2 -> 60 (58 = ids 0/3/6/9/12, 59 = 1/4/7/10/13). Victim 186-188
   63 | PROVEN      | leg sweep (B+LK); netsider: fighting pose into leg sweep | live input; sweep switch 0x4E9780: 63 even ids / 62 odd ids. Victim 195-197 dx ~+114600 (LIKELY: back-computed, log lost; Sub-Zero same clip live +114028)
   65 | PROVEN      | high kick (HK) | live input; HK switch 0x4E8C88 f2 -> 65 (66/71 = other fighters). Victim 311 dx +48349 (close +37972)

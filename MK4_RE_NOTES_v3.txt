@@ -1021,3 +1021,42 @@ Open: teleport hit 74 / 150 and 183; air throw; throw 76 vs 80; stage fatalities
 Run notes: no crashes or input stalls in this pass. After the teleport both fighters are invisible in the capture renderer
   (as on Reiko), so the teleport frames are blank; the memory logs are fine.
 Clip list file: NOOB_CLIPS.txt (this repo).
+==== 2026-10-23 EVENING UPDATE (~6:30 PM - 7:45 PM ET): BICYCLE CONTACT, HIT BLOOD, SIMS, CLIP AUDIT, CLIP 57 RECHECK ====
+Bicycle Kick juggle (72 -> 73 loops -> 72 -> 310 -> 304; victim 136 -> 183 -> 185) [PROVEN live]:
+  Contact point on the way up is mostly the victim's CHEST/MIDSECTION - confirmed by netsider from real-game frames (not feet-to-feet, not the hips).
+  The position lock (victim locked to the attacker while 73 kicks, released at 183) stays PROVEN.
+Hit blood per move (box captures c8-c10, Wine, practice, Sonya vs inactive dummy; render-node list 0x52B6CC + pool 0x5224F0; raw units, Y up = negative):
+  - CORRECTION: an earlier sim used the Leg Twist gore drops for normal hits - WRONG. Each move has its own effect; none uses the Leg Twist drops
+    (Leg Twist gravity 1310/pass; uppercut drops 229/tick).
+  - HK 65 [PROVEN]: 2 sprites SHARE2_G 0x7C->0x88 (half-fan spray, one mirrored = full round burst), 1 frame/tick, ~14 ticks (0.21 s).
+    Spawn = victim root at contact + (-1311 toward attacker, -39321 up, +-2621 z); v = (+3276 away, 0, +-2621)/tick; no gravity. Earlier 'HK: no blood' was WRONG.
+  - Bicycle 72-73 [PROVEN]: 7 sprites SHARE2_G 0x8D->0x98 (blood cloud), one every ~8 ticks (0.124 s) from victim 136 f1; spawn = victim root + (0,-26214,0);
+    constant v, no gravity: x +2659..+3886 (away), y -2664..-3898 (up), z -689..-1906; freed at ~20 ticks. No drops or splats.
+  - Uppercut 293 [PROVEN]: 9 SHARED_G drops (5 at contact + 1/tick x4) from victim root + (0,-6782,0), gravity +229/tick; drop parts cycle 0->3 (2 ticks each);
+    on the floor each becomes a splat animating parts 4->0xC (2 ticks each), then removed. Also SHARED_G 0x91->0x99 ring at root + (0,-26541,0) rising 327/tick,
+    and SHARE2_G 0x60->0x63 floor splatter at the victim's X when the body lands (~0.83 s).
+  - Cartwheel 104 (victim 131 -> 185) [PROVEN c9, 2 reps]: 4 sprites SHARE2_G 0x89->0x98 (0x89-0x8C pre-roll, then the Bicycle cloud frames), one every 3 ticks
+    from contact, each gone at ~17 ticks; spawn = victim root + (-6553, -21626 / -23591 alternating, 0); constant v (~+1600..+2400 away, -200..-1200 up), no gravity.
+  - All moves: SHARED_G 0xB6-0xBE grey landing dust (not blood) [LIKELY].
+  - Sprite world size = record ww/wh x 64 raw [LIKELY, from video]. Capture video runs 0.0745 s ahead of the memory log [PROVEN on one HK run].
+  - Nut Punch 438 (Cage): NOT captured (LP+BL gave 294 / 323 / crouch; two tries crashed the game). Its blood stays GUESS.
+Sims (local viewer, not in this repo - they load extracted game models):
+  - Sonya remaining specials sim: Square Wave 310-101-310 (vs standing dummy = no hit, dummy turns 305) / Leg Grab 257-102, victim 201-328 / Energy Ring 15 -> 130
+    [all PROVEN replays]. Cartwheel 104 is her last special[] entry [PROVEN static]; next of her moves in the tables is the weapon draw [LIKELY].
+  - Raiden vs Raiden sim v1: 48 entries (24 moves each) from RAIDEN_PROVEN_TABLE; PROVEN pairs incl. jump-in HK 56>131-185, jump-in LK 59>186-188, bolt 17>127,
+    torpedo 94>135-182; LIKELY: jump LP 96>186-188, roundhouse 64>142-141-143; GUESS: HK 71>311, jump kick 61>311.
+Clip used/unused audit (files in this repo: MK4_MASTER_ANIM_LIST.csv / .txt, SONYA_CLIPS_USED_vs_UNUSED.txt):
+  - Method: per-fighter *_CLIPS.txt + live seen list + byte scan of MK4.EXE for every clip record 0x4FDD6C+12*clip (and >>2).
+  - 144 of 612 clips have ZERO references in MK4.EXE (incl. 329-383, 449-526, 467 swim): LIKELY never played (a computed index is not ruled out).
+  - 366 clips are USED by at least one audited fighter; 102 are referenced in the EXE but not tied to an audited fighter (UNKNOWN).
+  - The viewer exports ~477 clips for every fighter; only ~80-113 per fighter are used by that fighter - that is why the viewer shows so many anims not in the game.
+  - Kitana (id 16): no clip list / exports, not audited.
+Clip 57 recheck (netsider doubted 57 = jump HK) [PROVEN]:
+  - Viewer clip numbering = EXE clip ids: frame counts match 477/477 for Sonya (shift +-1 gives ~68 matches); Cage 57/58/304 match.
+  - Live: 4 of 4 jump forward/back HK runs played 304-301-57-304. 60 fps video: Sonya airborne, leaning back with the kicking leg level = the reclined
+    'centerfold' look in the viewer (the viewer shows the mid-air pose on the floor, without the jump arc) [LIKELY visual match].
+  - So 57 = jump_fwd_back_HK_air, USED (Sonya and Cage). netsider's pose description of 57 is kept.
+Corrected clip names: the viewer auto name 'fall_knockdown_lying_torso_horizontal' (on 135 clip ids) was a pose-shape default, not evidence.
+  MK4_MASTER_ANIM_LIST.csv has columns auto_glb_name / corrected_name / corrected_name_label / corrected_name_evidence (37 PROVEN, 71 LIKELY = used live,
+  named by role only, 27 GUESS = never seen live, 'unidentified'). Key: 55/56/57 jump_fwd_back_HK_air, 58/59/60 jump_fwd_back_LK_air, 61 jump_up_kick,
+  301 jump_fwd_back_flip_lead_in [all PROVEN]. Viewer .glb file names are not changed.
