@@ -354,3 +354,44 @@ Practice lockup workaround: reboot practice every 7 moves. 27 moves in 4 chunks,
      So 79 = the f3/f9 (Tanya) throw. LIKELY.
      174 = the victim landing after 151. Sub-Zero would play 151/174 only when Tanya (or f3) throws him. LIKELY, not seen live.
    - Script 0x4ecb28 (171 -> 172 -> 174 natives) is a second shared fall chain that also references 174. Static only, GUESS.
+
+==== FUJIN (fighter id 5): LIVE PASS, WEAPON CLIPS, CLIP LIST (2026-10-23, ~12:28 AM - 2:10 AM ET) ====
+Full clip list with status per clip: FUJIN_CLIPS.txt (this repo; 117 clips: 59 PROVEN, 9 NETSIDER-ID, 21 LIKELY, 16 GUESS, 12 NOT HIS).
+Method as for Sonya: P1 Fujin with scripted inputs, live memory log of both clip slots (practice vs an inactive Fujin, and VS vs CPU),
+plus the static decoder (tools\script_decoder_v3.py, fighter 5) and entry f5 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
+Raw units only (65536 = 1 game unit = 256 mesh units). Fujin idle 291, standing height -73531, practice start gap 170392.
+
+1) PROVEN live (P1 Fujin):
+   48 round intro (switch 0x4E8EE0 f5; 7 of 7 round starts) | 120 victory pose (switch 0x4E9A28 f5 -> 0x4E9BC8; 8 of 8 won rounds)
+   81 throw, close LP / F+LP (throw switch 0x4E1784 f5 -> 81 / victim 158) -> victim 158-171-328, dx +306363..+330637, rise 98654
+   36 close LK special (table 0x4E0FA0 idx 5 -> script 0x4E1288, opp 155, damage 11796 = 18.0%) -> victim 155-170-138-139-185, dx +355674
+   264 close HP (table 0x4E9BF8, id mod 3 = 2) -> victim 311 | 314 close HK knee -> victim 134, dx +24465..+27510
+   294 LP | 296 HP | 65 HK | 308 LK | 293 uppercut -> 128-328, dx +96334, rise 157375 | 62 sweep (odd-id switch) | 64 roundhouse
+   260 crouch LP | 53 crouch HK | 315 crouch LK -> 134, dx +50763 | 257/256 crouch block
+   97 jump HP | 96 jump LP -> 186-188, dx +172996 | 61 jump-up kick (LK and HK) | 57 jump-forward HK -> 131-185, dx +203148, rise 89182
+   60 angled jump LK (switch 0x4E93C4 f5 -> 60) -> 186-188
+   58 dive kick (U,D+LK or jump then D+LK; special[10] script 0x4EB240) -> 183-185, dx +197241
+   98 F,D,F+HP lifts the opponent (victim 8-196, rise 95664) | 100 D,F+HK flying knee | 10-11 F,D+LP
+   Armed (after the weapon draw) specials still work: 100 close -> 127-311-131-185, dx +408068; 10-11 close -> 8-183-185, dx +270910.
+   Shared locomotion: 267 walk F, 272 walk B, 259/258 crouch, 304 jump, 301 flip, 323 block, 317-307 run.
+   As victim (VS vs CPU): 158-171-328, 13, 128, 134, 199 (after opponent clip 14, then 13), 311, 305 (turn-around when the opponent jumps over).
+2) Resolves an old open item: clip 58 in special script 0x4EB240 ("another fighter's move, GUESS") is Fujin's dive kick. PROVEN.
+   The angled-jump-LK switch (f5 -> 60) and the sweep switch (odd ids -> 62) are confirmed live for a third fighter.
+3) Static only, not seen live: 295, 297, 312 (LIKELY follow-on clips), 99 (B,F,D+LK, LIKELY; 9 timing variants failed), 54 (GUESS).
+   NOT HIS: 52, 55, 56 (other fighters' crouch / angled jump kicks), 327 (Sonya's jump-up kick), 59, 66, other throws.
+4) Weapon clips - named by netsider by eye in the clip viewer (his words = DONE, 2026-10-23 ~1:20-1:59 AM ET):
+   244 | weapon draw (B,B+LP)                            | netsider: "def a draw"
+   279 | walking forward with weapon in hands            | netsider: "walking forward with weapon in hands"            (live: F while armed)
+   280 | walking backwards with weapon in hand           | netsider: "walking backwards with weapon in hand"           (live: B while armed)
+   210 | idle stance holding the weapon (after 244)      | netsider: "just him idle, holding w/e it is"
+   217 | weapon stance to him shooting something         | netsider: "weapon stance to him shooting something (like when subzero does ice)"
+   219 | held shooting pose at the end of 217            | netsider: "idle pose of him shooting the thing in the last one at the end" (last one = 217)
+   208 | fighting stance to throwing a weapon/something  | netsider: "fighting stance to him throwing a weapon looks like or throwing something"
+   213 | poking something upwards                        | netsider: "him poking something upwards"                    (live: armed HP 212-213 -> victim 311)
+   212 | holding the spear and moving it upwards         | netsider: "him like holding the spear and moving it upwards, or w/e it is"
+   netsider's observation: 210/212/213 look like moves for a DIFFERENT weapon than 217/219 (Fujin's crossbow). Which weapon: GUESS, open.
+   Live: 217-219-259 played on D while armed (same input as Sonya's armed crouch 217/219); no hit seen from 217 itself. Open.
+5) CORRECTION (2026-10-23 ~2:05 AM ET): the earlier live table put "after weapon mode HK -> P2 131, dx +163825, rise 66945" under
+   HK 65. It belongs to 208: armed HK played 208 and the victim's 131 started during 208; 65 only started ~1.1 s later, after
+   Fujin was back to unarmed idle 291. PROVEN (re-read of the live log). FUJIN_CLIPS.txt has it right (rows 65, 131, 208).
+6) Open items: MK4_TODO_UNKNOWNS.txt E5.

@@ -187,6 +187,7 @@ E. FIGHTERS
 ==========================================================================================
 E1. Per-fighter verification
     Missing: live checks of each fighter's move table; only Sonya is done (77 PROVEN clips).
+    Also done (2026-10-23): Fujin (id 5) live pass, see E5.
     Status: partial-LIKELY (16 other fighters statically decoded; 166 GUESS rows in the per-fighter table)
     Get it: repeat the Sonya live procedure per fighter (logger + scripted inputs).
 E2. Sub-Zero: 19 clips he plays but nobody has identified yet
@@ -208,6 +209,17 @@ E3. Fighter ids 16 and 17
 E4. Hidden / boss fighters (Goro, Noob, Meat, Shinnok boss form) clip sets
     Status: UNKNOWN
     Get it: play or force those fighters and log their clips.
+E5. Fujin (fighter id 5): live pass done 2026-10-23 (notes "FUJIN"; FUJIN_CLIPS.txt, 59 PROVEN + 9 netsider-named weapon clips)
+    Open: 99 (B,F,D+LK) never produced live (9 timing variants), so its victim 195-179 is unseen too.
+    Open: 217/219 played on D while armed (217-219-259); netsider sees a shooting pose - find what makes it fire and if it hits.
+    Open: 210/212/213 look like a different weapon than the 217/219 crossbow (netsider) - which weapon: GUESS.
+    Open: static-only clips in his handlers: 295, 297, 312, 54, 261, 532, 533, 209, 547, 548, 596, 91.
+    Open: victim clips not yet seen on him: 141-142-143, 324, 254, 182, 316-320-192-194, 195-197, 172, 179, 549-550,
+          and the other fighters' throw victims 145 / 151 / 152 / 153 / 154 / 607 / 610.
+    Open: clip 8 has two readings (continue-screen well fall vs lifted by 98 / armed 10-11); 199 only seen after opponent
+          clip 14 (which move is 14?); sweep 62 never hit (gap 80000); fatalities and stage fatalities not attempted.
+    Status: PROVEN (59 clips) / LIKELY-GUESS rest (see FUJIN_CLIPS.txt)
+    Get it: same live procedure; close-range sweep; B,F,D+LK timing sweep; run the other fighters' throws on him; fatality runs.
 
 ==========================================================================================
 F. VICTIM REACTIONS

@@ -1,0 +1,188 @@
+FUJIN (fighter id 5) - CLIP LIST AND STATUS
+Mortal Kombat 4 PC (retail MK4.EXE). netsider's MK4-RE project. Built 2026-10-23 ET from the live memory logs,
+the MK4.EXE static reading and netsider's visual IDs. Full detail: MK4_RE_NOTES_v3.txt (this repo), FUJIN section.
+
+WHAT IS LISTED
+Every clip number Fujin's fighter object plays (as attacker OR as victim), every clip his own move scripts and
+per-fighter tables point at, and clips that turned up in his clip sets but belong to someone else.
+Clip number = index into the game's 612-entry clip table (record address 0x4FDD6C + 12*clip).
+Some shared move scripts pick the clip per fighter with a 16-entry FIGHTER_SWITCH (script opcode 0x3C, entries
+f0..f15 = fighter id). Fujin takes entry f5 (PROVEN). Only the f5 entry is his; the other 15 entries are other
+fighters' clips (see "OTHER FIGHTERS' ENTRIES" at the end). Victim / reaction clips are shared by all fighters.
+Live sources: practice mode P1 Fujin vs P2 Fujin (inactive dummy) and VS mode P1 Fujin vs CPU opponents (memory logs).
+
+STATUS LABELS
+ PROVEN       = seen live in the running game (memory log of the clip slot while pressing the input), or read
+                directly in the game code and matched live.
+ NETSIDER-ID  = netsider identified it by eye in the clip viewer; his description is the name (DONE, his words).
+                Where a live input is also known it is given in the evidence column.
+ LIKELY       = strong static (code) or indirect evidence, not seen live on Fujin.
+ GUESS        = weak evidence (static listing only).
+ NOT HIS      = belongs to another fighter (or is another fighter's version of a shared move). The evidence
+                column says how sure (PROVEN or LIKELY).
+ UNKNOWN      = in his set, purpose not known.
+ "netsider: ..." = netsider's own words for the animation.
+
+UNITS (raw game units only)
+ Positions are 16.16 fixed point: 65536 = 1 game unit = 256 mesh units (PROVEN). No metres are used.
+ dx   = victim X net displacement over the reaction (last - first). + = pushed away from the attacker,
+        - = thrown behind the attacker.
+ rise = victim standing height minus its lowest height (how high it went).
+ Speeds are units/tick (1 tick ~ 1/60 s, PROVEN). Fujin standing height -73531 (negative = up).
+ Practice start X -85196 / +85196 (gap 170392). Sequences like 155-170-138-139-185 are the clips in the order they play.
+
+clip | status      | name / description                                    | evidence / notes
+-----+-------------+-------------------------------------------------------+------------------
+   8 | PROVEN      | lifted / spun into the air (victim of 98 and of armed 10-11) | live practice: P2 8-196 after 98 (rise 95664); armed F,D+LP close: P2 8-183-185 dx +270910, rise 85369. Sonya list: 8 = continue-screen well fall part 1 (netsider ID) - same clip number, both readings kept. Shared
+   9 | LIKELY      | continue screen: well fall, part 2 (shared) | in his throw handler code[9] (static); PROVEN on Sonya's continue screen; never seen on Fujin
+  10 | PROVEN      | F,D+LP special[08] start (wind / smoke column) | live 10-11 far (no hit); static special[08] 0x4EB818 -> 10-11
+  11 | PROVEN      | F,D+LP special[08] second part | live 10-11; armed and close: P2 8-183-185, dx +270910, rise 85369
+  13 | PROVEN      | dazed / stagger (shared) | live VS: Fujin plays 199-13 after opponent clip 14 (2x) and 13 at the end of a lost round. Also listed in special[08] code[13] (role there not known). Sonya: 13 = FINISH HIM daze
+  36 | PROVEN      | close LK special (grab and toss) | live gap 40000: P1 36, P2 155-170-138-139-185, dx +355674, rise 3338; close-LK table 0x4E0FA0 idx 5 -> script 0x4E1288 (damage 11796 = 18.0%)
+  48 | PROVEN      | round-start intro pose | live VS 7 of 7 round starts; intro switch 0x4E8EE0 f5 -> 48
+  52 | NOT HIS     | crouch kick variant (Sub-Zero D+HK) | LIKELY not his: in the crouch-kick lists with 53/54/315; Sub-Zero plays 52 live (PROVEN); Fujin's D+HK is 53. (earlier live table said LIKELY)
+  53 | PROVEN      | crouch high kick (D+HK) | live 258-53; crouch-kick lists 0x4E9008 / 0x4E8FB8
+  54 | GUESS       | crouch-kick follow-on clip | static only: crouch-kick list after 53; never seen live. (earlier live table said LIKELY)
+  55 | NOT HIS     | angled jump HK variant (other fighters) | LIKELY not his: angled-jump-HK list 0x4E9540 -> 55; his live jump HK is 57. (earlier live table said LIKELY)
+  56 | NOT HIS     | angled jump HK variant (Sub-Zero) | LIKELY not his: Sub-Zero plays 56 live (PROVEN); his is 57. (earlier live table said LIKELY)
+  57 | PROVEN      | jump forward/back high kick (U+F/B then HK) | live 304-301-57; victim 131-185 dx +203148, rise 89182; P1 min height -210664
+  58 | PROVEN      | dive kick (U,D+LK, or jump then D+LK) | live 304-58-304; victim 183-185 dx +197241, rise 59675; special[10] script 0x4EB240 -> 58. (58 is also the angled-jump-LK clip of ids 0/3/6/9/12)
+  59 | NOT HIS     | angled jump LK (ids 1/4/7/10/13) | PROVEN not his from the switch 0x4E93C4 (f5 -> 60); in his static angled-LK list only
+  60 | PROVEN      | jump forward/back low kick (U+F/B then LK) | live 304-301-60; victim 186-188 dx +172996; switch 0x4E93C4 f5 -> 60
+  61 | PROVEN      | jump-up kick (U then LK or HK) | live: both jump-up LK and HK -> 61; switch 0x4E91E0
+  62 | PROVEN      | leg sweep (B+LK) | live 272-62 (no hit at gap 80000); sweep switch 0x4E9780: 62 for odd ids
+  64 | PROVEN      | roundhouse (B+HK) | live 272-64; switch 0x4E97E8 -> 64
+  65 | PROVEN      | high kick (HK) | live 65; HK switch 0x4E8C88 -> 65. CORRECTED: the "after weapon mode HK -> P2 131, dx +163825" in the earlier live table belongs to 208 (P2 131 starts during 208, 65 starts ~1.1 s later; re-read of the live log)
+  66 | NOT HIS     | high kick of other fighters / close-strike list | LIKELY not his: HK switch 0x4E8C88 other ids; also in the close-strike list (0x4E9BF8 / 0x4E9C38) with 261/532/533. His close HK is 314
+  75 | NOT HIS     | throw (ids 0,6,14) - attacker | PROVEN not his: throw switch 0x4E1784; in his static throw list only. Victim 152
+  76 | NOT HIS     | throw (ids 4,10) - attacker | PROVEN not his (throw switch). Victim 153
+  80 | NOT HIS     | throw (ids 1,7,12) - attacker | PROVEN not his (throw switch). Victim 154
+  81 | PROVEN      | throw (close LP or F+LP) | live gap 40000/38000 and every VS throw: P1 81, P2 158-171-328, dx +306363..+330637, rise 98654; throw switch 0x4E1784 f5 -> 81 / victim 158
+  83 | NOT HIS     | throw (id 13) - attacker | PROVEN not his (throw switch). Victim 145
+  91 | GUESS       | reaction clip in the close-LK script | static only: script 0x4E1288 names reaction 91; live 36 victim played 155-170-138-139-185, no 91
+  96 | PROVEN      | jump punch LP (U then LP) | live 304-96; victim 186-188 dx +172996
+  97 | PROVEN      | jump punch HP (U then HP) | live 304-97; P1 min height -185650
+  98 | PROVEN      | F,D,F+HP misc[2d] (lifts the opponent into a spin) | live P1 98, P2 8-196, rise 95664 (gap 200000 and close); static 0x4E8C38 -> 98
+  99 | LIKELY      | B,F,D+LK misc[2b] | static 0x4E8BE8 -> 99, victim 195-179; NOT produced live (9 timing variants gave walk/crouch only)
+ 100 | PROVEN      | D,F+HK special[09] (flying knee) | live P1 100; armed and close: P2 127-311-131-185, dx +408068; static 0x4EB728 / 0x4EB758 -> 100
+ 120 | PROVEN      | round-win victory pose (levitates; FUJIN WINS) | live VS 8 of 8 won rounds; victory switch 0x4E9A28 f5 -> 0x4E9BC8 -> 120
+ 127 | PROVEN      | D,F+HK hit reaction, start | live 127-311-131-185 after 100 (dx +408068); static special[09] reaction r5d -> 127
+ 128 | PROVEN      | uppercut launch (shared knockdown) | live 128-328 after 293: dx +96334, rise 157375; also live as P1 victim in VS
+ 131 | PROVEN      | knockdown (jump HK, D,F+HK, thrown weapon 208) | live 131-185 after 57; 127-311-131-185 after 100; 131 after armed 208 (dx +163825, rise 66945)
+ 134 | PROVEN      | low/body hit reaction (shared) | live after 314 (dx +24465..+27510) and 315 (dx +50763); also as P1 victim in VS
+ 138 | PROVEN      | close-LK special victim, part 3 | live 155-170-138-139-185 after 36
+ 139 | PROVEN      | close-LK special victim, part 4 | live 155-170-138-139-185 after 36
+ 141 | LIKELY      | roundhouse victim, part 2 | static B+HK reaction 142-141-143 (and throw reactions r64/r7d/r66); seen live on Sub-Zero's roundhouse victim, not on Fujin's 64
+ 142 | LIKELY      | roundhouse victim, part 1 | as 141
+ 143 | LIKELY      | roundhouse victim, part 3 | as 141
+ 145 | LIKELY      | thrown by the id 13 fighter (opponent clip 83) | static throw switch: f13 -> 83, victim 145; in his static victim list; not seen on Fujin
+ 151 | LIKELY      | thrown by an id 3/9 fighter (opponent clip 79) | static throw switch f3/f9 -> 79 / 151; not seen on Fujin
+ 152 | LIKELY      | thrown by an id 0/6/14 fighter (opponent clip 75) | static throw switch; in his static victim list; not seen on Fujin
+ 153 | LIKELY      | thrown by an id 4/10 fighter (opponent clip 76) | static; PROVEN on Sonya (153-173-328); not seen on Fujin
+ 154 | LIKELY      | thrown by an id 1/7/12 fighter (opponent clip 80) | static; PROVEN on Sonya (154-172-328); not seen on Fujin
+ 155 | PROVEN      | close-LK special victim, start | live 155-170-138-139-185 after 36 (dx +355674); script 0x4E1288 opp 155
+ 158 | PROVEN      | thrown by Fujin clip 81 (victim start) | live 158-171-328 in practice and as P1 victim in VS (thrown by an f5/f11 throw)
+ 170 | PROVEN      | close-LK special victim, part 2 | live 155-170-138-139-185
+ 171 | PROVEN      | landing after throw 81 | live 158-171-328 (practice and VS)
+ 172 | LIKELY      | throw landing (after 154) | static throw reaction r6b -> 172; PROVEN on Sonya; not seen on Fujin
+ 179 | GUESS       | B,F,D+LK victim, end | static misc[2b] reaction r61 -> 195-179; 99 never produced live
+ 182 | GUESS       | second hit-reaction clip after 311 | static LP/HP reaction r25 -> 311-182; never seen live
+ 183 | PROVEN      | knocked down (dive kick, armed F,D+LP) | live 183-185 after 58 (dx +197241); 8-183-185 after armed 10-11
+ 185 | PROVEN      | get-up after 131 / 183 / 139 | live 131-185, 183-185, 155-170-138-139-185
+ 186 | PROVEN      | jump-attack hit | live 186-188 after 96 and 60 (dx +172996)
+ 188 | PROVEN      | recover after 186 | live 186-188
+ 192 | LIKELY      | knockdown forward (sweep variant) | static sweep reaction r13 -> 316-320-192-194; PROVEN on Sonya in VS; not seen on Fujin
+ 194 | LIKELY      | get-up from upside-down | as 192
+ 195 | LIKELY      | sweep fall | static sweep reaction r12 -> 195-197; PROVEN on Sonya; 62 did not hit in Fujin's test (gap 80000)
+ 196 | PROVEN      | victim end after 8 (lands) | live 8-196 after 98. Also in static run reaction 549-550-196
+ 197 | LIKELY      | sweep get-up | as 195
+ 199 | PROVEN      | hit reaction to opponent clip 14 (17-frame clip), then 13 | live VS 2x: opponent 14 -> Fujin 199-13. Role from that context only (LIKELY)
+ 208 | NETSIDER-ID | fighting stance to throwing a weapon / something | netsider: "fighting stance to him throwing a weapon looks like or throwing something" (DONE). Live: armed HK -> 208, P2 131 dx +163825, rise 66945, Fujin then back to 291 (unarmed). Sonya plays her own 208 the same way (weapon throw, victim 131)
+ 209 | GUESS       | RUN-button action clip | static only: generic RUN action misc[03] starts 209; RUN tap 60 ms and hold 300 ms both did nothing
+ 210 | NETSIDER-ID | idle stance holding the weapon (after 244) | netsider: "just him idle, holding w/e it is" (DONE). Live: plays after every 244 and between armed moves. netsider: 210/212/213 look like a different weapon than 217/219 (which weapon: GUESS)
+ 212 | NETSIDER-ID | holding the spear and moving it upwards | netsider: "him like holding the spear and moving it upwards, or w/e it is" (DONE). Live: armed HP -> 212-213 (hit in 213)
+ 213 | NETSIDER-ID | poking something upwards | netsider: "him poking something upwards" (DONE). Live: armed HP 212-213 -> P2 311, dx +68187
+ 217 | NETSIDER-ID | weapon stance to him shooting something | netsider: "weapon stance to him shooting something (like when subzero does ice)" (DONE). Live: D while armed -> 217-219-259 (Sonya's 217/219 = armed crouch, same input). No hit seen from 217 itself
+ 219 | NETSIDER-ID | held shooting pose at the end of 217 | netsider: "idle pose of him shooting the thing in the last one at the end" (last one = 217) (DONE). Live: 217-219-259, very short (~1 tick) when D is tapped
+ 244 | NETSIDER-ID | weapon draw (B,B+LP) | netsider: "def a draw" (DONE). Live: B,B+LP -> 272-272-244-210; static misc[29] 0x4E92A8 -> 244
+ 254 | GUESS       | low-hit reaction follow-on after 134 | static LK / crouch LP reaction 134-254; live showed 134 only
+ 256 | PROVEN      | crouch block held / release | live D+BL 258-257-256
+ 257 | PROVEN      | crouch block start | live D+BL; static aux[0f] code[257]
+ 258 | PROVEN      | crouch held | live D
+ 259 | PROVEN      | crouch going down (reversed = standing up) | live D; also after armed 217-219
+ 260 | PROVEN      | crouch low punch (D+LP) | live 259-258-260
+ 261 | GUESS       | close-strike clip | static only: close-strike list 66 261 532 533; owner per fighter not resolved
+ 264 | PROVEN      | close high punch | live gap 40000: P1 264, P2 311; close-HP table 0x4E9BF8 id mod 3 = 2 (ids 2,5,8,11,14) -> 264
+ 267 | PROVEN      | walk forward | live F
+ 272 | PROVEN      | walk back | live B
+ 279 | NETSIDER-ID | walking forward with weapon in hands | netsider: "walking forward with weapon in hands" (DONE). Live: F while armed
+ 280 | NETSIDER-ID | walking backwards with weapon in hand | netsider: "walking backwards with weapon in hand" (DONE). Live: B while armed
+ 291 | PROVEN      | idle / fighting stance | all live logs (start of every practice and VS round)
+ 293 | PROVEN      | uppercut (D+HP) | live 259-258-293; victim 128-328 dx +96334, rise 157375. Also listed as stage fatality arena 0 misc[42] (B,F,B+HP, LIKELY static)
+ 294 | PROVEN      | low punch (LP) | live 294; VS LP hit -> 311
+ 295 | LIKELY      | low-punch follow-on clip | static LP 0x4E92D8 294-295, 0x4E9348 295; never seen live
+ 296 | PROVEN      | high punch (HP) | live 296
+ 297 | LIKELY      | high-punch follow-on clip | static HP code[297,296]; never seen live
+ 301 | PROVEN      | jump forward/back flip | live U+F / U+B
+ 304 | PROVEN      | jump straight up / landing | live U; also around the dive kick 304-58-304
+ 305 | PROVEN      | turn-around / re-face when the opponent jumps over | live VS 3x: opponent 301 over Fujin -> Fujin 305 (3 frames). Role LIKELY (same as Sonya)
+ 307 | PROVEN      | run loop | live F,F+RUN hold 317-307 (run dx 105504)
+ 308 | PROVEN      | low kick (LK) | live 308; LK switch 0x4E8D78 -> 308 (67/70 = other fighters)
+ 311 | PROVEN      | high hit reaction (shared) | live after 264, 213, 100; as P1 victim in VS
+ 312 | LIKELY      | D,F+HK second clip | static special[09] 0x4EB778 -> 312; never seen live
+ 314 | PROVEN      | close high kick (knee) | live gap 40000/30000: P1 314, P2 134 dx +24465..+27510; also in his crouch-kick list
+ 315 | PROVEN      | crouch low kick (D+LK) | live 258-315; victim 134 dx +50763
+ 316 | GUESS       | sweep-fall variant, start | static sweep reaction r13 -> 316-320-192-194; never seen live
+ 317 | PROVEN      | run start | live 317-307
+ 320 | GUESS       | sweep-fall variant, middle | as 316
+ 323 | PROVEN      | standing block held | live BL
+ 324 | LIKELY      | close-HP / face (high) hit reaction | static LP/HP reaction r20 -> 324; PROVEN on Sonya; not seen on Fujin (his close HP gave 311)
+ 327 | NOT HIS     | jump-up kick of Sonya (switch entry f2) | PROVEN not his: Sonya plays 327 live via switch 0x4E91E0; Fujin plays 61. (earlier live table said LIKELY)
+ 328 | PROVEN      | flip get-up recovery (shared) | live 158-171-328, 128-328; VS
+ 532 | GUESS       | close-strike clip | static only (close-strike list 0x4E99B0); owner not resolved
+ 533 | GUESS       | close-strike clip | static only (0x4E9A10); owner not resolved
+ 547 | GUESS       | run-related clip | static Run handler 0x4E2DB8 lists 547 548; normal run gave 317-307. (earlier live table: LIKELY shared variant)
+ 548 | GUESS       | run-related clip | as 547
+ 549 | GUESS       | run-collision victim, start | static run reaction rb5 -> 549-550-196; never seen live
+ 550 | GUESS       | run-collision victim, middle | as 549
+ 596 | GUESS       | run-related clip | static Run handler 0x4E2850.. only
+ 605 | NOT HIS     | throw (id 13) second attacker clip | PROVEN not his (throw switch: 83/145 then 605/607). Victim 607
+ 607 | LIKELY      | thrown by the id 13 fighter (part 2) | static throw switch 605/607; in his static victim list; not seen on Fujin
+ 609 | NOT HIS     | throw (id 15) - attacker | PROVEN not his (throw switch: 609/610). Victim 610
+ 610 | LIKELY      | thrown by the id 15 fighter | static throw switch 609/610; in his static victim list; not seen on Fujin
+
+SUMMARY (117 clips listed)
+ PROVEN        59
+ NETSIDER-ID    9
+ LIKELY        21
+ GUESS         16
+ NOT HIS       12
+ UNKNOWN        0
+
+MOVES WITH NO CLIP OF THEIR OWN
+ Fatalities: fatality A (misc40, BL / RUN combo), fatality B (misc43, D,F,F,U+BL) and the stage fatality for arena 8
+   (misc41, D,D,D+HK): input words read statically (LIKELY), clips are filled at run time; not attempted live.
+   Stage fatality arena 0 (misc42, B,F,B+HP) reuses the uppercut 293 (static, LIKELY).
+ Juggles: none produced on purpose. Armed special hits (10-11, 100) were seen; no juggle clip of his own found.
+
+STILL OPEN
+ - 99 (B,F,D+LK) and its victim 195-179: produce it live (9 timing variants failed).
+ - 217 / 219: netsider sees a shooting pose; live they played on D while armed (217-219-259), the same input as
+   Sonya's armed crouch. Find what makes 217/219 fire (if anything) and whether it hits.
+ - 210 / 212 / 213: netsider says a different weapon than the 217/219 crossbow. Which weapon: GUESS, open.
+ - 295, 297, 312, 54, 261, 532, 533, 209, 547, 548, 596, 91: static-only clips in his handlers; never seen live.
+ - Static-only victim clips on Fujin: 141-142-143, 324, 254, 182, 316-320-192-194, 195-197, 172, 179, 549-550,
+   and the other fighters' throw victims 145 / 151 / 152 / 153 / 154 / 607 / 610 (run those fighters' throws on him).
+ - 8: two readings (continue-screen well fall per Sonya's list; wind-lift victim here). Same clip, confirm by eye.
+ - 199: only seen after opponent clip 14 in VS; confirm what move clip 14 is.
+ - 62 sweep: never hit (gap 80000); re-run closer for the victim push.
+ - Fatalities and stage fatalities (see above).
+ - Clips outside the logs and his handlers were not surveyed (no full scan of all 612 clips for Fujin).
+
+OTHER FIGHTERS' ENTRIES IN THE SAME PER-FIGHTER TABLES (NOT HIS, PROVEN from the switch tables)
+ (Throw pairs are attacker/victim; Fujin plays the victim clip when one of those fighters throws him.)
+ throw 0x4E1784:          75/152 (ids 0,6,14), 80/154 (1,7,12), 79/151 (3,9), 76/153 (4,10), 78/156 (2, Sonya), 81/158 (5,11 = his), 83/145 then 605/607 (13), 609/610 + 604/606 (15)
+ round-start intro 0x4E8EE0: 44, 45, 46, 47, 49, 50, 51 (45/49/50 seen live on his VS opponents)
+ high kick 0x4E8C88: 66, 71    low kick 0x4E8D78: 67, 70    jump-up kick 0x4E91E0: 327 (Sonya)
+ angled jump LK 0x4E93C4: 58 (ids 0/3/6/9/12; 58 is also his dive kick), 59    sweep 0x4E9780: 63 (even ids)
+ roundhouse 0x4E97E8: 313 (Sonya)    close HP 0x4E9BF8 (id mod 3): 262, 263    victory 0x4E9A28: 111, 113, 114 (Sonya), 115-119, 121-125, 594
