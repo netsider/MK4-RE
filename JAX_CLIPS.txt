@@ -1,0 +1,211 @@
+JAX (fighter id 13) - CLIP LIST AND STATUS
+Mortal Kombat 4 PC (retail MK4.EXE). netsider's MK4-RE project. Built 2026-10-23 ET from the live memory logs
+and the MK4.EXE static reading. Full detail: MK4_RE_NOTES_v3.txt (this repo), JAX section.
+
+WHAT IS LISTED
+Every clip number Jax's fighter object plays (as attacker OR as victim), every clip his own move scripts and
+per-fighter tables point at, and clips that turned up in his clip sets but belong to someone else.
+Clip number = index into the game's 612-entry clip table (record address 0x4FDD6C + 12*clip).
+Some shared move scripts pick the clip per fighter with a 16-entry FIGHTER_SWITCH (script opcode 0x3C, entries
+f0..f15 = fighter id). Jax takes entry f13 (PROVEN: throw 83/145, HK 66, LK 67, angled jump LK 59, close HP 263 all matched live).
+Only the f13 entry is his; the other 15 entries are other fighters' clips. Victim / reaction clips are shared by all fighters.
+Live sources: practice mode P1 Jax vs P2 Jax (inactive dummy) and VS mode P1 Jax vs CPU opponents (memory logs;
+Jax = select-screen index 6).
+Frame sheets (8 frames per clip) of the captured video were checked by eye for 63 clips.
+
+STATUS LABELS
+ PROVEN       = seen live in the running game (memory log of the clip slot while pressing the input), or read
+                directly in the game code and matched live.
+ LIKELY       = strong static (code) or indirect evidence, not seen live on Jax.
+ GUESS        = weak evidence (static listing only).
+ NOT HIS      = belongs to another fighter (or is another fighter's version of a shared move). The evidence
+                column says how sure (PROVEN or LIKELY).
+ UNKNOWN      = in his set, purpose not known.
+
+UNITS (raw game units only)
+ Positions are 16.16 fixed point: 65536 = 1 game unit = 256 mesh units (PROVEN). No metres are used.
+ dx   = victim X net displacement over the reaction (last - first). + = pushed away from the attacker,
+        - = pulled toward / behind the attacker.
+ rise = victim standing height minus its lowest height (how high it went).
+ Jax standing height -75169 (negative = up). "gap" = X distance set before the move.
+ Sequences like 145-173-328 are the clips in the order they play.
+
+clip | status      | name / description                                    | evidence / notes
+-----+-------------+-------------------------------------------------------+------------------
+   9 | GUESS       | unknown clip in the throw handler code list | static only: throw handler 0x42C560 code[9]; not seen live
+  13 | PROVEN      | dazed / stagger (shared; opponent at FINISH HIM) | live VS: P2 13 at FINISH HIM before every fatality try
+  28 | LIKELY      | missile, second / end clip (proj[15]) | static only: proj[15] 0x4F0078 -> 29, 0x4F00A0 / 0x4F00B0 -> 28; not seen in the P1 slot (projectile object)
+  29 | PROVEN      | energy missile (D,F+LP; proj[15]) | live 259-258-259-284-29 (3x); victim 130, dx +127475 (gap 60000 / 200000), +42989 (gap 350000); pink projectile hits P2 in the frames
+  30 | PROVEN      | close LK special | live gap 40000: P1 30, P2 164, dx +118945; VS: LK pressed next to the dazed opponent also gave 30 / 164
+  44 | PROVEN      | round-start intro pose | live VS at every round start (all 14 Jax VS runs)
+  50 | NOT HIS     | round-start intro of the VS CPU opponent | PROVEN not his: P2 CPU intro in VS while Jax plays 44
+  52 | NOT HIS     | crouch HK of other fighters (Raiden and others) | LIKELY not his: crouch-kick lists 0x4E9008 / 0x4E8FB8 hold 54 and 52; Jax plays 54 live
+  54 | PROVEN      | crouch high kick (D+HK) | live 259-258-54; victim 311, dx +68187; crouch-kick lists 0x4E9008 / 0x4E8FB8 -> 54
+  55 | NOT HIS     | angled jump HK variant (Tanya) | PROVEN not his: Tanya plays 55 live; Jax plays 56
+  56 | PROVEN      | jump forward/back high kick (U+F/B then HK) | live 304-301-56 (forward and back); victim 131-185, dx +203148, rise 89182; P1 min height -212302
+  57 | NOT HIS     | angled jump HK variant (Fujin) | LIKELY not his: Fujin plays 57 live
+  58 | NOT HIS     | angled jump LK (Tanya and others) | PROVEN not his from switch 0x4E93C0 (ids 1,4,7,10,13 -> 59)
+  59 | PROVEN      | jump forward/back low kick (U+F/B then LK) | live 304-301-59 (forward) / 301-59 (back); victim 186-188, dx +172996; switch 0x4E93C0 f13 -> 59
+  60 | NOT HIS     | angled jump LK (Fujin and others) | PROVEN not his from switch 0x4E93C0
+  61 | PROVEN      | jump-up kick (U then LK or HK) | live 304-61 (practice and VS); switch 0x4E91E0 -> 61
+  62 | PROVEN      | leg sweep (B+LK) | live 270-62; victim 192-194, dx +94368; sweep switch 0x4E9780 -> 62
+  64 | PROVEN      | roundhouse (B+HK) | live 270-64; victim 142-141-143-328, dx -55982, rise 59294 (gap 45000); static 0x4E97E8 -> 64
+  65 | NOT HIS     | high kick of other fighters | PROVEN not his from HK switch 0x4E8C88 (Jax -> 66)
+  66 | PROVEN      | high kick (HK) | live 284-66 (far), F,F+HK and D,D+HK also gave 66 (victim 311, dx +68187); armed 285-66; HK switch 0x4E8C88 -> 66
+  67 | PROVEN      | low kick (LK) | live 284-67 (far); armed 285-67; LK switch 0x4E8D78 -> 67. Holding LK 3.5 s and releasing at gap 150000 froze the practice game twice (see STILL OPEN)
+  70 | NOT HIS     | low kick (Raiden) | PROVEN not his (LK switch; Raiden plays 70 live)
+  71 | NOT HIS     | high kick (Raiden) | PROVEN not his (HK switch; Raiden plays 71 live)
+  75 | NOT HIS     | throw (ids 0,6,14) - attacker | PROVEN not his (throw switch 0x4E1784); victim 152
+  76 | NOT HIS     | throw (ids 4,10) - attacker | PROVEN not his (throw switch); victim 153
+  80 | NOT HIS     | throw (Raiden and others) - attacker | PROVEN not his (throw switch; Raiden plays 80 live); victim 154
+  81 | NOT HIS     | throw (ids 5,11) - attacker | PROVEN not his (throw switch); victim 158
+  83 | PROVEN      | throw (close LP, F+LP or LP,LP) | live gap 40000: P1 83, P2 145-173-328, dx -248593 / -253593 (LP,LP), rise 82540; F+LP the same; VS 2x per run; throw switch f13 -> 83/145
+  84 | LIKELY      | air back-breaker (BL near an airborne opponent; misc[23]) | static only: misc[23] 0x4E8DC0 -> 84, victim 144, condition 0x06 (3D distance); BL tries vs a grounded opponent and air BL tries gave block 323 / jumps only
+  96 | PROVEN      | jump LP (straight) | live 304-96; no hit logged
+  97 | PROVEN      | jump HP (straight and forward) | live 304-97 / 301-97, P2 311; min height -187288 (straight), -212302 (forward); VS
+ 106 | LIKELY      | dash punch, second clip (special[17]) | static only: special[17] 0x4EB15C -> 106; live D,B+LP played 299 only
+ 108 | PROVEN      | ground pound / ground shockwave (F,F,D+LK; misc[2c]) | live 265-...-259-258-108 (3x); victim 182, dx +124507 (gap 150000 and 300000) / +139579 (gap 60000); purple energy pillar and ground wave in the frames
+ 111 | NOT HIS     | victory pose of another fighter | PROVEN not his: Johnny Cage plays 111 in VS (select-index probe run); victory switch 0x4E9A28
+ 114 | PROVEN      | round-win victory pose (JAX WINS) | live VS after every won round and before / after both fatalities ("JAX WINS" in the frames); victory switch 0x4E9A28
+ 123 | NOT HIS     | victory pose (Raiden) | PROVEN not his (victory switch; Raiden plays 123 live)
+ 128 | PROVEN      | launched by uppercut (victim, shared) | live P2 128-328 after 293
+ 130 | PROVEN      | hit by the missile / dash punch (victim) | live P2 130 after 29 (3x) and 311-130 after 299 (2x)
+ 131 | PROVEN      | hit by an angled jump HK / thrown weapon (victim, shared) | live P2 131-185 after 56; P2 131 after the weapon throw 208
+ 134 | PROVEN      | hit low/body (victim, shared) | live P2 134 after close HK 314 (dx +27027), crouch LK 315 (dx +50763), LK at gap 60000
+ 137 | PROVEN      | opponent pose after losing the round (shared) | live VS P2 137 while Jax plays 114
+ 141 | PROVEN      | hit by roundhouse, part 2 (victim, shared) | live P2 142-141-143-328 after 64
+ 142 | PROVEN      | hit by roundhouse, part 1 (victim, shared) | live (see 141)
+ 143 | PROVEN      | hit by roundhouse, part 3 (victim, shared) | live (see 141)
+ 144 | LIKELY      | victim of the air back-breaker 84 | static misc[23] opp-clip 144; not seen
+ 145 | PROVEN      | thrown by Jax, part 1 (victim of 83) | live P2 145-173-328 (practice 3x, VS 2x per run)
+ 152 | LIKELY      | thrown by ids 0,6,14 (victim) | static throw switch: 75/152
+ 153 | LIKELY      | thrown by ids 4,10 (victim) | static throw switch: 76/153
+ 154 | LIKELY      | thrown by Raiden and others (victim) | static throw switch: 80/154
+ 158 | LIKELY      | thrown by ids 5,11 (victim) | static throw switch: 81/158
+ 164 | PROVEN      | victim of close LK 30 | live P2 164 after 30 (practice and VS)
+ 173 | PROVEN      | thrown by Jax, landing (after 145) | live P2 145-173-328
+ 182 | PROVEN      | hit by the ground pound 108 (victim) | live P2 182 after 108 (3x)
+ 183 | LIKELY      | dash punch victim (static) | static special[17] r28 -> 183; live dash-punch victim was 311-130
+ 185 | PROVEN      | knocked down after an air hit (victim, shared) | live P2 131-185 after 56
+ 186 | PROVEN      | hit by an angled jump LK, part 1 (victim, shared) | live P2 186-188 after 59
+ 188 | PROVEN      | hit by an angled jump LK, part 2 (victim, shared) | live P2 186-188
+ 192 | PROVEN      | swept, part 1 (victim) | live P2 192-194 after 62
+ 194 | PROVEN      | swept, part 2 (victim) | live P2 192-194
+ 195 | LIKELY      | swept, other side, part 1 (victim) | static sweep r12 -> 195-197
+ 196 | LIKELY      | run-push victim end clip | static run rb5 -> 549-550-196
+ 197 | LIKELY      | swept, other side, part 2 (victim) | static sweep r12 -> 195-197
+ 205 | PROVEN      | hit by the armed LP swing (victim) | live P2 205, dx -28905 (gap 90000)
+ 206 | PROVEN      | opponent remains / collapsed after a fatality (shared) | live VS P2 557-206 after fatality B; FATALITY in the frames
+ 208 | PROVEN      | weapon throw (D,F+HP again while armed) | live 285-217-219-259-285-208-284 (weapon thrown, Jax back to unarmed 284); P2 131, dx +196590, rise 66945; weapon flying in the frames
+ 209 | GUESS       | RUN-button action clip | static misc[03] -> 209; RUN taps (3x) gave nothing
+ 217 | PROVEN      | armed crouch, going down | live armed D: 285-217-219-259; armed D+HP 217-219-293
+ 219 | PROVEN      | armed crouch, held | live 217-219 (3x)
+ 231 | PROVEN      | armed HP | live 285-231-285; P2 319-328, rise 65040 (gap 90000)
+ 232 | PROVEN      | armed LP (weapon swing) | live 285-232-285 (3x); victim 205, dx -28905 (gap 90000)
+ 244 | PROVEN      | weapon draw (D,F+HP) | live 284-259-258-259-284-244-285 (9x); misc[29] 0x4E92A8 -> 244; weapon visible in the frames
+ 246 | PROVEN      | armed block | live armed BL: 285-246-285
+ 252 | PROVEN      | armed jump-up HP | live 285-304-252-304-285
+ 254 | LIKELY      | low-hit victim follow-on (shared) | static LK / crouch LP victim 134-254; not seen
+ 256 | PROVEN      | crouch block held | live 259-258-257-256-257-258-259
+ 257 | PROVEN      | crouch block (going down / up) | live (see 256)
+ 258 | PROVEN      | crouch held (shared locomotion) | live D held, before every crouch move
+ 259 | PROVEN      | crouch down / up (shared locomotion) | live
+ 260 | PROVEN      | crouch LP | live 259-258-260; no hit logged
+ 261 | GUESS       | close-strike set | static close-strike list 0x4E9998 -> 261; not produced live
+ 262 | NOT HIS     | close HP (id mod 3 = 0) | PROVEN not his (close-HP table 0x4E9BF8; 13 mod 3 = 1 -> 263)
+ 263 | PROVEN      | close HP | live gap 40000: P1 263, P2 311 (2x); close-HP table 0x4E9BF8 id mod 3 = 1 -> 263
+ 264 | NOT HIS     | close HP (id mod 3 = 2) | PROVEN not his (close-HP table 0x4E9BF8)
+ 265 | PROVEN      | walk forward | live F (all sessions; also before 317-307 run)
+ 267 | NOT HIS     | walk forward of other fighters (Raiden) | PROVEN not his: Raiden walks with 267; Jax 265
+ 270 | PROVEN      | walk back | live B, and before sweep 62 / roundhouse 64
+ 272 | NOT HIS     | walk back of other fighters (Raiden) | PROVEN not his: Raiden walks back with 272; Jax 270
+ 275 | PROVEN      | armed walk forward | live 285-275-285 (3x); armed run 275-317-307
+ 276 | PROVEN      | armed walk back | live 285-276-285 (2x)
+ 284 | PROVEN      | idle stance | live every session (P1 and the P2 Jax dummy)
+ 285 | PROVEN      | armed stance | live after every 244 and between armed moves
+ 286 | NOT HIS     | armed stance (Raiden, Quan Chi) | PROVEN not his: Raiden / Quan Chi armed stance 286; Jax 285
+ 289 | NOT HIS     | idle stance of the VS CPU opponent | PROVEN not his: P2 CPU idle in VS; Jax idle is 284
+ 291 | NOT HIS     | idle stance (Raiden) | PROVEN not his: Raiden idle 291; Jax 284
+ 293 | PROVEN      | uppercut (D+HP) | live 259-258-293; victim 128-328, dx +96334, rise 157375; armed 217-219-293. Also stage fatality arena 0 misc[42] (static, LIKELY)
+ 294 | PROVEN      | LP | live 284-294 (far); armed-weapon-thrown LP 294
+ 295 | LIKELY      | LP follow-on (LP chain) | static LP 294-295; LP,LP close gave the throw 83
+ 296 | PROVEN      | HP | live 284-296 (far; also B,F+HP and F,F,B,B+HP gave 296)
+ 297 | LIKELY      | HP follow-on | static HP code[297,296]; not seen
+ 299 | PROVEN      | dash punch (D,B+LP; special[17]) | live 259-258-259-284-299 (3x); Jax X moves forward +122000 / +118700 / +137600 (dash); P2 311-130, dx +238112 (gap 150000) / +323514 (gap 60000); no hit at gap 300000. Name from the movement, frames had no fighters (capture bug): name LIKELY
+ 301 | PROVEN      | flip / forward jump roll (shared locomotion) | live in angled jumps
+ 304 | PROVEN      | jump (shared locomotion) | live
+ 307 | PROVEN      | run loop | live 265-317-307 (F,F+RUN hold), pushes P2 +105504; armed 275-317-307 (+361074)
+ 308 | NOT HIS     | low kick of other fighters | PROVEN not his (LK switch 0x4E8D78 -> 67 for Jax)
+ 311 | PROVEN      | hit high (victim, shared) | live P2 311 after 263, 97, 54, 66, 299
+ 314 | PROVEN      | close HK (knee) | live gap 40000: P1 314, P2 134, dx +27027
+ 315 | PROVEN      | crouch LK | live 259-258-315; victim 134, dx +50763
+ 316 | LIKELY      | swept victim (static set) | static sweep r13 -> 316-320-192-194
+ 317 | PROVEN      | run start | live 317-307
+ 319 | PROVEN      | hit by the armed HP (victim) | live P2 319-328 after 231 (rise 65040)
+ 320 | LIKELY      | swept victim (static set) | static sweep r13 -> 316-320-192-194
+ 323 | PROVEN      | block (standing) | live BL (every session warm-up; BL at gap 45000)
+ 324 | LIKELY      | hit by LP / HP (victim, shared) | static LP / HP victim r20 -> 324; LP/HP were done far (no hit)
+ 327 | NOT HIS     | jump-up kick (Sonya) | PROVEN not his (switch 0x4E91E0)
+ 328 | PROVEN      | get up after a knockdown (victim, shared) | live P2 ...-328 after 83, 293, 64, 231
+ 384 | PROVEN      | fatality A (hold LK about 4.7 s, F,F,D,F, release LK): arm rip | live VS 3x (gap 40000 2x incl. one with BL held through the directions, gap 90000 1x): P1 384-443, P2 389-400; opponent arms ripped off, JAX WINS, FATALITY in the frames
+ 389 | PROVEN      | fatality victim, at the input (shared with Raiden fatality A) | live VS 3x with 384; Raiden fatality A also plays 389
+ 400 | PROVEN      | fatality A victim (arms ripped off) | live VS 3x: P2 389-400 with 384-443
+ 443 | PROVEN      | fatality end pose (shared with Raiden fatality A) | live VS 3x after 384; Raiden fatality A also ends in 443
+ 532 | PROVEN      | close HP follow-on (close HP, HP) | live HP,HP at gap 40000: P1 263-532, P2 311; static close-strike list 0x4E99B0 -> 532
+ 533 | GUESS       | close-strike set | static close-strike list 0x4E9A10 -> 533; not produced live
+ 547 | GUESS       | run-related clip | static run 0x4E2DB8 -> 547-548
+ 548 | GUESS       | run-related clip | static run 0x4E2DB8 -> 547-548
+ 549 | LIKELY      | run-push victim, part 1 | static run rb5 -> 549-550-196
+ 550 | LIKELY      | run-push victim, part 2 | static run rb5 -> 549-550-196
+ 555 | PROVEN      | fatality B (B,F,F,D+BL; BL held through the directions or not): energy blast, part 1 | live VS 2x (gap 40000, game pushed to 34845): P1 555-556, P2 557-206; opponent blown apart, JAX WINS, FATALITY in the frames
+ 556 | PROVEN      | fatality B part 2 | live VS 2x (555-556-114)
+ 557 | PROVEN      | fatality B victim (blown apart) | live VS 2x: P2 557-206
+ 596 | GUESS       | run-related clip | static run 0x4E2850.. -> 596
+ 605 | LIKELY      | throw, second attacker entry for id 13 | static throw switch 0x4E17D0: 605/607 for id 13; live throws played 83/145 only
+ 607 | LIKELY      | thrown by Jax, second entry (victim of 605) | static throw switch: 605/607
+ 609 | NOT HIS     | throw (id 15) - attacker | PROVEN not his (throw switch); victim 610
+ 610 | LIKELY      | thrown by id 15 (victim) | static throw switch: 609/610
+
+SUMMARY (133 clips listed)
+ PROVEN        78
+ LIKELY        23
+ GUESS          7
+ NOT HIS       25
+ UNKNOWN        0
+
+MOVES WITH NO CLIP OF THEIR OWN / FATALITY INPUTS
+ Fatality A (misc40, move word 2e014640, input F,F,D,F + LK RELEASE): REACHED live 3x, clips 384-443 / victim 389-400 (arm rip, PROVEN).
+   Condition 0x2E (code 0x45E200) = X distance <= 65536 AND finish-him state AND (frame counter 0x538418 minus the time of
+   the last LK PRESS, stored by the LK-press handler 0x45CD00 into 0x53FDBC) >= 240 frames. The frame counter runs at about
+   60-64 per second, so LK must be held at least ~4 s before it is released. The opponent stays dazed only ~4 s, so the
+   working input presses LK during the throw that ends the match (before FINISH HIM), keeps holding it, then at FINISH HIM:
+   F,F,D,F, release LK (held ~4.7 s in total). Worked at gap 40000 (plain directions, and with BL held through the
+   directions) and from gap 90000 (the F taps walk Jax in; the release distance was not logged).
+   Failed: LK pressed at FINISH HIM next to the opponent (it plays close LK 30 and knocks the opponent down: round over);
+   LK pressed at FINISH HIM at gap 90000-250000 and held 0.3-4.5 s (dazed time ran out, or the hold was too short);
+   hold started too early for the window (5.0 s target: the dazed time ran out first).
+ Fatality B (misc43, move word 1b413243, B,F,F,D+BL, condition 0x1B = X distance <= 65536): REACHED live 2x (gap 40000,
+   pushed by the game to 34845), clips 555-556 / victim 557-206 (PROVEN). Both inputs worked: BL held through B,F,F,D,
+   released, then BL pressed again; and the plain input (no Up in it, so nothing starts a jump).
+ Stage fatalities: arena 0 (misc42, F,F,B+HP -> uppercut 293, static) and arena 8 (misc41, F,F,B+LK): not attempted (need those
+   arenas in VS). LIKELY (static input).
+
+STILL OPEN
+ - 28 (missile end clip) and 106 (dash-punch second clip): static only, never in the P1 slot. LIKELY.
+ - 84 / 144 air back-breaker (BL near an airborne opponent): static only; needs the opponent in the air. LIKELY.
+ - 605 / 607 (second throw entry for id 13): static only. LIKELY.
+ - 295, 297, 261, 533, 209, 547, 548, 596, 9: static-only clips in his handlers; LP,LP / HP,HP / RUN taps gave nothing new (HP,HP gave 532).
+ - Armed B+LK / B+HK: the weapon draw did not finish in that session twice (clip slot stuck at 258), not resolved.
+ - Holding LK ~3.5 s and releasing it at gap 150000 in practice froze the game logic twice (P1 stuck in 67, P2 frame counter
+   stopped); at gap 60000 the same input was a normal LK. Cause not known (GUESS: linked to the LK-hold fatality check).
+ - Several practice sessions froze (clip slot stuck) and were re-run in fresh boots; all moves listed PROVEN were seen in a
+   clean session.
+ - Clips PROVEN in the logs without a usable video (capture-side rendering bug, fighters missing): 54, 256, 315.
+ - Clips outside the logs and his handlers were not surveyed (no full scan of all 612 clips for Jax).
+
+OTHER FIGHTERS' ENTRIES IN THE SAME PER-FIGHTER TABLES (NOT HIS, PROVEN from the switch tables)
+ (Throw pairs are attacker/victim; Jax plays the victim clip when one of those fighters throws him.)
+ throw 0x4E1784:          75/152 (ids 0,6,14), 80/154 (1, 7, 12), 79/151 (3,9), 76/153 (4,10), 78/156 (2, Sonya), 81/158 (5,11), 83/145 then 605/607 (13 = his), 609/610 (15)
+ high kick 0x4E8C88: 65, 71 (66 = his)    low kick 0x4E8D78: 70, 308 (67 = his)    jump-up kick 0x4E91E0: 327 (Sonya)
+ angled jump LK 0x4E93C0: 59 (ids 1,4,7,10,13; his), 60 (ids 2,5,8,11,14,15), 58 (the other ids)    angled jump HK: 55 (Tanya), 57 (Fujin) (56 = his)
+ close HP 0x4E9BF8 (id mod 3): 262, 264 (263 = his)    victory 0x4E9A28: 111 (Johnny Cage, seen live), 113, 115, 119, 120, 121, 122, 123 (Raiden), 124, 125, 594 (114 = his)

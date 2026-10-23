@@ -1,0 +1,189 @@
+JAREK (fighter id 12) - CLIP LIST AND STATUS
+Mortal Kombat 4 PC (retail MK4.EXE). netsider's MK4-RE project. Built 2026-10-23 ET from the live memory logs
+and the MK4.EXE static reading. Full detail: MK4_RE_NOTES_v3.txt (this repo), JAREK section.
+
+WHAT IS LISTED
+Every clip number Jarek's fighter object plays (as attacker OR as victim), every clip his own move scripts and
+per-fighter tables point at, and clips that turned up in his clip sets but belong to someone else.
+Clip number = index into the game's 612-entry clip table (record address 0x4FDD6C + 12*clip).
+Some shared move scripts pick the clip per fighter with a 16-entry FIGHTER_SWITCH (script opcode 0x3C, entries
+f0..f15 = fighter id). Jarek takes entry f12. Only the f12 entry is his; the other entries are other
+fighters' clips (see "OTHER FIGHTERS' ENTRIES" at the end). Victim / reaction clips are shared by all fighters.
+Live sources: practice mode P1 Jarek vs P2 Jarek (inactive dummy) and VS mode P1 Jarek vs CPU opponents (memory logs),
+run on a Windows PC with the retail game (native, windowed).
+No clip in this list has a visual ID by eye from the owner yet; roles come from the input that played them (fatality frames checked by eye).
+
+STATUS LABELS
+ PROVEN       = seen live in the running game (memory log of the clip slot while pressing the input), or read
+                directly in the game code and matched live.
+ LIKELY       = strong static (code) or indirect evidence, not seen live on Jarek.
+ GUESS        = weak evidence (static listing only).
+ NOT HIS      = belongs to another fighter (or is another fighter's version of a shared move). The evidence
+                column says how sure (PROVEN or LIKELY).
+ UNKNOWN      = in his set, purpose not known.
+
+UNITS (raw game units only)
+ Positions are 16.16 fixed point: 65536 = 1 game unit = 256 mesh units (PROVEN). No metres are used.
+ dx   = victim X net displacement over the reaction (last - first). + = pushed away from the attacker.
+ rise = victim standing height minus its lowest height (how high it went).
+ gap  = X distance between the fighters when the input started. Jarek standing height -73531 (negative = up).
+ Practice start X -85196 / +85196 (gap 170392). Sequences like 154-172-328 are the clips in the order they play.
+
+clip | status      | name / description                                    | evidence / notes
+-----+-------------+-------------------------------------------------------+------------------
+   9 | GUESS       | throw-handler code clip | static throw handler code[9]; not seen live
+  13 | PROVEN      | dazed / FINISH HIM stance (shared) | live: every CPU victim plays 13 at FINISH HIM before Jarek's fatality input
+  27 | PROVEN      | D,B+LP projectile (proj[0e]) | live practice at 3 gaps: P2 130, dx +124525 / +35130 / +77604; static proj[0e] 0x4F0100 -> 27
+  30 | PROVEN      | close low kick (LK at close range) | live gap 40000: P1 30, P2 164, dx +128954
+  44 | NOT HIS     | round-start intro of another fighter | PROVEN not his: VS CPU opponent played 44; intro switch 0x4E8EE0
+  45 | NOT HIS     | round-start intro of another fighter (Scorpion) | PROVEN not his: VS CPU opponent played 45
+  49 | PROVEN      | round-start intro pose | live every practice start and VS round (P1 Jarek); intro switch 0x4E8EE0
+  50 | NOT HIS     | round-start intro of another fighter (Reptile) | PROVEN not his: VS CPU opponent played 50
+  52 | LIKELY      | crouch HK of other fighters (in his crouch-kick list) | his crouch HK played 54 live; 52 in the shared lists 0x4E9008 / 0x4E8FB8
+  54 | PROVEN      | crouch high kick (D+HK) | live 259-258-54; crouch-kick lists 0x4E9008 / 0x4E8FB8
+  55 | PROVEN      | jump forward/back high kick | live 304-301-55 forward and back: P2 131-185, dx +159487, rise 89182; angled-jump-HK list 55/56/57
+  56 | NOT HIS     | angled jump HK of other fighters | LIKELY not his: Jarek plays 55
+  57 | NOT HIS     | angled jump HK of other fighters (Quan Chi) | PROVEN not his (Quan Chi plays 57); Jarek plays 55
+  58 | PROVEN      | jump forward/back low kick | live 304-301-58: P2 186-188, dx +142240; switch 0x4E93C4 ids 0/3/6/9/12 -> 58
+  59 | NOT HIS     | angled jump LK (ids 1/4/7/10/13) | PROVEN not his from the switch 0x4E93C4
+  60 | NOT HIS     | angled jump LK (ids 2/5/8/11/14) | PROVEN not his from the switch 0x4E93C4
+  63 | PROVEN      | leg sweep (B+LK) | live: P2 195-197, dx +136068; armed B+LK also 63; sweep switch 0x4E9780 even ids -> 63
+  65 | PROVEN      | high kick (HK) | live: P2 311, dx +60591; armed HK also 65; HK switch 0x4E8C88 -> 65
+  66 | NOT HIS     | high kick / close strike of other fighters (Scorpion) | PROVEN not his: Scorpion plays 66; Jarek's HK played 65, close HK played 314
+  75 | NOT HIS     | throw (ids 0/6/14) - attacker | PROVEN not his: throw switch 0x4E1784 (Scorpion). Victim 152
+  76 | NOT HIS     | throw (ids 4/10) - attacker | PROVEN not his: throw switch. Victim 153
+  80 | PROVEN      | throw (close LP or F+LP) | live close LP and F+LP: P1 80, P2 154-172-328, dx +232804, rise 72648; throw switch 0x4E1784 ids 1/7/12 -> 80 / victim 154
+  81 | NOT HIS     | throw (ids 5/11) - attacker | PROVEN not his: throw switch. Victim 158
+  83 | NOT HIS     | throw (id 13) - attacker | PROVEN not his: throw switch. Victim 145; then 605/607
+  96 | PROVEN      | jump punch LP (U then LP) | live: P2 186-188, dx +122648; static 0x4E9710 -> 96
+  97 | PROVEN      | jump punch HP (U then HP) | live: P2 311; static 0x4E9658 -> 97
+ 107 | PROVEN      | B,D,B+HK special (special[14]) | live: P2 182; static 0x4EB190 -> 107
+ 125 | PROVEN      | victory pose ("JAREK WINS") | live after every VS win and after both fatalities; frames show JAREK WINS
+ 128 | PROVEN      | uppercut launch reaction (shared) | live P2 128-328 after 293
+ 130 | PROVEN      | projectile hit reaction (shared) | live P2 130 after the projectile 27
+ 131 | PROVEN      | angled jump-kick / knockdown reaction (shared) | live P2 131-185 after 55 and after the weapon throw 208; P1 131-185 as VS victim
+ 132 | PROVEN      | hit reaction (shared) | live VS: P1 132-328 when hit by the CPU
+ 134 | PROVEN      | low hit reaction (shared) | live P2 134 after 308 and 314; P1 134 as VS victim
+ 141 | PROVEN      | roundhouse reaction part 2 (shared) | live 142-141-143-328
+ 142 | PROVEN      | roundhouse reaction part 1 (shared) | live 142-141-143-328 after 313
+ 143 | PROVEN      | roundhouse reaction part 3 (shared) | live 142-141-143-328
+ 154 | PROVEN      | throw victim (ids 1/7/12 throw) | live P2 154-172-328 after 80
+ 164 | PROVEN      | close-LK victim reaction | live P2 164 after 30
+ 172 | PROVEN      | throw victim part 2 | live P2 154-172-328
+ 182 | PROVEN      | hit reaction (shared); also fatality B victim part 1 | live P2 182 after 107; VS fatality B victim 13-182-206 (2 of 2)
+ 183 | PROVEN      | special hit reaction (shared) | live P2 183-185 after B,F+LK and close F,D,F+HP; P1 183 as VS victim; static r2a -> 183
+ 185 | PROVEN      | knockdown / fall follow-on (shared) | live 131-185, 183-185
+ 186 | PROVEN      | jump-kick hit reaction (shared) | live P2 186-188 after 96 and 58; P1 186-188 as VS victim
+ 188 | PROVEN      | jump-kick reaction part 2 (shared) | live 186-188
+ 195 | PROVEN      | sweep reaction part 1 (shared) | live P2 195-197 after 63
+ 197 | PROVEN      | sweep reaction part 2 (shared) | live 195-197
+ 206 | PROVEN      | dazed victim falls when FINISH HIM ends (shared) | live VS: victim 13-182-206 after fatality B (5 of 5), and 13-206 when FINISH HIM timed out (JBH at gap 200000, frames: no fatality)
+ 208 | PROVEN      | weapon throw (armed F,F+HP again) | live: P2 131, dx +195090, rise 66945; Jarek is unarmed afterwards
+ 209 | GUESS       | RUN-button action clip | static misc[03] 0x46A070 -> 209; RUN tap / hold never played it
+ 218 | PROVEN      | armed crouch (part 1) | live armed D: 218-219
+ 219 | PROVEN      | armed crouch (part 2) | live 218-219
+ 229 | PROVEN      | armed low punch (also listed in proj[0e]) | live armed LP 229; static proj[0e] 0x4F0158 also lists 229 (that use not seen)
+ 239 | PROVEN      | armed high punch | live armed HP 239
+ 244 | PROVEN      | weapon draw (F,F+HP) | live F,F+HP: 244 then armed stance 286; static 0x4E92A8 -> 244
+ 246 | PROVEN      | armed block | live armed BL 246
+ 256 | PROVEN      | crouch block (part 2) | live D+BL 257-256
+ 257 | PROVEN      | crouch block | live D+BL 257-256; static aux[0f] -> 257
+ 258 | PROVEN      | crouch hold | live D 259-258
+ 259 | PROVEN      | crouch down | live D 259-258
+ 260 | PROVEN      | crouch low punch (D+LP) | live D+LP 260; static aux[0e] -> 260
+ 261 | GUESS       | close-strike list clip | static close-strike list 0x4E9998 -> 261; never seen live
+ 262 | PROVEN      | close high punch | live close HP: P2 311; close-HP table 0x4E9BF8 id mod 3 = 0 -> 262
+ 263 | NOT HIS     | close HP of other fighters (id mod 3 = 1) | PROVEN not his from the table 0x4E9BF8
+ 264 | NOT HIS     | close HP of other fighters (id mod 3 = 2) | PROVEN not his from the table 0x4E9BF8
+ 267 | PROVEN      | walk forward | live F
+ 272 | PROVEN      | walk back | live B
+ 277 | PROVEN      | armed walk (forward) | live armed F
+ 278 | PROVEN      | armed walk (back) | live armed B
+ 284 | PROVEN      | fighting stance (idle) | live: Jarek idle 284 in practice and VS
+ 286 | PROVEN      | armed stance | live after weapon draw 244
+ 288 | NOT HIS     | CPU opponent idle | PROVEN not his: VS CPU opponent idle 288 / 289
+ 289 | NOT HIS     | CPU opponent idle | PROVEN not his: VS CPU opponent idle 289
+ 293 | PROVEN      | uppercut (D+HP) | live D+HP (and armed D+HP): P2 128-328, dx +95697, rise 157375; static 0x4E9288 -> 293
+ 294 | PROVEN      | low punch (LP) | live at gap 75000: P2 311; static 0x4E92D8 -> 294-295
+ 295 | LIKELY      | low-punch follow-on clip | static LP 294-295; LP,LP played 294 only
+ 296 | PROVEN      | high punch (HP) | live HP 296 (HP,HP played 296 only)
+ 297 | LIKELY      | high-punch follow-on clip | static HP code[297,296]; not seen live
+ 301 | PROVEN      | jump forward/back flip; also B,F+LK roll and F,D,F+HP rising | live U+F / U+B; B,F+LK 301-304 (P2 183-185, rise 33209); F,D,F+HP 301-304 (P1 min height -225975)
+ 304 | PROVEN      | jump straight up / landing | live U; end of the 301 specials
+ 305 | PROVEN      | turn-around / re-face | live; P2 305 when F,D,F+HP crosses over at mid / far range
+ 307 | PROVEN      | run loop | live F,F+RUN hold 317-307; pushes P2 +139813
+ 308 | PROVEN      | low kick (LK); static special[1d] clip | live LK: P2 134, dx +49846; armed LK also 308; static special[1d] 0x4EB088 -> 308 but F,D,F+HP played 301-304, not 308
+ 309 | UNKNOWN     | seen after crouch LP / crouch block | live P1 309 after 260 / 257-256; role not known (crouch recover, GUESS)
+ 311 | PROVEN      | high hit reaction (shared) | live P2 311 after 294, 65, 262, 97, 327
+ 313 | PROVEN      | roundhouse (B+HK) | live: P2 142-141-143-328, rise 59294; armed B+HK also 313; static 0x4E97E8 -> 313
+ 314 | PROVEN      | close high kick (knee) | live close HK: P2 134, dx +27510
+ 315 | PROVEN      | crouch low kick (D+LK) | live 259-258-315
+ 316 | GUESS       | sweep alternate victim (shared) | static sweep r13 -> 316-320-192-194; live sweep played 195-197
+ 317 | PROVEN      | run start | live 317-307 (also armed)
+ 323 | PROVEN      | standing block | live BL 323
+ 324 | LIKELY      | knockout fall (shared) | static LP/HP r20 -> 324; not seen on Jarek's victims in these logs (seen in other fighters' passes)
+ 327 | PROVEN      | jump-up kick (U then LK or HK) | live U+LK and U+HK: P2 311; static 0x4E91E0 -> 327
+ 328 | PROVEN      | flip get-up recovery (shared) | live 128-328, 154-172-328, 142-141-143-328; P1 132-328
+ 389 | PROVEN      | fatality A victim part 1 | live VS fatality A: victim 13-389-404 (6 of 6, gap 26553 to 60000); frames show the chest punch and the heart pulled out
+ 402 | PROVEN      | fatality A, part 1 (F,B,F,F+LK; heart rip) | live VS: P1 402-405 at gap 26553 to 60000 (6 of 6, with and without BL held); frames checked
+ 404 | PROVEN      | fatality A victim part 2 (falls dead) | as 389
+ 405 | PROVEN      | fatality A, part 2 (holds the heart up) | as 402; frames show Jarek holding the heart up, then JAREK WINS
+ 527 | NOT HIS     | CPU opponent's fatality on Jarek | PROVEN not his: VS CPU P2 527 while P1 Jarek played 131 / 185
+ 532 | GUESS       | close-strike list clip | static 0x4E99B0 -> 532; never seen live
+ 533 | GUESS       | close-strike list clip | static 0x4E9A10 -> 533; never seen live
+ 547 | GUESS       | run-related clip | static Run handler 0x4E2DB8 lists 547 548; run played 317-307
+ 548 | GUESS       | run-related clip | as 547
+ 549 | GUESS       | run victim clip (shared) | static Run rb5 -> 549-550-196; not seen live
+ 577 | PROVEN      | fatality B (U,U,F,F+BL; eye laser) | live VS: P1 577 then 125 at gap 130000 to 185000 (5 of 5, BL held); frames show the red eye laser destroying the opponent, then JAREK WINS
+ 596 | GUESS       | run-related clip | static Run handler 0x4E2850.. only
+ 605 | NOT HIS     | throw (id 13) second part | PROVEN not his: throw switch. Victim 607
+ 609 | NOT HIS     | throw (id 15) - attacker | PROVEN not his: throw switch. Victim 610
+
+SUMMARY (107 clips listed)
+ PROVEN        73
+ LIKELY         4
+ GUESS         10
+ NOT HIS       19
+ UNKNOWN        1
+
+MOVES WITH NO CLIP OF THEIR OWN / FATALITY INPUTS
+ Fatalities (VS at FINISH HIM, victim in 13; tried 2026-10-23 ~8:25-9:08 AM ET; gap = X distance at FINISH HIM, set by writing X):
+   Fatality A (misc40, F,B,F,F+LK, condition 0x1B = distance <= 65536): hold BL through F,B,F,F, release BL, press LK
+   -> Jarek 402-405 (punches into the chest and pulls the heart out, then holds it up), victim 13-389-404, then JAREK WINS.
+   PROVEN 6 of 6 (gap 40000 four times incl. once after a close pre-move at 38695, gap 26553, gap 60000; with and without BL held:
+   BL is not needed, as no Up is in the input). Frames checked. No fatality at gap 90000 (plain LK 308, then victory 125) or 150000:
+   matches the <= 65536 window. A variant that pressed LK first and then BL (LK held) failed at gap 40000 (victory 125, victim 137).
+   Fatality B (misc43, U,U,F,F+BL, condition 0x25 = distance >= 117964): hold BL through U,U,F,F (so Up does not jump), release BL,
+   press BL again -> Jarek 577 (red laser from the eyes destroys the opponent), victim 13-182-206, then 125 (JAREK WINS). Frames checked.
+   PROVEN 5 of 5 with BL held (gap 130000, 150000 twice, 170000, 185000). No fatality at gap 40000 (too close; victory 125, victim 137)
+   and none at gap 200000 (2 runs: FINISH HIM timed out, frames show no fatality): an upper distance limit between 185000 and 200000
+   is LIKELY; it is not in the condition code (GUESS). Without BL held the Ups made Jarek jump (304) and it failed. One run at gap 150000
+   after a jump pre-move also failed (victory 125, victim 206; cause GUESS).
+   No "FATALITY" banner was caught in the sampled frames (0.4 s steps for 6 s) for either fatality; the kills are clear in the frames.
+   Stage fatalities: arena 0 misc42 (static B,F,F+LP, clip 293) and arena 8 misc41 (static F,D,F+HK): not confirmed. One B,F,F+LP try
+   at gap 40000 gave no fatality (victory 125, victim 137), but the VS stage is random and was not known to be arena 0 / 8. Unresolved.
+ Specials with no clip of their own: B,F+LK (special[15]) plays the flip 301-304 as a low roll (victim 183-185);
+   F,D,F+HP (special[1d]) plays 301-304 rising high (P1 min height -225975; victim 183-185 close, 305 cross-over at mid / far).
+   Static special[1d] lists 308, but 308 was not played by this move (308 is his LK).
+ Not produced: RUN tap / hold (209 never seen), LP,LP / HP,HP chains (294 / 296 only), BL+HK+LK and RUN combos, D,U.
+ Weapon: drawn with F,F+HP (244, stance 286). Armed moves are listed above. The armed F,F+HP throws it (208) and he is unarmed after.
+   Armed moves after the throw replayed unarmed clips, so the armed jump / armed run were not logged separately.
+
+STILL OPEN
+ - Stage fatalities (see above); fatality B upper distance limit (between 185000 and 200000, LIKELY).
+ - "FATALITY" banner not caught in the sampled frames.
+ - 295 / 297 (LP / HP follow-on clips): static only.
+ - 209, 261, 532, 533, 547, 548, 596, 9: static-only clips in his handlers; never seen live.
+ - 52: in his crouch-kick list; his crouch HK played 54.
+ - 309: seen after crouch LP / crouch block, role unknown.
+ - 316 / 549 victim lists and 324: static only in this pass.
+ - Clips outside the logs and his handlers were not surveyed (no full scan of all 612 clips for Jarek).
+- No game crash in this pass.
+
+OTHER FIGHTERS' ENTRIES IN THE SAME PER-FIGHTER TABLES (NOT HIS, PROVEN from the switch tables)
+ (Throw pairs are attacker/victim; Jarek plays the victim clip when one of those fighters throws him.)
+ throw 0x4E1784:          80/154 (ids 1, 7, 12 = his), 75/152 (0,6,14), 79/151 (3,9), 76/153 (4,10), 78/156 (2,8), 81/158 (5,11), 83/145 then 605/607 (13), 609/610 + 604/606 (15)
+ round-start intro 0x4E8EE0: 44, 45, 46, 47, 48, 49 (his), 50
+ high kick 0x4E8C88: 65 (his; 66 = Scorpion, 71 = Quan Chi)    jump-up kick 0x4E91E0: 327 (his), 61
+ angled jump LK 0x4E93C4: 58 (ids 0/3/6/9/12, his), 59 (1/4/7/10/13), 60 (2/5/8/11/14)    sweep 0x4E9780: 63 (even ids, his), 62 (odd ids)
+ roundhouse 0x4E97E8: 313 (his), 64    close HP 0x4E9BF8 (id mod 3): 262 (his), 263, 264

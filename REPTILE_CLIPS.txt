@@ -1,0 +1,200 @@
+REPTILE (fighter id 10) - CLIP LIST AND STATUS
+Mortal Kombat 4 PC (retail MK4.EXE). netsider's MK4-RE project. Built 2026-10-23 ET from the live memory logs
+and the MK4.EXE static reading. Full detail: MK4_RE_NOTES_v3.txt (this repo), REPTILE section.
+
+WHAT IS LISTED
+Every clip number Reptile's fighter object plays (as attacker OR as victim), every clip his own move scripts and
+per-fighter tables point at, and clips that turned up in his clip sets but belong to someone else.
+Clip number = index into the game's 612-entry clip table (record address 0x4FDD6C + 12*clip).
+Some shared move scripts pick the clip per fighter with a 16-entry FIGHTER_SWITCH (script opcode 0x3C, entries
+f0..f15 = fighter id). Reptile takes entry f10 (PROVEN: intro 50, victory 121, throw 76/153, jump-up kick 327, HK 66, LK 67 all matched live).
+Only the f10 entry is his; the other 15 entries are other fighters' clips. Victim / reaction clips are shared by all fighters.
+Live sources: practice mode P1 Reptile vs P2 Reptile (inactive dummy) and VS mode P1 Reptile vs CPU opponents (memory logs).
+Frame sheets (8 frames per clip) of the captured video were checked by eye; 64 clips have a usable frame sheet.
+
+STATUS LABELS
+ PROVEN       = seen live in the running game (memory log of the clip slot while pressing the input), or read
+                directly in the game code and matched live.
+ LIKELY       = strong static (code) or indirect evidence, not seen live on Reptile.
+ GUESS        = weak evidence (static listing only).
+ NOT HIS      = belongs to another fighter (or is another fighter's version of a shared move). The evidence
+                column says how sure (PROVEN or LIKELY).
+ UNKNOWN      = in his set, purpose not known.
+
+UNITS (raw game units only)
+ Positions are 16.16 fixed point: 65536 = 1 game unit = 256 mesh units (PROVEN). No metres are used.
+ dx   = victim X net displacement over the reaction (last - first). + = pushed away from the attacker,
+        - = pulled toward / behind the attacker.
+ rise = victim standing height minus its lowest height (how high it went).
+ Reptile standing height -73531 (negative = up). "gap" = X distance set before the move.
+ Sequences like 153-173-328 are the clips in the order they play.
+
+clip | status      | name / description                                    | evidence / notes
+-----+-------------+-------------------------------------------------------+------------------
+   9 | GUESS       | unknown clip in the throw handler code list | static only: throw handler 0x42C560 code[9]; not seen live
+  12 | PROVEN      | BL+HK move (misc[1f], cond 0x17): green flash, LIKELY the invisibility toggle | live BL held + HK: P1 323-12-289 and 12-289 (2x, gap 150000); HK held + BL gave a plain HK 66; static misc[1f] 0x4E8B98 -> 12; frame sheet shows a green flash, the fighters were not drawn (capture-side bug), so "invisibility" is LIKELY only
+  13 | PROVEN      | dazed / stagger (shared) | live VS: P2 13 at FINISH HIM before every fatality attempt
+  25 | PROVEN      | acid spit (D,F+HP; proj[0c]) | live gap 200000: P1 259-258-259-289-25, victim 182, dx +98248; sheet shows green spit; static proj[0c] 0x4F01D0 -> 25. Flaky: the same input at 350000, 60000 and a second try at 200000 gave no 25
+  26 | LIKELY      | acid spit second clip (proj[0c]) | static only: 0x4F0240 -> 26; not seen in the P1 slot (projectile object)
+  32 | PROVEN      | close LK special | live gap 40000: P1 32, P2 147-167-191, dx +161843 (video blank, capture-side bug)
+  50 | PROVEN      | round-start intro pose | live VS at every round start (all clean VS runs); intro switch 0x4E8EE0 f10 -> 50
+  52 | LIKELY      | crouch kick (D+HK / D+LK) | static crouch-kick lists 0x4E9008 / 0x4E8FB8 -> 52; the two clean tries froze the clip slot (capture-side bug)
+  55 | NOT HIS     | angled jump HK variant (Tanya) | PROVEN not his: Tanya plays 55 live; Reptile plays 56
+  56 | PROVEN      | jump forward/back high kick (U+F/B then HK) | live 304-301-56 (forward, back); victim 131-185, dx +203148, rise 89182
+  57 | NOT HIS     | angled jump HK variant (Fujin) | LIKELY not his: Fujin plays 57 live
+  58 | NOT HIS     | angled jump LK (Tanya and others) | PROVEN not his from switch 0x4E93C0 (f10 -> 59)
+  59 | PROVEN      | jump forward/back low kick (U+F/B then LK) | live 301-59 (forward and back); victim 186-188, dx +172996; switch 0x4E93C0 f10 -> 59
+  60 | NOT HIS     | angled jump LK (Fujin and others) | PROVEN not his from switch 0x4E93C0
+  61 | NOT HIS     | jump-up kick (Raiden) | PROVEN not his: Raiden plays 61 live; switch 0x4E91E0 f10 -> 327
+  63 | PROVEN      | leg sweep (B+LK) | live 273-63; victim 195-197, dx +114028; armed 278-63 (same clip); static sweep 0x4E9780 -> 63
+  65 | NOT HIS     | high kick (switch entry of other fighters) | PROVEN not his: HK switch 0x4E8C88 f10 -> 66
+  66 | PROVEN      | high kick (HK) | live 289-66 (far 2x, 120000 1x); armed 286-66, victim 311, dx +68146; HK switch 0x4E8C88 f10 -> 66
+  67 | PROVEN      | low kick (LK) | live 289-67 (far 2x); armed 286-67, victim 134, dx +68050; LK switch 0x4E8D78 f10 -> 67
+  70 | NOT HIS     | low kick (Raiden) | PROVEN not his: Raiden plays 70 live; LK switch f10 -> 67
+  71 | NOT HIS     | high kick (Raiden) | PROVEN not his: Raiden plays 71 live; HK switch f10 -> 66
+  75 | NOT HIS     | throw (ids 0,6,14) - attacker | PROVEN not his (throw switch 0x4E1784); victim 152
+  76 | PROVEN      | throw (close LP or F+LP) | live gap 40000/45000: P1 76, P2 153-173-328, dx -305897 / -310897, rise 75382 (LP, F+LP, LP,LP, armed LP close: 5x); VS 2x per run; throw switch f10 -> 76/153
+  80 | NOT HIS     | throw (ids 1,7,12) - attacker | PROVEN not his (throw switch); victim 154
+  81 | NOT HIS     | throw (ids 5,11) - attacker | PROVEN not his (throw switch); victim 158
+  83 | NOT HIS     | throw (id 13) - attacker | PROVEN not his (throw switch); victim 145
+  96 | PROVEN      | jump LP (straight) | live 304-96; no hit logged
+  97 | PROVEN      | jump HP (straight and forward) | live 304-97 / 301-97, P2 311; min height -185650 (straight), -210664 (forward); VS
+ 106 | PROVEN      | B,F+LP close strike (special[16]) | live gap 60000: P1 273-268-106, P2 183-185, dx +334857, rise 83605 (sheet: hit with blood); at 350000 106 played with no hit; static special[16] 0x4EB160 -> 106. At 200000 the input gave nothing (2x)
+ 121 | PROVEN      | round-win victory pose (REPTILE WINS) | live VS after every won round; victory switch 0x4E9A28 f10 -> 121
+ 122 | NOT HIS     | victory pose of another fighter | PROVEN not his (victory switch, f10 -> 121)
+ 123 | NOT HIS     | victory pose (Raiden) | PROVEN not his (victory switch)
+ 125 | NOT HIS     | victory pose of another fighter | PROVEN not his (victory switch)
+ 128 | PROVEN      | launched by the uppercut (victim, shared) | live P2 128-328 after 293
+ 131 | PROVEN      | hit by an angled jump HK / thrown weapon (victim, shared) | live P2 131-185 after 56; P2 131 after armed B,B+LK 208
+ 134 | PROVEN      | hit low/body (victim, shared) | live P2 134 after close HK 314 (dx +27405), crouch LP 260, LK 67
+ 137 | PROVEN      | opponent pose after losing the round (shared) | live VS P2 137 while Reptile plays 121 (failed fatality tries)
+ 141 | PROVEN      | hit by the roundhouse, part 2 (victim, shared) | live P2 142-141-143-328 after 313
+ 142 | PROVEN      | hit by the roundhouse, part 1 (victim, shared) | live (see 141)
+ 143 | PROVEN      | hit by the roundhouse, part 3 (victim, shared) | live (see 141), rise 59294
+ 145 | LIKELY      | thrown by fighter 13 (victim) | static throw switch: 83/145
+ 147 | PROVEN      | victim of close LK 32, part 1 | live P2 147-167-191
+ 152 | LIKELY      | thrown by ids 0,6,14 (victim) | static throw switch: 75/152
+ 153 | PROVEN      | thrown by Reptile, part 1 (victim of 76) | live P2 153-173-328 (practice 5x, VS 2x per run)
+ 154 | LIKELY      | thrown by ids 1,7,12 (victim) | static throw switch: 80/154
+ 158 | LIKELY      | thrown by ids 5,11 (victim) | static throw switch: 81/158
+ 167 | PROVEN      | victim of close LK 32, part 2 | live P2 147-167-191
+ 171 | LIKELY      | thrown, landing (victim of 81) | static r6d -> 171
+ 172 | LIKELY      | thrown, landing (victim of 80) | static r6b -> 172
+ 173 | PROVEN      | thrown by Reptile, landing (after 153) | live P2 153-173-328
+ 179 | PROVEN      | hit by B,F+LK (victim, special[18]) | live P2 179-328 after 302-303-302, dx -87733 / -88208 (pulled toward Reptile), rise 112119
+ 182 | PROVEN      | hit by the acid spit (victim) | live P2 182 after 25, dx +98248
+ 183 | PROVEN      | hit by B,F+LP 106, part 1 (victim) | live P2 183-185
+ 185 | PROVEN      | knocked down after an air hit (victim, shared) | live P2 131-185 (after 56) and 183-185 (after 106)
+ 186 | PROVEN      | hit by an angled jump LK, part 1 (victim, shared) | live P2 186-188 after 59
+ 188 | PROVEN      | hit by an angled jump LK, part 2 (victim, shared) | live P2 186-188
+ 189 | PROVEN      | hit by an armed LP / HP (victim) | live P2 189-328 after armed LP 240 (dx +112357, rise 196725) and 189-191 after armed HP 230 (dx +168410, rise 151459)
+ 191 | PROVEN      | knockdown end (victim, shared) | live P2 147-167-191 (after 32) and 189-191 (after 230)
+ 195 | PROVEN      | swept, part 1 (victim) | live P2 195-197 after 63 (unarmed and armed)
+ 196 | LIKELY      | run-push victim end clip | static run rb5 -> 549-550-196
+ 197 | PROVEN      | swept, part 2 (victim) | live P2 195-197
+ 206 | GUESS       | opponent clip after a failed fatality at long range | live VS P2 206 (2x: PBH at 200000 and 250000) while Reptile plays 121; purpose not known
+ 208 | PROVEN      | armed B,B+LK: weapon thrown (ends unarmed) | live armed: 286-278-286-278-286-208-289, P2 131, dx +196590, rise 66945 (1x); Reptile is unarmed (289) afterwards
+ 209 | GUESS       | RUN-button action clip | static misc[03] -> 209; RUN tap gave nothing
+ 218 | PROVEN      | armed crouch, going down | live armed D: 286-218-219-259; armed D+HP 286-218-219-293
+ 219 | PROVEN      | armed crouch, held | live 218-219 (2x)
+ 230 | PROVEN      | armed HP | live 286-230-286; victim 189-191, dx +168410, rise 151459 (gap 90000)
+ 240 | PROVEN      | armed LP | live 286-240-286; victim 189-328, dx +112357, rise 196725 (gap 90000)
+ 244 | PROVEN      | weapon draw (B,B+LK) | live 289-273-289-273-289-244-286 (4x); misc[29] 0x4E92A8 -> 244. Once (fresh game) the same input gave LK 67 instead
+ 246 | PROVEN      | armed block | live armed BL: 286-246-286
+ 252 | PROVEN      | armed jump-up HP | live armed 286-304-252-304-286 (1x), no hit
+ 254 | LIKELY      | low-hit victim follow-on (shared) | static LK / crouch LP victim 134-254; not seen
+ 256 | PROVEN      | crouch block held | live 259-258-257-256-257-258-259
+ 257 | PROVEN      | crouch block (going down / up) | live (see 256)
+ 258 | PROVEN      | crouch held (shared locomotion) | live D held
+ 259 | PROVEN      | crouch down / up (shared locomotion) | live
+ 260 | PROVEN      | crouch LP | live 259-258-260; victim 134
+ 261 | GUESS       | close-strike set | static close-strike list 0x4E9998 -> 261; not produced live
+ 263 | PROVEN      | close HP | live gap 45000: P1 263, P2 311 (3x)
+ 268 | PROVEN      | walk forward | live (before F moves and the run)
+ 273 | PROVEN      | walk back | live (before B moves)
+ 277 | PROVEN      | armed walk forward | live 286-277-286 (2x)
+ 278 | PROVEN      | armed walk back | live 286-278-286 (3x)
+ 286 | PROVEN      | armed stance | live after every 244 and between armed moves
+ 289 | PROVEN      | idle stance | live every session (P1 and the P2 dummy)
+ 293 | PROVEN      | uppercut (D+HP) | live 259-258-293; victim 128-328, rise 157375; armed D+HP 218-219-293
+ 294 | PROVEN      | LP | live 289-294 (far)
+ 295 | LIKELY      | LP follow-on (LP chain) | static LP 294-295; LP,LP close gave the throw 76
+ 296 | PROVEN      | HP | live 289-296 (far)
+ 297 | LIKELY      | HP follow-on | static HP code[297,296]; HP,HP gave 263-532
+ 299 | LIKELY      | B,F+LK alternate clip (special[18]) | static 0x4EB130 -> 299; live always 302-303-302
+ 301 | PROVEN      | flip / forward jump roll (shared locomotion) | live in angled jumps
+ 302 | PROVEN      | B,F+LK special, part 1 / end (special[18]) | live 273-268-302-303-302 at gaps 60000, 150000, 300000 (4x); victim 179-328 when close; static 0x4EB110 -> 302-303
+ 303 | PROVEN      | B,F+LK special, part 2 | live (see 302)
+ 304 | PROVEN      | jump (shared locomotion) | live
+ 305 | PROVEN      | turn around (shared) | live P1/P2 305 when sides swapped
+ 307 | PROVEN      | run loop | live 268-317-307 (F,F+RUN hold), pushes P2 +105504; armed 277-317-307
+ 311 | PROVEN      | hit high (victim, shared) | live P2 311 after 263, 97, armed 66
+ 313 | PROVEN      | roundhouse (B+HK) | live 273-313; victim 142-141-143-328, rise 59294; armed 278-313; static 0x4E97E8 -> 313
+ 314 | PROVEN      | close HK (knee) | live gap 40000: P1 314, P2 134, dx +27405
+ 317 | PROVEN      | run start | live 317-307
+ 323 | PROVEN      | block (standing) | live BL
+ 324 | LIKELY      | hit by LP / HP (victim, shared) | static LP / HP victim r20 -> 324; LP/HP were done far (no hit)
+ 327 | PROVEN      | jump-up kick (U then LK or HK) | live 304-327 (practice and VS); switch 0x4E91E0 f10 -> 327 (f1 Raiden -> 61)
+ 328 | PROVEN      | get up after a knockdown (victim, shared) | live P2 ...-328 after 76, 293, 313, 179, 240
+ 389 | PROVEN      | fatality A victim part 1 (at the input) | live VS (gap 40000, 60000)
+ 431 | PROVEN      | fatality A victim (head torn off) | live VS 3x (PAH 40000, PAH 60000, PAV 40000); P2 is pulled in to Reptile (x2 jumps to x1)
+ 432 | PROVEN      | fatality A (hold BL, press HP+HK+LP+LK, release BL, Up): Reptile tears the head off | live VS 3x: P1 289-432, P2 389-431; REPTILE WINS / FATALITY on video
+ 493 | PROVEN      | fatality B start (before the vomit) | live VS 5x: P1 493-544-545-544-493
+ 532 | PROVEN      | close HP follow-on (close HP, HP) | live HP,HP at gap 45000: P1 263-532, P2 311
+ 533 | GUESS       | close-strike set | static close-strike list 0x4E9A10 -> 533; not produced live
+ 544 | PROVEN      | fatality B (U,D,D,D+HP, far): acid vomit, part 1 | live VS 5x (gaps 120000, 150000 3x, 180000): P1 493-544-545-544-493, P2 13-546
+ 545 | PROVEN      | fatality B acid vomit, part 2 | live VS 5x
+ 546 | PROVEN      | fatality B victim (melts to a skeleton) | live VS 5x; REPTILE WINS / FATALITY on video
+ 547 | GUESS       | run-related clip | static run 0x4E2DB8 -> 547-548
+ 548 | GUESS       | run-related clip | static run 0x4E2DB8 -> 547-548
+ 549 | LIKELY      | run-push victim, part 1 | static run rb5 -> 549-550-196
+ 550 | LIKELY      | run-push victim, part 2 | static run rb5 -> 549-550-196
+ 596 | GUESS       | run-related clip | static run 0x4E2850.. -> 596
+ 605 | NOT HIS     | throw (id 13) second attacker clip | PROVEN not his (throw switch); victim 607
+ 607 | LIKELY      | thrown by id 13 (victim) | static throw switch: 605/607
+ 609 | NOT HIS     | throw (id 15) - attacker | PROVEN not his (throw switch); victim 610
+ 610 | LIKELY      | thrown by id 15 (victim) | static throw switch: 609/610
+
+SUMMARY (123 clips listed)
+ PROVEN        80
+ LIKELY        18
+ GUESS          8
+ NOT HIS       17
+ UNKNOWN        0
+
+MOVES WITH NO CLIP OF THEIR OWN / FATALITY INPUTS
+ Fatality A (misc, condition 0x2C close): input = hold BL, press and hold HP+HK+LP+LK, release BL, press Up.
+   REACHED live 3x (VS, P2 dazed 13): PAH gap 40000, PAH gap 60000, PAV gap 40000 (Tanya variant). Clips 289-432 / victim 389-431 (PROVEN).
+   Condition 0x2C (code 0x45E2A0) = X distance <= 65536 (call 0x45E5C0) AND, at the moment Up is pressed, HP+HK+LP+LK held and
+   BL NOT held (mask table 0x4E70C0). PROVEN by the live results:
+   - plain input (no Block hold) at 40000 and 20000 (pushed to 32270): the first button fired LP 294, which hit the victim -> no fatality;
+   - Up pressed while BL still held (PAW, 40000): no fatality;
+   - PAH at 90000 (2 clean runs): Up became a jump 304 -> no fatality, as the distance check predicts.
+ Fatality B (U,D,D,D+HP, condition 0x25 = X distance >= 0x1CCCC = 117964, so a FAR fatality):
+   REACHED live 5x (VS): gap 120000 (PBH), 150000 (PBH 2x, plain PB 1x), 180000 (PBH). Clips 493-544-545-544-493 / victim 13-546 (PROVEN).
+   The rule "close range, hold Block" does not apply to this one: at 40000 (PBH) it failed (below the 117964 bound).
+   Block-hold (PBH) and plain (PB) both worked at 150000; the Tanya variant (PBV, BL pressed again while HP held) failed at 150000.
+   Failed at 200000 and 250000 (P1 121, P2 206): an upper limit exists, but the condition code only has the lower
+   bound, so the cause of the upper limit is UNRESOLVED (GUESS: input timing / P2 walk at long range).
+ Stage fatality, invisibility toggle, and other special moves: only 12 (BL+HK) was produced; see the 12 row.
+
+STILL OPEN
+ - Fatality B upper distance limit (works at 180000, fails at 200000): cause not found.
+ - Acid spit 25 (D,F+HP): produced only once (gap 200000); the same input at 350000, 60000 and a second 200000 gave nothing;
+   a later redo run froze the clip slot at 258 (capture-side bug) and gave no data.
+ - 12 (BL+HK): the green flash is seen, but the fighters were not drawn in the capture, so "invisibility" is LIKELY only.
+ - 52 crouch kick: the clip slot froze on both clean tries (capture-side bug), LIKELY only.
+ - 26, 295, 297, 299, 261, 533, 209, 547, 548, 596, 9: static-only clips in his handlers, not produced live.
+ - 206: opponent clip after failed long-range fatality tries; purpose not known.
+ - Static-only victim clips: 145, 152, 154, 158, 171, 172, 196, 254, 324, 549, 550, 607, 610.
+ - 16 PROVEN clips have no usable frame sheet: the video was blank or the camera was broken for that part of the run
+   (capture-side rendering bug: 32, 59, 128, 141, 142, 143, 147, 167, 185, 186, 188, 191, 260, 296), or no frame sheet exists for
+   them (137, 389: short clips in VS runs).
+ - Clips outside the logs and his handlers were not surveyed (no full scan of all 612 clips for Reptile).
+
+OTHER FIGHTERS' ENTRIES IN THE SAME PER-FIGHTER TABLES (NOT HIS, PROVEN from the switch tables)
+ (Throw pairs are attacker/victim; Reptile plays the victim clip when one of those fighters throws him.)
+ throw 0x4E1784:          75/152 (ids 0,6,14), 80/154 (1,7,12), 79/151 (3,9), 76/153 (4, 10 = his), 78/156 (2), 81/158 (5,11), 83/145 then 605/607 (13), 609/610 (15)
+ high kick 0x4E8C88: 65, 71 (66 = his)    low kick 0x4E8D78: 70, 308 (67 = his)    jump-up kick 0x4E91E0: 61 (Raiden) (327 = his)
+ angled jump LK 0x4E93C0: 59 (ids 1,4,7,10,13; his), 60 (ids 2,5,8,11,14,15), 58 (the other ids)    angled jump HK: 55 (Tanya), 57 (Fujin) (56 = his)
+ victory 0x4E9A28: 111, 113, 114, 115, 119, 120, 122, 123, 124, 125, 594 (121 = his)

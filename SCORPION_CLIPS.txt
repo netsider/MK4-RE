@@ -31,6 +31,7 @@ UNITS (raw game units only)
 
 clip | status      | name / description                                    | evidence / notes
 -----+-------------+-------------------------------------------------------+------------------
+  12 | PROVEN      | fatality B (giant scorpion transformation; B,F,D,U+HP) | live VS: hold BL through B,F,D,U, release BL, HP at gap 50000 / 36175 (2 of 2): P1 12, P2 13-584-585; "FATALITY" on screen; frames checked
   13 | PROVEN      | dazed / FINISH HIM stance (shared) | live P2 199-13 after the spear 14 (practice); every CPU victim plays 13 at FINISH HIM
   14 | PROVEN      | B,B+LP spear (proj[06]) | live 274-290-274-290-14 at gap 200000, 350000 and close: P2 199-13 (pulled in and dazed), dx -196605 / -340782 / -78642; static proj[06] 0x4F0430 -> 14 / victim 199
   37 | PROVEN      | close LK special (grab and flip) | live gap 40000 / 25000: P1 37-282, P2 157-586, dx +28140 / +30170, rise 42717; close-LK table 0x4E0FA0 idx 0 -> 0x42BDD0 -> script 0x4E12E0 (clip 37, opp 157, damage 11796 = 18.0%)
@@ -133,31 +134,39 @@ clip | status      | name / description                                    | evi
  324 | PROVEN      | knockout fall (shared) | live VS: CPU 324 when the HP hit 296 ended the match, then 137
  327 | PROVEN      | jump-up kick (U then LK or HK) | live 304-327-304 for U+LK and U+HK; U+HK hit: P2 311; static 0x4E91E0 -> 327
  328 | PROVEN      | flip get-up recovery (shared) | live 128-328, 152-173-328, 142-141-143-328
+ 390 | PROVEN      | fatality A (fire breath; B,F,F,B+BL) | live VS: hold BL through B,F,F,B, release BL, BL again at gap 130000 / 150000 / 170000 (3 of 3): P1 390, P2 13-391; "FATALITY" on screen; frames checked
+ 391 | PROVEN      | fatality A victim (burns) | as 390
  448 | PROVEN      | D,F+LP fire projectile (misc[28]) | live 259-258-259-290-448-290 at gap 150000 and 60000: P2 182, dx +98248; flames visible in the frames; static misc[28] 0x4E8B40 -> 448
  547 | GUESS       | run-related clip | static Run handler 0x4E2DB8 lists 547 548; run gave 317-307
  548 | GUESS       | run-related clip | as 547
+ 584 | PROVEN      | fatality B victim, part 1 (seized by the giant scorpion) | as 12
+ 585 | PROVEN      | fatality B victim, part 2 (on the floor) | as 12
  586 | PROVEN      | close-LK victim, part 2 | live P2 157-586
  596 | GUESS       | run-related clip | static Run handler 0x4E2850.. only
 
-SUMMARY (107 clips listed)
- PROVEN        80
+SUMMARY (112 clips listed)
+ PROVEN        85
  LIKELY         3
  GUESS          7
  NOT HIS       17
  UNKNOWN        0
 
 MOVES WITH NO CLIP OF THEIR OWN
- Fatalities: fatality A (misc40, static input B,F,F,B+BL) and fatality B (misc43, static B,F,D,U+HP) were tried live in VS
-   at FINISH HIM (victim in 13, gap 80000) as fast taps, slow taps, BL held long (A) and BL held through the input (B): no fatality
-   came out. The direction taps played walk 274 / 269 and crouch 259-258; the final BL gave block 323; in B the U+HP gave a jump
-   and jump punch 97. Every attempt ended in the victory pose 115-118 (PROVEN). The B / BL-held try lost the game process during
-   the FINISH HIM placement (game window gone, no dialog). Fatality clips unresolved (the static input decode may be wrong, GUESS).
+ Fatalities (VS at FINISH HIM, victim in 13; retried 2026-10-23 ~7:45-8:25 AM ET with the hold-Block technique; gap = X distance at FINISH HIM):
+   Fatality B (misc43, B,F,D,U+HP, condition 0x1B = distance <= 65536): hold BL through B,F,D,U (so Up does not jump), release BL,
+   press HP -> Scorpion 12 (bursts into flame and turns into a giant scorpion), victim 13-584-585, "FATALITY" on screen.
+   PROVEN 2 of 2 (gap 50000 and 36175). No fatality at gap 90000 (BL held, same input: victory 115-118).
+   Fatality A (misc40, B,F,F,B+BL, condition 0x25 = distance >= 117964): hold BL through B,F,F,B, release BL, press BL again
+   -> Scorpion 390 (fire breath), victim 13-391 (burns), then Scorpion 115-118 and victim 206, "FATALITY" on screen.
+   PROVEN 3 of 3 (gap 130000, 150000, 170000). No fatality at gap 50000 (too close) and at gap 200000 (1 run; an upper distance
+   limit between 170000 and 200000 is LIKELY, as Liu Kang's fatality A also failed at 200000; not found in the condition code, GUESS).
+   The earlier tries at gap 80000 (with and without BL held) failed: 80000 is outside both distance windows.
    Stage fatalities: arena 0 misc42 (static B,F,F+LK) played the low kick 67 (opponent 134); arena 8 misc41 (static F,D,D+LK)
    played crouch moves only; the VS stage is random and was not confirmed to be arena 0 / 8, so these tries prove nothing. Unresolved.
  Juggles: none produced on purpose. 293 launches (rise 155605).
 
 STILL OPEN
- - Fatality A / B clips and the stage fatalities (see above).
+ - Stage fatalities (see above); fatality A upper distance limit (failed at 200000, GUESS).
  - 43 / 163 (second clip pair of the close-LK special): static only; close LK (2 runs) played 37-282 / 157-586.
  - 295 / 297 (LP / HP follow-on clips): static only; LP,LP and HP,HP played 294 / 296 only.
  - 209, 261, 547, 548, 596 (and 532 / 533 from the close-strike list): static-only clips in his handlers; never seen live.

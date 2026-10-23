@@ -1,0 +1,175 @@
+GORO (fighter id 15) - CLIP LIST AND STATUS
+Mortal Kombat 4 PC (retail MK4.EXE). netsider's MK4-RE project. Built 2026-10-23 ET from the live memory logs
+and the MK4.EXE static reading. Full detail: MK4_RE_NOTES_v3.txt (this repo), GORO section.
+
+WHAT IS LISTED
+Every clip number Goro's fighter object played live (as attacker OR as victim), every clip his own move scripts and
+per-fighter tables point at, and clips that turned up in shared clip sets but belong to someone else.
+Clip number = index into the game's 612-entry clip table (record address 0x4FDD6C + 12*clip).
+Shared move scripts pick the clip per fighter with a 16-entry FIGHTER_SWITCH (script opcode 0x3C, entries f0..f15 = fighter id).
+Goro takes entry f15 (the last entry; PROVEN live: 66, 67, 63, 327, 60 all match f15). Victim / reaction clips are shared by all fighters.
+Live sources: practice mode P1 Goro vs P2 Goro (inactive dummy), memory logs; see HOW GORO WAS SELECTED.
+
+HOW GORO WAS SELECTED (he is a hidden fighter, not on the normal grid or practice menu)
+ Name table 0x4F11D8 has 18 names; 15 = GORO, 16 = KITANA, 17 = NOOB (PROVEN static).
+ The practice menu cycles fighter ids 0..14 only (max 0xE) in 0x4F11CC (P1) and 0x4F11D0 (P2); at practice start the code at
+ 0x4A3620 copies 0x4F11CC into the fight-time P1 fighter id 0x535EC8 (PROVEN static + live).
+ Route used: FORCED FIGHTER ID IN MEMORY. With the practice menu open, 15 was written to 0x4F11CC and 0x4F11D0; the menu rows
+ then read "PLAYER 1 GORO" / "PLAYER 2 GORO" (OCR) and the fight started as Goro vs Goro (frames show the four-armed Goro; PROVEN).
+ The game's own route (static, code 0x4A0180, P1 select): after the pick, if [0x53FD54] != 0 (Hidden chosen), input bits
+ 0x4D30A4&0x20 and 0x4D30A8&4 are clear (two buttons held), [0x5416A4] != 0 (Goro unlocked) and the pick is 6 (Shinnok) and
+ [0x5416A8] == 0, the fighter id becomes 15 and 0x5416A8 is set. Same for Noob: flags 0x5416AC/0x5416B0 with Reiko (7) -> 0x11.
+ P2 copy at 0x4A0490 (0x538268 / 0x536060). Public FAQs give the player code (beat the game with Shinnok to unlock, then Hidden,
+ U,U,U,L on Shinnok, RUN+BL) - not tried in full (LIKELY match). Setting the flags in memory and picking Shinnok did not give Goro.
+
+STATUS LABELS
+ PROVEN       = seen live in the running game (memory log of the clip slot while pressing the input), or read
+                directly in the game code and matched live.
+ LIKELY       = strong static (code) or indirect evidence, not seen live on Goro.
+ GUESS        = weak evidence (static listing only).
+ NOT HIS      = belongs to another fighter (or is another fighter's version of a shared move). The evidence
+                column says how sure (PROVEN or LIKELY).
+ UNKNOWN      = in his set, purpose not known.
+
+UNITS (raw game units only)
+ Positions are 16.16 fixed point: 65536 = 1 game unit = 256 mesh units (PROVEN). No metres are used.
+ gap  = X distance between the fighters when the input starts.
+ dx   = victim X net displacement over the reaction (last - first). + = pushed away from the attacker,
+        - = pulled toward / thrown behind the attacker.
+ rise = victim standing height minus its lowest height (how high it went).
+ Goro standing height -85458 (negative = up; Liu Kang -70320, so Goro stands 15138 higher - he is the big fighter).
+ Practice start X -85196 / +85196. Sequences like 606-607-152-173-328 are the clips in the order they play.
+
+clip | status      | name / description                                    | evidence / notes
+-----+-------------+-------------------------------------------------------+------------------
+  13 | PROVEN      | dazed / pulled-in stance (shared) | live VS: P1 Goro 199-13 when CPU Scorpion played his spear 14 (3 times)
+  27 | LIKELY      | fireball-related clip (proj[00]) | static proj[00] 0x4F07B8 / 0x4F07C8 -> 27; not seen in his clip slot (GUESS: the projectile object)
+  52 | PROVEN      | crouch high kick (D+HK) | live 259-258-52; static crouch kicks 0x4E9008 -> 52
+  54 | NOT HIS     | crouch HK of other fighters | PROVEN not his: Goro plays 52 (Liu Kang 54)
+  55 | NOT HIS     | angled jump HK of other fighters | PROVEN not his: Goro plays 56
+  56 | PROVEN      | jump forward/back high kick | live 301-56 (forward and back); angled-HK list 0x4E9588 -> 56
+  57 | NOT HIS     | angled jump HK of other fighters | PROVEN not his: Goro plays 56
+  58 | NOT HIS     | angled jump LK of other fighters | PROVEN not his: Goro plays 60
+  59 | NOT HIS     | angled jump LK of other fighters | PROVEN not his: Goro plays 60
+  60 | PROVEN      | jump forward/back low kick | live 301-60 (forward and back); switch 0x4E93C0 f15 -> 60
+  61 | NOT HIS     | jump-up kick of other fighters | PROVEN not his: Goro plays 327 (Liu Kang 61)
+  62 | NOT HIS     | sweep of other fighters | PROVEN not his: Goro plays 63
+  63 | PROVEN      | leg sweep (B+LK) | live 589-63; sweep switch 0x4E9780 f15 -> 63
+  64 | NOT HIS     | roundhouse of other fighters | PROVEN not his: Goro plays 313
+  66 | PROVEN      | high kick (HK), close and far | live 66 at gaps 40000 and 90000; HK switch 0x4E8C88 f15 -> 66
+  67 | PROVEN      | low kick (LK), close and far | live 67; gap 40000: P2 134, dx +50991; LK switch 0x4E8D78 f15 -> 67
+  75 | PROVEN      | throw, part 3 (shared throw clip) | as 604; static 0x4E1828 -> 75 / opp 152
+  96 | PROVEN      | jump punch LP | live 304-96
+  97 | PROVEN      | jump punch HP | live 304-97
+ 128 | LIKELY      | uppercut victim (shared) | static uppercut opp 128 (live P2 did not react to 293 in this run)
+ 130 | PROVEN      | fireball hit reaction (shared) | live P2 Goro 130 after 592
+ 134 | PROVEN      | low/body hit reaction (shared) | live P2 Goro 134 after LK 67 at gap 40000
+ 141 | LIKELY      | roundhouse victim, part 2 (shared) | static 142-141-143; roundhouse did not hit live
+ 142 | LIKELY      | roundhouse victim, part 1 (shared) | as 141
+ 143 | LIKELY      | roundhouse victim, part 3 (shared) | as 141
+ 152 | PROVEN      | thrown, part 3 (shared, victim of 75) | as 606
+ 173 | PROVEN      | thrown, part 4 (shared) | as 606
+ 178 | PROVEN      | stomp victim (knocked flat) | live P2 Goro 305-178-328 after 601-602 (frames: victim flattened); static misc30 victim 178
+ 181 | PROVEN      | hard-uppercut launch (shared) | live P2 Goro 181-328 after 600, rise 191187
+ 182 | PROVEN      | hit reaction after 602 (shared) | live P2 Goro 182 after B,F,D,D+HK
+ 192 | LIKELY      | sweep fall (shared) | static; PROVEN on other fighters, not seen on Goro runs
+ 194 | LIKELY      | sweep get-up (shared) | as 192
+ 199 | PROVEN      | pulled-in victim (spear), then 13 (shared) | live VS: P1 Goro 199-13 after the CPU Scorpion spear 14
+ 209 | GUESS       | RUN-button action clip | static misc[03] 0x46A070 -> 209; RUN tap played nothing live
+ 256 | PROVEN      | crouch block release | as 257
+ 257 | PROVEN      | crouch block | live D+BL 259-258-257-256-257
+ 258 | PROVEN      | crouch held | live D
+ 259 | PROVEN      | crouch going down | live D (D,D+HP, crouch moves, ground-pound input)
+ 260 | PROVEN      | crouch low punch (D+LP) | live 259-258-260
+ 261 | GUESS       | close-strike clip | static close-strike list 66 261 532 533; not produced live
+ 262 | NOT HIS     | close HP of other fighters | PROVEN not his: Goro plays 296 at close range
+ 266 | NOT HIS     | walk forward of other fighters | PROVEN not his: Goro walks with 590
+ 271 | NOT HIS     | walk back of other fighters | PROVEN not his: Goro walks back with 589
+ 287 | NOT HIS     | idle of other fighters | PROVEN not his: Goro idle 587
+ 293 | PROVEN      | uppercut (D+HP) | live 259-258-293; static 0x4E9288 -> 293
+ 294 | PROVEN      | low punch (LP) | live 294 (gap 90000; LP,LP played 294 once)
+ 295 | LIKELY      | low-punch follow-on clip | static LP 294-295; not seen live
+ 296 | PROVEN      | high punch (HP), also HP at close range | live 296 at gaps 25000, 40000 and 90000 (no separate close-HP clip played)
+ 297 | LIKELY      | high-punch follow-on clip | static HP code[297,296]; not seen live (HP,HP played 296 once)
+ 301 | PROVEN      | jump forward/back | live U+F / U+B (P1 min height -222591 / -223977)
+ 304 | PROVEN      | jump straight up / landing | live U (P1 min height -197577)
+ 305 | PROVEN      | turn-around / re-face (shared) | live P2 305 before 178 (stomp)
+ 307 | PROVEN      | run loop | as 317; static Run handler code[307]
+ 311 | PROVEN      | high hit reaction (shared) | live VS: P1 Goro 311 when hit; P2 Reptile 311 after Goro jump HP 97
+ 313 | PROVEN      | roundhouse (B+HK) | live 589-313; static list 0x4E97E8 -> 313
+ 315 | PROVEN      | crouch low kick (D+LK) | live 259-258-315 (static crouch-kick list showed 52 only)
+ 316 | GUESS       | sweep-fall variant, start | static sweep reaction 316-320-192-194; not produced live (sweep did not hit)
+ 317 | PROVEN      | run start | live F,F+RUN hold 590-317-307
+ 319 | PROVEN      | two-handed-punch hit reaction (shared) | live P2 Goro 319-328 after 599
+ 320 | GUESS       | sweep-fall variant, middle | as 316
+ 323 | PROVEN      | standing block (shared) | live BL 587-323-587
+ 327 | PROVEN      | jump-up kick (U then LK or HK) | live 304-327 (LK and HK); switch 0x4E91E0 f15 -> 327
+ 328 | PROVEN      | flip get-up recovery (shared) | live P2 after 319, 181, 178 and the throw
+ 486 | GUESS       | listed by the B,F,D,D+HK handler scan | as 493
+ 487 | GUESS       | listed by the B,F,D,D+HK handler scan | as 493
+ 493 | GUESS       | listed by the B,F,D,D+HK handler scan | static scan of 0x43B830 runs past the handler (it also lists Liu Kang fatality 537-538); probably not his
+ 532 | GUESS       | close-strike clip | as 261
+ 533 | GUESS       | close-strike clip | as 261
+ 537 | NOT HIS     | Liu Kang fatality B, part 1 | PROVEN not his (Liu Kang 537-538 PROVEN); only appears through the 0x43B830 scan overrun
+ 538 | NOT HIS     | Liu Kang fatality B, part 2 | as 537
+ 541 | GUESS       | listed by the B,F,D,D+HK handler scan | as 493
+ 544 | GUESS       | listed by the B,F,D,D+HK handler scan | as 493
+ 545 | GUESS       | listed by the B,F,D,D+HK handler scan | as 493
+ 547 | GUESS       | run-related clip | static Run handler 0x4E2DB8 lists 547 548; run gave 317-307
+ 548 | GUESS       | run-related clip | as 547
+ 587 | PROVEN      | idle / fighting stance | all live logs (Goro idle, P1 and P2); practice start and every reset
+ 589 | PROVEN      | walk back | live B (warm-up, WalkF_B, before sweep 63 and roundhouse 313)
+ 590 | PROVEN      | walk forward | live F (F inputs of F,B+HP / F,F+HP / F,F,B+HK play 590); WalkF_B
+ 591 | GUESS       | chest kick, part 2 | static 0x4E2B68 -> 591; not captured
+ 592 | PROVEN      | fireball F,B+HP (proj[00]) | live 590-589-592; P2 130, dx +127475 (gap 200000) / +48661 (gap 350000); fire visible in the frames; static proj[00] 0x4F0778 -> 592
+ 594 | PROVEN      | round-win victory pose | live VS: P1 Goro 594 after each won round (throw 604-605-75 then 594), banner "GORO WINS" in the frames; victory switch 0x4E9A28 f15 -> 594
+ 596 | GUESS       | run-related clip | static Run handler 0x4E2850.. only
+ 598 | GUESS       | chest kick B,B+HK (misc32), part 1 | static 0x4E2B58 -> 598; not captured: the B,B+HK runs lost the game input / logger (see STILL OPEN)
+ 599 | PROVEN      | two-handed punch F,F+HP (misc31) | live 590-590-599; gap 60000: P2 319-328, dx +22936, rise 65040; gap 120000: no hit; static 0x4E2B48 -> 599
+ 600 | PROVEN      | hard uppercut D,D+HP (misc33) | live 259-258-259-600; P2 181-328, dx +106164, rise 191187
+ 601 | PROVEN      | stomp F,F,B+HK (misc30), part 1 (leaps up) | live 590-590-589-601-602; P1 min height -258462; P2 305-178-328; static 0x4E2BA0 -> 601
+ 602 | PROVEN      | stomp, part 2 (lands); also B,F,D,D+HK | live after 601; B,F,D,D+HK played 602 alone (P2 182, dx +124507) at gaps 150000 and 60000; static 0x4E2BB8 / 0x4E2C38 -> 602
+ 603 | LIKELY      | stomp, part 3 | static 0x4E2C20 -> 603; not seen live
+ 604 | PROVEN      | throw, part 1 (close LP or F+LP) | live gap 40000: P1 604-605-75, P2 606-607-152-173-328, dx -287678 / -285975, rise 66970; static throw 0x4E1780 -> 604 / opp 606
+ 605 | PROVEN      | throw, part 2 | as 604; static 0x4E17D0 -> 605 / opp 607
+ 606 | PROVEN      | thrown by Goro, part 1 | live P2 Goro 606-607-152-173-328 after 604-605-75 (practice); VS: P2 Reptile 606-607-152-173 the same
+ 607 | PROVEN      | thrown by Goro, part 2 | as 606
+ 609 | GUESS       | throw switch entry for id 15 - attacker | static throw switch 0x4E1708 id 15 -> 609 / victim 610, but live Goro threw with 604-605-75 (both close LP and F+LP); purpose not known
+ 610 | GUESS       | victim of 609 | as 609
+
+SUMMARY (94 clips listed)
+ PROVEN        51
+ LIKELY        10
+ GUESS         19
+ NOT HIS       14
+ UNKNOWN        0
+
+FATALITIES
+ Goro has no fatality entries: the decoder found no misc40 / misc43 (fatality A / B) rows and no stage-fatality rows for
+ fighter 15 (PROVEN static). He is a boss / hidden fighter. No fatality runs were made.
+VS MODE
+ VS route: FORCED FIGHTER ID IN MEMORY at the select screen. P1 picked Shinnok (grid index 2) in Arcade 1-player; for 3 s after
+ the pick every value 6 in 0x535EC8 was overwritten with 15. The fight loaded as Goro: VS HUD "GORO" vs "REPTILE", round banner "GORO WINS" (PROVEN).
+ (First tries: writing 0x53FD54 = 1, 0x5416A4 = 1, 0x5416A8 = 0 before the pick, with and without BL+RUN held (input bits
+ 0x4D30A4 0x20 and 0x4D30A8 4 then read clear), still loaded Shinnok: 0x535EC8 stayed 6. So 0x4A0180 alone was not the
+ path taken for that pick; GUESS: 0x53FD54 is reset or the Hidden choice is a separate select step.)
+ Result, one VS run (150 s): Goro beat Reptile 2-0, then won round 1 against Scorpion; each won round was
+ throw 604-605-75 then victory pose 594 (3 times, PROVEN). Round start: Goro played no intro clip (idle 587 straight away; intro switch 0x4E8EE0 f15 has no clip) - LIKELY.
+ Goro as victim (VS): 199-13 (spear pull), 311, 134. No "FINISH HIM" sequence was reached on Goro's side (rounds were won by
+ throw with the opponent HP set low; the logger sets the opponent HP, see the PROVEN table).
+
+STILL OPEN
+ - Chest kick B,B+HK (misc32, 598 / 591): not captured. Every session that reached it lost the game input or the logger
+   (three tries); it was skipped. Static only (GUESS).
+ - 603 (stomp part 3), 295 / 297 (LP / HP follow-on), 27 (fireball list): static only.
+ - The full ground pound (misc34) was not produced: B,F,D,D+HK played 602 alone. Its handler scan runs into other scripts.
+ - 209 (RUN action): RUN tap played nothing.
+ - 609 / 610: the throw switch entry for id 15, not what Goro's throw played.
+ - Victims of 293 / 63 / 313: P2 did not react in that session (no hit); static only.
+ - The game's own hidden-select route was not completed live (see above).
+ - Clips outside the logs and his handlers were not surveyed (no full scan of all 612 clips for Goro).
+
+OTHER FIGHTERS' ENTRIES IN THE SAME PER-FIGHTER TABLES (NOT HIS, PROVEN from the switch tables)
+ high kick 0x4E8C88: 71 (66 = his)    low kick 0x4E8D78: 70 (67 = his)    jump-up kick 0x4E91E0: 61 (327 = his)
+ angled jump LK 0x4E93C4: 58, 59 (60 = his)    sweep 0x4E9780: 62 (63 = his)
+ victory 0x4E9A28: 111, 113-125 (594 = his)

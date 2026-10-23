@@ -657,3 +657,330 @@ Frame sheets (8 frames per clip) of the captured video were checked by eye for 5
    have no frame sheet for that reason (70, 96, 205, 218, 219, 233, 234, 246, 277, 278, 305, 532, 56, 183, 185).
 7) Open: 19, 95, 295, 297 (LIKELY); 261/533, 209, 547/548/596, 179, 9 (GUESS); static-only victim clips 141-143, 145, 152, 153, 158, 171,
    195-197, 254, 316, 320, 324, 549, 550, 607, 610. See RAIDEN_CLIPS.txt "STILL OPEN".
+
+==== LIU KANG (fighter id 3): LIVE PASS, SPECIALS, WEAPON, FATALITIES, CLIP LIST (2026-10-23, ~6:39 AM - 8:10 AM ET) ====
+Full clip list with status per clip: LIUKANG_CLIPS.txt (this repo; 118 clips: 81 PROVEN, 3 LIKELY, 9 GUESS, 25 NOT HIS).
+Method as for Raiden / Tanya / Scorpion: P1 Liu Kang with scripted inputs, live memory log of both clip slots (practice vs an inactive Liu Kang,
+and VS vs CPU), plus the static decoder (script_decoder_v3.py, fighter 3) and entry f3 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
+Name from the select screen (grid index 3, HUD "LIU KANG"), the practice menu and "LIU KANG WINS". Raw units only (65536 = 1 game unit = 256 mesh units).
+Liu Kang idle 287, armed stance 286, standing height -70320. Frame sheets of the captured video were checked by eye for 44 clips (victim clips included).
+
+1) PROVEN live (P1 Liu Kang):
+   48 round intro (switch 0x4E8EE0 f3; every practice start and VS round start) | 119 victory pose "LIU KANG WINS" (switch 0x4E9A28)
+   79 throw, close LP / F+LP (throw switch 0x4E1784 ids 3,9 -> 79 / victim 151) -> victim 151-174-191, dx -319505 / -304855, rise 71505
+   262 close HP (table 0x4E9BF8, id mod 3 = 0) -> 311 | 314 close HK knee -> 134, dx +27510 | 67 close LK -> 134, dx +30840
+   294 LP | 296 HP | 66 HK -> 311, dx +68187 | 67 LK -> 134 | 293 uppercut -> 128-328, dx +96334, rise 157375 | 62 sweep -> 192-194, dx +94368
+   64 roundhouse -> 142-141-143-328, dx +150696, rise 59294 | 260 crouch LP | 54 crouch HK | 315 crouch LK -> 134, dx +50763
+   257/256 crouch block | 323 block | 97 jump HP -> 311 | 96 jump LP -> 186-188 | 61 jump-up kick (LK and HK)
+   55 jump forward/back HK -> 131-185, dx +203148, rise 89182 | 58 jump forward/back LK (switch 0x4E93C4) -> 186-188, dx +172996
+   Locomotion: 266 walk F, 271 walk B (his own), 259/258 crouch, 304 jump, 301 flip, 305 turn, 266-317-307 run (pushes the opponent +105504).
+2) Specials (PROVEN live):
+   18 F,F+HP high fireball (proj[01]) -> victim 130, dx +127475 (gap 200000) / +90306 (gap 350000)
+   19 F,F+LP low fireball (proj[02]) -> victim 127, dx +159820 / +64146 | 20 air fireball (F,F+HP in a straight jump) -> 130
+   92-93-92 F,F+HK flying kick (special[03]) -> victim 131, dx +196590, rise 66945 (at gap 90000 he flies past: opponent 305)
+   67-287-68 bicycle kick (hold LK ~3.5 s, release; special[04]) -> victim 136-182, dx +377395 (gap 150000) / +447395 (gap 80000)
+3) Weapon (PROVEN live): 244 draw B,F+LK -> 286 armed stance | 277 / 278 armed walk F / B | 246 armed block | 218-219 armed crouch
+   240 armed LP -> victim 189-191, dx +126141, rise 151459 | 233-216 armed HP -> 311, dx +62244 | armed D+HP -> 218-219-293
+   208 weapon throw (armed B,F+LK) -> victim 131, dx +124605, rise 66945; afterwards unarmed 287. Armed HK / LK / B+LK keep 66, 67, 278-62.
+4) Fatalities (VS, opponent dazed at FINISH HIM, victim clip 13). Gap = X distance at FINISH HIM.
+   Fatality B (misc43, condition 0x1B = distance <= 65536): hold BL through F,D,D,U, release BL, HP -> Liu Kang 537-538, victim 539-540
+     (spun into the air, explodes), "FATALITY". PROVEN 2x (gap 50000 and 30000). No fatality with BL still held at HP, nor at gap 90000 (HP 296).
+   Fatality A (misc40, condition 0x26 = distance >= 117964 plus held BL+HK+LK): hold BL, F,F,F,D, and HK+LK must be held when BL is pressed
+     again: (1) slow taps (70/60 ms), then hold HK+LK, release BL, press BL; or (2) hold BL + HK+LK from the start, F,F,F,D, release BL, press BL.
+     -> victim 389-419, Liu Kang becomes a dragon (his clip slot is invalid while the dragon plays; dragon clip id not read), "FATALITY".
+     PROVEN 3x at gap 150000. No fatality: fast taps with HK+LK pressed late (played crouch HK 54), BL re-press without HK+LK, plain inputs,
+     gap 50000, and input (2) at gap 200000 (1 run; cause GUESS). 389 is also the start of Raiden's fatality A victim (shared).
+   Stage fatalities (arena 8 F,F,B+LP; arena 0 F,F,B+HK -> 293 static) not attempted.
+5) As victim (practice, P2 Liu Kang): 127, 128-328, 130, 131-185, 134, 136-182, 142-141-143-328, 151-174-191, 186-188, 189-191, 192-194, 305, 311;
+   in VS (P1 hit by the CPU): 152-173-328 (thrown by an id 0/6/14 fighter), 189-191, 199-13, 311, 134. PROVEN.
+6) Open: 295, 297 (LIKELY, LP / HP follow-ons; LP,LP untested because the game stopped taking inputs after the walk test in two sessions);
+   261/532/533, 547/548/596, 592, 316/320 (GUESS, static only); dragon clip id; fatality A upper distance / timing window.
+   Clip counts: 118 clips: 81 PROVEN, 3 LIKELY, 9 GUESS, 25 NOT HIS. See LIUKANG_CLIPS.txt "STILL OPEN".
+
+==== SCORPION (fighter id 0): FATALITIES A AND B PROVEN (update, 2026-10-23, ~7:45 AM - 8:25 AM ET) ====
+Retry with the hold-Block technique (as on Raiden / Liu Kang). VS mode, P1 Scorpion vs CPU, victim dazed in clip 13 at FINISH HIM;
+gap = X distance between the fighters when the input starts (raw units, 65536 = 1 game unit).
+Fatality B (misc43, B,F,D,U+HP, condition 0x1B = distance <= 65536): hold BL through B,F,D,U, release BL, press HP
+  -> Scorpion 12 (bursts into flame, becomes a giant scorpion), victim 584-585, "FATALITY" on screen. PROVEN 2 of 2 (gap 50000, 36175).
+  Gap 90000, same input: no fatality (victory 115-118).
+Fatality A (misc40, B,F,F,B+BL, condition 0x25 = distance >= 117964): hold BL through B,F,F,B, release BL, press BL again
+  -> Scorpion 390 (fire breath), victim 391 (burns), then 115-118 / 206, "FATALITY" on screen. PROVEN 3 of 3 (gap 130000, 150000, 170000).
+  No fatality at gap 50000 (too close) or 200000 (1 run). An upper distance limit between 170000 and 200000 is LIKELY (Liu Kang's
+  fatality A also failed at 200000); it was not found in the condition code (GUESS).
+The earlier attempts (gap 80000) failed because 80000 is outside both distance windows (LIKELY).
+Clip list: SCORPION_CLIPS.txt now lists 112 clips: 85 PROVEN, 3 LIKELY, 7 GUESS, 17 NOT HIS (new PROVEN: 12, 390, 391, 584, 585).
+Still open for Scorpion: stage fatalities (arena 0 / 8 not confirmed in VS), the fatality A upper distance limit.
+
+==== JAX (fighter id 13): LIVE PASS, SPECIALS, WEAPON, FATALITIES, CLIP LIST (2026-10-23, ~7:05 AM - 8:50 AM ET) ====
+Full clip list with status per clip: JAX_CLIPS.txt (this repo; 133 clips: 78 PROVEN, 23 LIKELY, 7 GUESS, 25 NOT HIS).
+Method as for Raiden / Tanya: P1 Jax with scripted inputs, live memory log of both clip slots (practice vs an inactive Jax,
+and VS vs CPU), plus the static decoder (script_decoder_v3.py, fighter 13) and entry f13 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
+Name from "JAX WINS". Raw units only (65536 = 1 game unit = 256 mesh units). Jax idle 284, armed stance 285, standing height -75169.
+VS select-screen index: Jax = 6 (row 1, column 1; PROVEN from the select screenshot). Johnny Cage = 8.
+Frame sheets (8 frames per clip) of the captured video were checked by eye for 63 clips (victim clips included).
+
+1) PROVEN live (P1 Jax):
+   44 round intro (every VS round start) | 114 victory pose "JAX WINS" (switch 0x4E9A28 f13; opponent plays 137)
+   83 throw, close LP / F+LP (throw switch 0x4E1784 f13 -> 83 / victim 145) -> victim 145-173-328, dx -248593..-253593, rise 82540
+   30 close LK special -> victim 164, dx +118945 | 263 close HP (table 0x4E9BF8, id mod 3 = 1) -> 311
+   532 close HP,HP follow-on (263-532) -> 311 | 314 close HK knee -> 134, dx +27027
+   294 LP | 296 HP | 66 HK -> 311, dx +68187 | 67 LK -> 134 | 293 uppercut -> 128-328, dx +96334, rise 157375
+   62 sweep -> 192-194, dx +94368 | 64 roundhouse -> 142-141-143-328, dx -55982, rise 59294
+   260 crouch LP | 54 crouch HK -> 311 | 315 crouch LK -> 134, dx +50763 | 257/256 crouch block | 323 block
+   97 jump HP -> 311 | 96 jump LP | 61 jump-up kick | 56 jump forward/back HK -> 131-185, dx +203148, rise 89182
+   59 jump forward/back LK (switch 0x4E93C0 f13) -> 186-188, dx +172996
+   Shared locomotion: 265 walk F, 270 walk B, 259/258 crouch, 304 jump, 301 flip, 317-307 run (pushes the opponent +105504).
+2) Specials (PROVEN live):
+   29  D,F+LP energy missile (proj[15] 0x4F0078 -> 29) -> victim 130, dx +127475 (gap 60000/200000), +42989 (gap 350000)
+   299 D,B+LP dash punch (special[17]) -> Jax X +118700..+137600, victim 311-130, dx +238112 (gap 150000) / +323514 (gap 60000);
+       no hit at gap 300000. The video of that session had no fighters, so the name "dash punch" is LIKELY.
+   108 F,F,D+LK ground pound (misc[2c], handler 0x468F50) -> victim 182, dx +124507 (gap 150000/300000), +139579 (gap 60000).
+   Static only, not seen: 28 (missile end), 106 (dash-punch second clip, victim 183). LIKELY.
+   84 air back-breaker (misc[23], BL near an airborne opponent, victim 144): BL vs a standing opponent = block 323. LIKELY.
+3) Weapon (PROVEN live): 244 draw D,F+HP -> 285 armed stance | 275 / 276 armed walk F / B | 246 armed block | 217-219 armed crouch
+   232 armed LP -> victim 205, dx -28905 | 231 armed HP -> victim 319-328, rise 65040 | 252 armed jump-up HP | armed D+HP -> 217-219-293
+   208 weapon throw (D,F+HP again while armed) -> victim 131, dx +196590, rise 66945; Jax returns to unarmed 284.
+   Armed HK / LK / run keep 66, 67, 317-307. Not resolved: armed B+LK / B+HK (the draw did not finish in that session twice).
+4) Fatalities (VS, opponent dazed at FINISH HIM):
+   Fatality B (misc43, move word 1b413243) B,F,F,D+BL, condition 0x1B (X distance <= 65536): hold BL through B,F,F,D, release BL,
+     press BL again (the plain input also works). Jax 555-556, victim 557-206 (energy blast, opponent blown apart, FATALITY).
+     PROVEN 2x (gap 40000, pushed by the game to 34845).
+   Fatality A (misc40, move word 2e014640) hold LK, F,F,D,F, release LK. It sits on the LK RELEASE list, condition 0x2E (code at
+     0x45E200, check at 0x45E5C0): X distance [0x533d5c] <= 0x10000, the finish-him flags ([0x535f14] != 0, [0x535f18] == 0,
+     byte [0x4f160c] != 0), and frame counter [0x538418] minus the LK-press time ([0x53FDBC] P1 / [0x528a04] P2, written by the
+     LK-press handlers 0x45CD00 / 0x45D4C0) >= 240. The counter runs at 64 per second (~3.7 s), longer than most of the dazed time,
+     and an LK press next to the dazed opponent plays close LK 30 (knockdown, round over).
+     Working method: press LK during the match-ending throw (P1 83 / P2 145) and keep holding; at FINISH HIM do F,F,D,F and release
+     LK (~4.7 s total hold). Jax 384-443, victim 389-400 (arms ripped off, FATALITY). PROVEN 3x (gap 40000 plain, gap 40000 with
+     BL held through the directions, gap 90000 - the F taps walk Jax in). A 5.0 s hold target failed (the dazed time ran out).
+     Failed tries: LK pressed at FINISH HIM close (close LK 30), or far and held (dazed time ran out, P1 114).
+   Stage fatalities (arena 0 F,F,B+HP; arena 8 F,F,B+LK) not attempted.
+5) As victim (practice, P2 Jax): 128-328, 130, 131-185, 134, 142-141-143-328, 145-173-328, 164, 182, 186-188, 192-194, 205, 311,
+   319-328. PROVEN.
+6) Capture note: many practice sessions recorded the stage without fighters while the memory log was fine (capture-side rendering bug,
+   cause GUESS); 3 PROVEN clips have no frame sheet for that reason (54, 256, 315). LK held ~3.5 s and released at gap 150000 in
+   practice froze the game logic twice (P1 stuck in 67); GUESS: linked to the LK-hold check above.
+7) Open: 28, 106, 183, 84/144, 605/607, 295, 297 (LIKELY); 261/533, 209, 547/548/596, 9 (GUESS); armed B+LK / B+HK.
+   See JAX_CLIPS.txt "STILL OPEN".
+
+==== REPTILE (fighter id 10): LIVE PASS, SPECIALS, WEAPON, FATALITIES, CLIP LIST (2026-10-23, ~7:00 AM - 8:47 AM ET) ====
+Full clip list with status per clip: REPTILE_CLIPS.txt (this repo; 123 clips: 80 PROVEN, 18 LIKELY, 8 GUESS, 17 NOT HIS).
+Method as for Reiko / Quan Chi / Tanya / Raiden: P1 Reptile with scripted inputs, live memory log of both clip slots (practice vs an inactive
+Reptile, and VS vs CPU), plus the static decoder (script_decoder_v3.py, fighter 10) and entry f10 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
+Name from "REPTILE WINS". Raw units only (65536 = 1 game unit = 256 mesh units). Reptile idle 289, armed stance 286, standing height -73531.
+Frame sheets (8 frames per clip) of the captured video were checked by eye; 64 clips have a compare image (victim clips included).
+
+1) PROVEN live (P1 Reptile):
+   50 round intro (switch 0x4E8EE0 f10; every VS round start) | 121 victory pose "REPTILE WINS" (switch 0x4E9A28 f10; opponent plays 137)
+   76 throw, close LP / F+LP (throw switch 0x4E1784 f10 -> 76 / victim 153) -> victim 153-173-328, dx -305897..-310897 (thrown behind), rise 75382
+   32 close LK special -> victim 147-167-191, dx +161843 | 263 close HP -> 311 | 532 close HP,HP follow-on (263-532) -> 311
+   314 close HK knee -> 134, dx +27405
+   294 LP | 296 HP | 66 HK (switch 0x4E8C88 f10) | 67 LK (switch 0x4E8D78 f10) | 293 uppercut -> 128-328, rise 157375
+   63 sweep -> 195-197, dx +114028 | 313 roundhouse -> 142-141-143-328, rise 59294 | 260 crouch LP -> 134 | 257/256 crouch block | 323 block
+   97 jump HP -> 311 | 96 jump LP | 327 jump-up kick (switch 0x4E91E0 f10; Raiden f1 = 61) | 56 jump forward/back HK -> 131-185, dx +203148,
+   rise 89182 | 59 jump forward/back LK (switch 0x4E93C0 f10) -> 186-188, dx +172996
+   Shared locomotion: 268 walk F, 273 walk B, 259/258 crouch, 304 jump, 301 flip, 305 turn, 317-307 run (pushes the opponent +105504).
+   52 crouch kick: LIKELY only (static lists 0x4E9008 / 0x4E8FB8; the clip slot froze on both clean tries).
+2) Specials (PROVEN live):
+   25  D,F+HP acid spit (proj[0c] 0x4F01D0 -> 25) -> victim 182, dx +98248 (gap 200000). Only 1 of 4 tries worked (350000, 60000, 2nd 200000: nothing).
+   106 B,F+LP close strike (special[16] 0x4EB160) -> victim 183-185, dx +334857, rise 83605 (gap 60000); at 350000 106 with no hit.
+   302-303-302 B,F+LK (special[18] 0x4EB110) at gaps 60000..300000 (4x); close -> victim 179-328, dx -87733 / -88208 (pulled toward Reptile).
+   12  BL+HK (misc[1f] 0x4E8B98, cond 0x17 = BL+HK held, Up not held): 323-12-289 (2x); green flash in the frames, fighters not drawn, so the
+       invisibility toggle is LIKELY only. HK held then BL = plain HK 66.
+   Static only, not seen: 26 (spit second clip), 299 (B,F+LK alternate). LIKELY. RUN tap = nothing (209 GUESS).
+3) Weapon (axe, PROVEN live): 244 draw B,B+LK -> 286 armed stance | 277 / 278 armed walk F / B | 240 armed LP -> 189-328, dx +112357, rise 196725
+   230 armed HP -> 189-191, dx +168410, rise 151459 | 246 armed block | 218-219 armed crouch | 252 armed jump-up HP
+   208 armed B,B+LK: the axe is thrown -> victim 131, dx +196590, rise 66945; Reptile is unarmed (289) afterwards.
+   Armed LK / HK / B+LK / B+HK / D+HP / run keep 67, 66, 63, 313, 293, 317-307.
+4) Fatalities (VS, opponent dazed 13 at FINISH HIM).
+   Fatality A (cond 0x2C, code 0x45E2A0): X distance <= 65536 (call 0x45E5C0) AND HP+HK+LP+LK held with BL NOT held at the moment Up is pressed
+     (mask table 0x4E70C0). Input: hold BL, press and hold HP+HK+LP+LK, release BL, press Up. Reptile 289-432, victim 389-431: the opponent
+     is pulled to Reptile and his head is torn off, REPTILE WINS / FATALITY. PROVEN 3x (PAH 40000, PAH 60000, PAV 40000 = Tanya variant).
+     No fatality: plain input at 40000 and 32270 (the first button fired LP 294 and hit the opponent), Up pressed while BL still held (40000),
+     and BL-held at 90000 (2 runs; the Up started a jump 304).
+   Fatality B (cond 0x25, code 0x45E580): X distance >= 0x1CCCC (117964) only, so it is a FAR fatality and the close-range rule does not apply.
+     Input U,D,D,D+HP (with or without the BL hold). Reptile 493-544-545-544-493, victim 13-546: acid vomit, the opponent melts to a skeleton,
+     FATALITY. PROVEN 5x (120000, 150000 3x (2 BL-held, 1 plain), 180000).
+     No fatality: 40000 (below the bound), Tanya variant at 150000, and 200000 / 250000 (P1 121, P2 206). The upper limit is NOT RESOLVED
+     (the condition code has only the lower bound; GUESS: input timing at long range).
+5) As victim (practice, P2 Reptile): 128-328, 131-185, 134, 142-141-143-328, 147-167-191, 153-173-328, 179-328, 182, 183-185, 186-188,
+   189-328, 189-191, 195-197, 311. PROVEN. VS opponent: 13, 137; 206 after failed far fatality tries (GUESS what).
+6) Capture note: many sessions recorded blank video or a broken camera while the memory log was fine (capture-side rendering bug, cause GUESS);
+   PROVEN clips without a usable sheet: 32, 59, 128, 141, 142, 143, 147, 167, 185, 186, 188, 191, 260, 296 (and 137, 389: no sheet).
+   One redo chunk (spit / B,F+LP / RUN) froze the clip slot and gave no data. Overlapping-run VS logs (wrong fighter, intro 45) were excluded and redone.
+7) Open: fatality B upper limit; 26, 295, 297, 299, 52 (LIKELY); 261/533, 209, 547/548/596, 9, 206 (GUESS); static-only victim clips 145, 152,
+   154, 158, 171, 172, 196, 254, 324, 549, 550, 607, 610. See REPTILE_CLIPS.txt "STILL OPEN".
+
+==== JAREK (fighter id 12): LIVE PASS, SPECIALS, WEAPON, FATALITIES, CLIP LIST (2026-10-23, ~8:10 AM - 9:00 AM ET) ====
+Full clip list with status per clip: JAREK_CLIPS.txt (this repo; 107 clips: 73 PROVEN, 4 LIKELY, 10 GUESS, 19 NOT HIS, 1 UNKNOWN).
+Method as for Raiden / Liu Kang / Scorpion: P1 Jarek with scripted inputs, live memory log of both clip slots (practice vs an inactive Jarek,
+and VS vs CPU), plus the static reading of his handlers and entry f12 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
+Run natively on a Windows PC with the retail game (windowed). PROVEN: MK4.EXE has a single-instance check (named file mapping
+"Mortal Kombat 4", also the window class / title, at 0x4F2B10; the game exits if it already exists); a second copy needs that name changed.
+Name from the select screen (row 1, col 4), the practice menu and "JAREK WINS". Raw units only (65536 = 1 game unit = 256 mesh units).
+Jarek idle 284, armed stance 286, standing height -73531. Fatality frames checked by eye.
+
+1) PROVEN live (P1 Jarek):
+   49 round intro (switch 0x4E8EE0; every practice start and VS round start) | 125 victory pose "JAREK WINS"
+   80 throw, close LP / F+LP (throw switch 0x4E1784 ids 1,7,12 -> 80 / victim 154) -> victim 154-172-328, dx +232804, rise 72648
+   262 close HP (table 0x4E9BF8, id mod 3 = 0) -> 311 | 314 close HK knee -> 134, dx +27510 | 30 close LK -> 164, dx +128954
+   294 LP -> 311 | 296 HP | 65 HK -> 311, dx +60591 | 308 LK -> 134, dx +49846 | 293 uppercut -> 128-328, dx +95697, rise 157375
+   63 sweep -> 195-197, dx +136068 | 313 roundhouse -> 142-141-143-328, rise 59294 | 260 crouch LP | 54 crouch HK | 315 crouch LK
+   257/256 crouch block | 309 after crouch LP / crouch block (role UNKNOWN) | 323 block | 97 jump HP -> 311 | 96 jump LP -> 186-188, dx +122648
+   327 jump-up kick (LK and HK) -> 311 | 55 jump forward/back HK -> 131-185, dx +159487, rise 89182 | 58 jump forward/back LK -> 186-188, dx +142240
+   Locomotion: 267 walk F, 272 walk B, 259/258 crouch, 304 jump, 301 flip, 305 turn, 317-307 run (pushes the opponent +139813).
+2) Specials (PROVEN live):
+   27 D,B+LP projectile (proj[0e]) -> victim 130, dx +124525 / +35130 / +77604 | 107 B,D,B+HK (special[14]) -> victim 182
+   B,F+LK (special[15]) -> 301-304 low roll -> victim 183-185, rise 33209
+   F,D,F+HP (special[1d]) -> 301-304 rising (P1 min height -225975) -> victim 183-185 close, 305 (cross-over) at mid / far.
+   Static special[1d] lists 308, but the move played 301-304 (308 is his LK); 308 for this move is not proven (GUESS: unused entry).
+3) Weapon (PROVEN live): 244 draw F,F+HP -> 286 armed stance | 277 / 278 armed walk | 246 armed block | 218-219 armed crouch
+   229 armed LP | 239 armed HP | armed D+HP 293 | armed HK / LK / B+LK / B+HK keep 65, 308, 63, 313 | run 317-307
+   208 weapon throw (armed F,F+HP) -> victim 131, dx +195090, rise 66945; afterwards unarmed.
+4) Fatalities (VS, opponent dazed at FINISH HIM, victim clip 13). Gap = X distance at FINISH HIM.
+   Fatality A (misc40, F,B,F,F+LK, condition 0x1B = distance <= 65536): F,B,F,F (BL held or not), release BL, LK
+     -> Jarek 402-405 (punches into the chest, pulls the heart out and holds it up), victim 389-404, then JAREK WINS. PROVEN 4 of 4 (gap 40000 x3, 26553 x1;
+     3 with BL held, 1 without). No fatality at gap 90000 (LK 308) or 150000. LK-then-BL variant at 40000 failed.
+   Fatality B (misc43, U,U,F,F+BL, condition 0x25 = distance >= 117964): hold BL through U,U,F,F (so Up does not jump), release BL,
+     press BL again -> Jarek 577 (red eye laser destroys the opponent), victim 182-206, then 125. PROVEN 2 of 2 at gap 150000. No fatality at 40000
+     (too close; victim 137), at 200000 (2 runs; FINISH HIM timed out) or without BL held (the Ups jump: 304). Upper limit LIKELY 150000-200000.
+   No "FATALITY" banner was caught in the sampled frames (0.4 s steps) for either one; the kills are clear in the frames.
+   206 is the dazed victim's fall when FINISH HIM ends (also played after a FINISH HIM timeout), not fatality-only. PROVEN.
+   Stage fatalities (arena 0 B,F,F+LP -> 293 static; arena 8 F,D,F+HK) not confirmed: the VS stage was not arena 0 / 8.
+5) As victim (practice, P2 Jarek): 128-328, 130, 131-185, 134, 142-141-143-328, 154-172-328, 164, 182, 183-185, 186-188, 195-197, 305, 311;
+   in VS (P1 hit by the CPU): 131-185, 132-328, 134, 183, 186-188, and 131 / 185 under the CPU's fatality (CPU clip 527). PROVEN.
+6) Open: 295, 297 (LIKELY, LP / HP follow-ons; LP,LP and HP,HP played 294 / 296 only); 209 (RUN action, never played);
+   261/532/533, 547/548/596, 9, 52, 316, 549 (GUESS, static only); 309 role; stage fatalities; fatality B upper distance limit.
+   No game crash in this pass.
+   Clip counts: 107 clips: 73 PROVEN, 4 LIKELY, 10 GUESS, 19 NOT HIS, 1 UNKNOWN. See JAREK_CLIPS.txt "STILL OPEN".
+
+==== JAREK (fighter id 12): FATALITY UPDATE (2026-10-23, ~9:02 AM - 9:08 AM ET) ====
+Extra VS run (P1 Jarek vs CPU, same hold-Block method; gap = X distance at FINISH HIM, raw units).
+Fatality B (U,U,F,F+BL, BL held): Jarek 577, victim 13-182-206 at gap 130000, 170000 and 185000 (3 of 3) -> now PROVEN 5 of 5
+  (130000 to 185000). With the 2 failures at 200000, the upper distance limit is between 185000 and 200000 (LIKELY).
+  One try at gap 150000 after a jump pre-move failed (victory 125, victim 206; cause GUESS).
+Fatality A (F,B,F,F+LK): Jarek 402-405, victim 389-404 at gap 60000 and at 38695 (after a close pre-move) -> now PROVEN 6 of 6 (26553 to 60000).
+Stage fatality arena 0 (B,F,F+LP) at gap 40000: no fatality (victory 125, victim 137); stage not known to be arena 0, so unresolved.
+JAREK_CLIPS.txt updated to match (same clip counts: 107 clips: 73 PROVEN, 4 LIKELY, 10 GUESS, 19 NOT HIS, 1 UNKNOWN).
+
+==== KAI (fighter id 11): LIVE PASS, SPECIALS, WEAPON, FATALITIES, CLIP LIST (2026-10-23, ~8:15 AM - 9:15 AM ET) ====
+Full clip list with status per clip: KAI_CLIPS.txt (this repo; 139 clips: 107 PROVEN, 6 LIKELY, 7 GUESS, 19 NOT HIS).
+Method as for Raiden / Reptile / Jax: P1 Kai with scripted inputs, live memory log of both clip slots (practice vs an inactive
+Kai, and VS vs CPU), run natively on Windows with a private input hook in the game process, plus the shared static tables
+(entry f11 of the 16-entry FIGHTER_SWITCH tables, op 0x3C). Inputs from the in-game MOVES LIST (pause menu).
+Name from "KAI WINS". Raw units only (65536 = 1 game unit = 256 mesh units). Kai idle 288, armed stance 285, standing height -74829.
+
+1) PROVEN live (P1 Kai):
+   45 round intro | 122 victory pose "KAI WINS" (victory switch 0x4E9A28; opponent plays 137)
+   81 throw, close LP / F+LP (throw switch 0x4E1784: 81/158 for ids 5,11) -> victim 158-171-328, dx +324835..+328637, rise 98654
+   34 close LK special (VS, gap 40000) -> victim 159-177 (KO). In practice the same LK at 40000 gave 70.
+   264 close HP (close-HP switch: id mod 3 = 2) | 533 close HP,HP follow-on (264-533) -> 311
+   294 LP (LP,LP -> 311) | 296 HP | 71 HK (switch 0x4E8C88) | 70 LK (switch 0x4E8D78) -> 134, dx +48706 | 293 uppercut
+   62 sweep -> 192-194, dx +118296 | 64 roundhouse (no hit) | 260 crouch LP | 52 crouch HK | 315 crouch LK | 257/256 crouch block | 323 block
+   97 jump HP | 96 jump LP | 61 jump-up kick (switch 0x4E91E0) | 57 jump forward/back HK | 60 jump forward/back LK -> 186-188, dx +168944
+   Locomotion: 265 walk F, 270 walk B (his own), 259/258 crouch, 304 jump, 301 flip, 305 turn, 265-317-307 run (pushes +77939).
+2) Specials (PROVEN live; inputs from the in-game moves list):
+   21  B,B+HP falling fireball -> victim 132-328, dx +18347 (gaps 200000, 350000). 23 = static second clip (LIKELY).
+   22-310-304 F,F+LP rising fireball (ground and in the air) -> victim 179-328, rise 217304, dx -31230..-58950; Kai rises 124590..205044.
+   298-310 D,F+HP air fist: Kai rises 158856, opponent turns (305); never hit at gaps 90000..300000 (victim clip not known).
+   551 D,F+LK super roundhouse -> victim 131-185, dx +289641, rise 89182 (gap 90000); no hit at 200000.
+   Handstand BL+LK: 1 start, 4 held, 5 walk, 6 LK kick (-> 127, dx +98212), 0 HK kick (-> 131-185, dx +289281), 2-3-2 LP spin (hold or tap LP).
+   HP in the handstand: nothing. RUN tap: nothing (209 GUESS). Air B,B+HP / air D,F+HP: plain jump HP 97.
+3) Weapon (knife, PROVEN live): 244 draw D,B+LP -> 285 armed stance | 275 / 276 armed walk F / B | 246 armed block | 217-219 armed crouch
+   229 armed LP -> 132-328, dx +86686 | 230 armed HP -> 183-185, dx +353536, rise 92443 | armed HK 71 -> 311, armed LK 70 -> 134
+   208 armed D,B+LP: weapon thrown -> victim 131, dx +23296, rise 66945; Kai is unarmed (288) afterwards. Armed B+LK 276-62, armed D+HP 217-219-293.
+4) Fatalities (VS, opponent dazed 13 at FINISH HIM; gap = X distance written just before the input):
+   Fatality A (moves list "FATALITY (HOLD BLK) U.F.U.B+HK"; condition 0x2D + held mask BL+HK at 0x4E70A0, close):
+     Input: hold BL, U,F,U,B (40 ms taps, 20 ms gaps), press HK while BL is STILL held, then release. Kai 440-445-440-443,
+     victim 389-441-444-441: Kai lifts the opponent overhead and tears him in half, KAI WINS / FATALITY. PROVEN 2x (gap 40000).
+     No fatality: BL released before HK (4x at 30000 / 40000 / 50000 -> plain HK 71), slow taps at 50000, no BL hold (jump 304),
+     gap 90000 (too far).
+   Fatality B (moves list "FATALITY II U.U.U.D+BLK"; condition 0x25 = X distance >= 117964, FAR):
+     Input: hold BL, U,U,U,D (70 ms taps, 60 ms gaps), release BL, press BL. Kai 493-486-487, victim 13-130-206: Kai floats up,
+     raises his fist, the opponent bursts in blood and falls, KAI WINS. PROVEN 3x (150000 2x, 120000).
+     No fatality: 40 ms taps (150000, 200000: Kai only crouches 259-258-257-256), D still held when BL is pressed again (crouch block),
+     the "release BL, then D+BL" form, plain U,U,U,D+BL (jump 304), gap 40000 (below the bound), gap 200000 with slow taps
+     (upper limit; cause not found, as for Reptile).
+   Stage fatalities (spike B,F,D+HK; fan F,F,D+BL) not tried. LIKELY from the moves list only.
+5) As victim (VS, P1 Kai vs CPU): 128-328, 130, 131(-185/-311), 132-328, 134, 146-166-328, 151-174-191, 152-173-328, 154-172-328,
+   157-586, 158-171-328, 159-177, 162, 164, 180, 182, 183-185, 186-188, 189-191, 192-194, 195-197, 305, 311, 328, 606-607-152-173-328. PROVEN.
+   Opponent: 13 (dazed), 137 (lost round), 206 (after FINISH HIM ends; meaning GUESS).
+6) Open: fatality B upper limit (fails at 200000); stage fatalities and the Shinnok morph to Kai not tried; air fist 298 never hit;
+   23, 295, 297 (LIKELY), 94, 209, 261, 532, 547, 548, 596 (GUESS) static-only; 141-143 roundhouse victim set not hit live.
+   See KAI_CLIPS.txt "STILL OPEN".
+
+
+==== GORO (fighter id 15): CLIP PASS (2026-10-23) ====
+Goro is a hidden / boss fighter: not on the select grid, and the practice menu cycles fighter ids 0..14 only (0x4F11CC P1 / 0x4F11D0 P2).
+Name table 0x4F11D8 (18 names): 15 = GORO, 16 = KITANA, 17 = NOOB (PROVEN static). He takes entry f15 (the last) of the 16-entry
+FIGHTER_SWITCH tables (PROVEN live: HK 66, LK 67, sweep 63, jump-up kick 327, jump LK 60 all match f15).
+ROUTE USED: FORCED FIGHTER ID IN MEMORY (not the player code).
+  Practice: 15 written to 0x4F11CC and 0x4F11D0 with the practice menu open -> menu reads "PLAYER 1 GORO" / "PLAYER 2 GORO";
+  code 0x4A3620 copies 0x4F11CC to the fight-time P1 id 0x535EC8 at practice start. PROVEN (frames show the four-armed Goro).
+  VS: Arcade, P1 picks Shinnok (grid 2), then 0x535EC8 = 6 overwritten with 15 for 3 s -> HUD "GORO" vs "REPTILE", "GORO WINS". PROVEN.
+  Game's own route (static, code 0x4A0180 for P1, 0x4A0490 for P2): after the pick, if Hidden flag [0x53FD54] != 0, input bits
+  0x4D30A4&0x20 and 0x4D30A8&4 clear (two buttons held), Goro-unlocked flag [0x5416A4] != 0, pick == 6 (Shinnok) and once-flag
+  [0x5416A8] == 0 -> id 15 and 0x5416A8 = 1 (Noob: 0x5416AC / 0x5416B0 with Reiko 7 -> 0x11). LIKELY matches the public code
+  (beat the game with Shinnok, then Hidden, U,U,U,L on Shinnok, RUN+BL). Setting those flags in memory and picking Shinnok with BL+RUN
+  held still loaded Shinnok (0x535EC8 stayed 6) - not resolved (GUESS: 0x53FD54 is reset by the select screen).
+Goro idle 587, standing height -85458 (raw; Liu Kang -70320), walk F 590 / B 589, run 590-317-307, block 323, crouch 259/258, jump 304 / 301.
+Specials (PROVEN live): fireball F,B+HP 592 (P2 130); two-handed punch F,F+HP 599 (P2 319-328, gap 60000); hard uppercut D,D+HP 600
+  (P2 181-328, rise 191187); stomp F,F,B+HK 601-602 (leaps to height -258462, P2 305-178-328); B,F,D,D+HK played 602 alone (P2 182).
+Throw (PROVEN): 604-605-75, victim 606-607-152-173-328, dx -287678. Victory pose 594 (PROVEN, VS). No round-start intro clip (LIKELY).
+Fatalities: none - no misc40 / misc43 / stage-fatality rows for fighter 15 (PROVEN static). None attempted.
+Clip list: GORO_CLIPS.txt lists 94 clips: 51 PROVEN, 10 LIKELY, 19 GUESS, 14 NOT HIS. Detail: GORO_PROVEN_TABLE.txt.
+Open: chest kick B,B+HK (598 / 591) not captured - the sessions that reached it lost the game input or the logger (skipped after
+  3 tries); 603, 295 / 297, 27, 209, 261 / 532 / 533 static only; 609 / 610 (throw switch id 15) not what he threw; the game's own
+  hidden-select route not completed live.
+Run problems: the practice game stopped taking inputs or the memory logger stalled several times (as on Liu Kang); a watcher thread
+  added to the move driver made it stall every time and was removed; lost moves were re-run after a reboot.
+Clip list file: GORO_CLIPS.txt (this repo).
+
+==== JOHNNY CAGE (fighter id 14): LIVE PASS, SPECIALS, WEAPON, FATALITIES, CLIP LIST (2026-10-23, ~8:52 AM - 9:52 AM ET) ====
+Full clip list with status per clip: CAGE_CLIPS.txt (this repo; 114 clips: 74 PROVEN, 15 LIKELY, 6 GUESS, 19 NOT HIS).
+Method as for Raiden / Jax: P1 Cage with scripted inputs, live memory log of both clip slots (practice vs an inactive Cage,
+and VS vs CPU), plus the static decoder (script_decoder_v3.py, fighter 14) and entry f14 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
+Name from "JOHNNY CAGE WINS". Raw units only (65536 = 1 game unit = 256 mesh units). Cage idle 291, armed stance 286, standing height -74645.
+VS select-screen index: Cage = 8 (PROVEN).
+Frame sheets (8 frames per clip) of the captured video were checked by eye for 62 clips (victim clips included).
+
+1) PROVEN live (P1 Cage):
+   44 round intro (every VS round start; same clip as Jax) | 111 victory pose "JOHNNY CAGE WINS" (switch 0x4E9A28 f14; opponent 137)
+   75 throw, close LP / F+LP (throw switch 0x4E1784 f14 -> 75 / victim 152) -> victim 152-173-328, dx -287678, rise 66970
+   534 close LK special -> victim 535-536, dx +177095 | 264 close HP (table 0x4E9BF8, id mod 3 = 2) -> 311
+   533 close HP,HP follow-on (264-533) -> 311 | 314 close HK knee -> 134, dx +27300
+   294 LP | 296 HP | 71 HK | 70 LK | 293 uppercut -> 128-328, dx +96334, rise 157375
+   63 sweep -> 195-197, dx +114028 | 313 roundhouse (no hit logged at gap 45000)
+   260 crouch LP | 52 crouch HK -> 128-328 | 315 crouch LK -> 134, dx +50763 | 257/256 crouch block | 323 block
+   97 jump HP -> 311 | 96 jump LP | 327 jump-up kick | 57 jump forward/back HK -> 131-185, dx +203148, rise 89182
+   60 jump forward/back LK (switch 0x4E93C0 f14) -> 186-188, dx +172996
+   Shared locomotion: 291 idle (same as Raiden), 267 walk F, 272 walk B, 259/258 crouch, 304 jump, 301 flip, 317-307 run (+105504).
+2) Specials (PROVEN live):
+   28  green bolt. D,B+LP (proj[13] 0x4F00C0 -> 28) -> victim 130, dx +127475 (gap 60000), +42989 (gap 350000).
+       D,F+HP (proj[14], not resolved statically) also plays 28; it hit only at gap 60000 (victim 130, dx +127475), no hit at
+       200000 / 350000. Two D,x bolt tries froze the practice game (P1 stuck in 258 / 28; see 6).
+   85  B,D,B+HP shadow uppercut (special[1c]) -> victim 127-311-131-185, dx +400194 (gap 60000) / +420194 (gap 40000),
+       rise 159959; Cage rises to height -157231; green shadow trail. No hit at gap 150000.
+   308 B,F+LK shadow kick (special[1b]) -> victim 183-185, dx +250323 (gap 150000 / 300000), +332239 (gap 60000), rise 59675.
+   Static only, not seen: 27 (bolt second clip), 105 (shadow-uppercut second clip). LIKELY.
+   438 LP+BL special (misc[2a], victim 126): LP+BL at gap 40000 = throw 75, at 60000 = LP 294, BL then LP = block 323. LIKELY.
+3) Weapon = sword (PROVEN live, c2 + c4): 244 draw F,D,F+LK -> 286 armed stance. The draw only came out with F held into D
+   (F down, D down, F up, D up, then F + LK); quick taps F,D,F+LK gave walk / LK 70 (c2, c3_0).
+   230 armed LP (rising slash) -> victim 189-191, dx +168410 (gap 90000), rise 151459 | 226 armed HP (stab) -> victim 182, dx +106152
+   armed D+HP -> 218-219-293 (uppercut) | armed B+LK -> 278-63 sweep (victim 195-197) | armed B+HK -> 278-313 | armed HK / LK keep 71 / 70
+   277 / 278 armed walk F / B | 218-219 armed crouch | armed run 277-317-307 (pushes the opponent +114023)
+   208 sword throw (F,D,F+LK again while armed) -> victim 131, dx +196590, rise 66945; Cage returns to unarmed 291.
+4) Fatalities (VS, opponent dazed 13 at FINISH HIM; hold-Block technique: BL held through the directions, release, then the button):
+   Fatality A (misc40, move word 1b413c40) F,B,D,D+HK, condition 0x1B (X distance <= 65536): Cage 406-443, victim 389-410
+     (Cage tears the opponent in half, JOHNNY CAGE WINS, FATALITY). PROVEN 2x at gap 40000 (BL held, and the plain input).
+   Fatality B (misc43, move word 1b413243) D,D,F,D+BL, condition 0x1B: Cage 259-258-293 (the uppercut clip, green energy burst),
+     victim 130 then 206 (head knocked off, remains; FATALITY). PROVEN 2x at gap 40000 (BL held, and the plain input). No clip of its own.
+   Far-range check (gap 150000, BL held): fatality B input = no fatality (P1 111, P2 137); fatality A input = plain HK 71, then the
+     dazed time ran out. Both Cage fatalities are close-range only, as condition 0x1B says (not far-range like some other fighters').
+   Stage fatalities (arena 0 B,F,F+LK -> 293; arena 8 D,F,F+HK) not attempted. LIKELY (static input).
+5) As victim (practice, P2 Cage): 127-311-131-185, 128-328, 130, 131-185, 134, 152-173-328, 183-185, 186-188, 195-197, 311,
+   535-536. PROVEN. In VS Cage was never hit by the CPU.
+6) Capture / freeze note: several practice sessions froze (P1 clip slot stuck, once the game process ended: the D,F+HP bolt in c1,
+   D,B+LP in the re-run); the frozen moves were re-run in fresh boots. GUESS: the same capture-side bug seen on other fighters.
+7) Open: 27, 105, 438/126, 295, 297, 192/194, 196/549/550, 153/154/158 (LIKELY); 9, 261, 532, 547, 548, 596 (GUESS);
+   stage fatalities; armed block / armed jump attacks not tried. See CAGE_CLIPS.txt "STILL OPEN".

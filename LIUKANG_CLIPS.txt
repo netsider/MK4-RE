@@ -1,0 +1,197 @@
+LIU KANG (fighter id 3) - CLIP LIST AND STATUS
+Mortal Kombat 4 PC (retail MK4.EXE). netsider's MK4-RE project. Built 2026-10-23 ET from the live memory logs
+and the MK4.EXE static reading. Full detail: MK4_RE_NOTES_v3.txt (this repo), LIU KANG section.
+
+WHAT IS LISTED
+Every clip number Liu Kang's fighter object plays (as attacker OR as victim), every clip his own move scripts and
+per-fighter tables point at, and clips that turned up in shared clip sets but belong to someone else.
+Clip number = index into the game's 612-entry clip table (record address 0x4FDD6C + 12*clip).
+Some shared move scripts pick the clip per fighter with a 16-entry FIGHTER_SWITCH (script opcode 0x3C, entries
+f0..f15 = fighter id). Liu Kang takes entry f3 (PROVEN). Only the f3 entry is his; the other entries are other
+fighters' clips (see "OTHER FIGHTERS' ENTRIES" at the end). Victim / reaction clips are shared by all fighters.
+Live sources: practice mode P1 Liu Kang vs P2 Liu Kang (inactive dummy) and VS mode P1 Liu Kang vs CPU opponents, including fatality runs (memory logs).
+Select screen: Liu Kang is grid index 3 (row 0, column 3; the VS HUD then reads "LIU KANG") and the practice menu
+reads "LIU KANG" (OCR). In VS the banner "LIU KANG WINS" is visible in the frames.
+No clip in this list has a visual ID by eye from the owner yet; roles come from the input that played them (frame sheets checked by eye;
+the renderer sometimes does not draw the fighters).
+
+STATUS LABELS
+ PROVEN       = seen live in the running game (memory log of the clip slot while pressing the input), or read
+                directly in the game code and matched live.
+ LIKELY       = strong static (code) or indirect evidence, not seen live on Liu Kang.
+ GUESS        = weak evidence (static listing only).
+ NOT HIS      = belongs to another fighter (or is another fighter's version of a shared move). The evidence
+                column says how sure (PROVEN or LIKELY).
+ UNKNOWN      = in his set, purpose not known.
+
+UNITS (raw game units only)
+ Positions are 16.16 fixed point: 65536 = 1 game unit = 256 mesh units (PROVEN). No metres are used.
+ dx   = victim X net displacement over the reaction (last - first). + = pushed away from the attacker,
+        - = pulled toward / thrown behind the attacker.
+ rise = victim standing height minus its lowest height (how high it went).
+ Speeds are units/tick (1 tick ~ 1/60 s, PROVEN). Liu Kang standing height -70320 (negative = up).
+ Sequences like 152-173-328 are the clips in the order they play.
+
+clip | status      | name / description                                    | evidence / notes
+-----+-------------+-------------------------------------------------------+------------------
+  13 | PROVEN      | dazed / FINISH HIM stance (shared) | live P2 at every FINISH HIM before his fatalities; P1 in VS after opponent clip 14 (199-13)
+  18 | PROVEN      | F,F+HP high fireball (proj[01]) | live 266-287-266-287-18; P2 130, dx +127475 (gap 200000) / +90306 (gap 350000); fireball visible; static proj[01] 0x4F06A8 -> 18
+  19 | PROVEN      | F,F+LP low fireball (proj[02]) | live 266-287-266-287-19; P2 127, dx +159820 (gap 200000) / +64146 (gap 350000); static proj[02] 0x4F0660 -> 19
+  20 | PROVEN      | air fireball (F,F+HP in a straight jump, proj[01]) | live 304-20-304; P2 130, dx +127475 (gap 250000); fireball visible; static proj[01] 0x4F06E0 -> 20
+  48 | PROVEN      | round-start intro pose | live at every practice start and VS round start; intro switch 0x4E8EE0 -> 48
+  52 | NOT HIS     | crouch HK of other fighters | PROVEN not his: Liu Kang plays 54
+  54 | PROVEN      | crouch high kick (D+HK) | live 259-258-54; also came out on a fast fatality-A attempt (D then HK)
+  55 | PROVEN      | jump forward/back high kick | live 304-301-55 forward, 301-55 back; victim 131-185, dx +203148, rise 89182; VS
+  56 | NOT HIS     | angled jump HK variant (other fighters) | PROVEN not his: Liu Kang plays 55
+  57 | NOT HIS     | angled jump HK variant (other fighters) | PROVEN not his: Liu Kang plays 55
+  58 | PROVEN      | jump forward/back low kick | live 304-301-58; victim 186-188, dx +172996; switch 0x4E93C4 ids 0/3/6/9/12 -> 58; VS
+  59 | NOT HIS     | angled jump LK (ids 1/4/7/10/13) | PROVEN not his (switch 0x4E93C4)
+  60 | NOT HIS     | angled jump LK (ids 2/5/8/11/14) | PROVEN not his (switch 0x4E93C4)
+  61 | PROVEN      | jump-up kick (U then LK or HK) | live 304-61 (LK and HK); switch 0x4E91E0 -> 61; VS (61)
+  62 | PROVEN      | leg sweep (B+LK) | live 271-62; victim 192-194, dx +94368; armed 278-62 the same; sweep switch 0x4E9780 -> 62
+  63 | NOT HIS     | sweep of other fighters | PROVEN not his (Scorpion plays 63)
+  64 | PROVEN      | roundhouse (B+HK) | live 271-64; gap 45000: P2 142-141-143-328, dx +150696, rise 59294; list 0x4E97E8 -> 64
+  66 | PROVEN      | high kick (HK) | live 66; P2 311, dx +68187; HK switch 0x4E8C88 -> 66; armed HK 66; VS
+  67 | PROVEN      | low kick (LK); also first part of the bicycle kick | live 67; P2 134, dx +68187; LK switch 0x4E8D78 -> 67; armed LK 67; LK hold starts with 67
+  68 | PROVEN      | bicycle kick (hold LK ~3.5 s, release; special[04]) | live 67-287-68; P2 136-182, dx +377395 (gap 150000) / +447395 (gap 80000); kicks visible; static special[04] 0x4EB5F8 -> 68
+  70 | NOT HIS     | low kick of other fighters | PROVEN not his (Kai switch entry)
+  71 | NOT HIS     | high kick of other fighters | PROVEN not his (Kai switch entry)
+  75 | NOT HIS     | throw (ids 0,6,14) - attacker | PROVEN not his (Scorpion). Liu Kang plays victim 152-173-328 when thrown by it (VS)
+  76 | NOT HIS     | throw (ids 4,10) - attacker | PROVEN not his (throw switch). Victim 153
+  78 | NOT HIS     | throw (ids 2,8) - attacker | PROVEN not his (throw switch). Victim 156
+  79 | PROVEN      | throw (close LP or F+LP) | live gap 40000: P1 79, P2 151-174-191, dx -319505 / -304855 (thrown behind), rise 71505; VS throws; throw switch ids 3,9 -> 79 / victim 151
+  80 | NOT HIS     | throw (ids 1,7,12) - attacker | PROVEN not his (throw switch). Victim 154
+  81 | NOT HIS     | throw (ids 5,11) - attacker | PROVEN not his (throw switch). Victim 158
+  83 | NOT HIS     | throw (id 13) - attacker | PROVEN not his (throw switch). Victim 145
+  92 | PROVEN      | F,F+HK flying kick (special[03]) | live 266-287-266-287-92-93-92; P2 131, dx +196590, rise 66945, P1 min height -104270 (gap 200000); at gap 90000 P1 92 only, P2 305 (flew past); static special[03] 0x4EB690 -> 92
+  93 | PROVEN      | flying kick, contact part | live 92-93-92 on a hit (gap 200000); static 0x4EB6D0 93-92
+  96 | PROVEN      | jump punch LP | live 304-96; victim 186-188, dx +172996
+  97 | PROVEN      | jump punch HP | live 304-97; VS (victim 311)
+ 119 | PROVEN      | round-win victory pose ("LIU KANG WINS") | live VS 119 after every won round and failed fatality; victory switch 0x4E9A28
+ 127 | PROVEN      | low-fireball hit reaction | live P2 127 after 19
+ 128 | PROVEN      | uppercut knockdown (shared) | live P2 128-328 after 293, rise 157375
+ 130 | PROVEN      | high-fireball hit reaction | live P2 130 after 18 and air fireball 20
+ 131 | PROVEN      | knockdown (flying kick 92, jump HK 55, weapon throw 208) | live P2 131 / 131-185
+ 134 | PROVEN      | low/body hit reaction (shared) | live P2 after 67, 314, 315; P1 in VS
+ 136 | PROVEN      | bicycle-kick victim, part 1 | live P2 136-182 after 68
+ 137 | LIKELY      | collapse at round end (shared) | seen on victims at FINISH HIM after a failed fatality (13 -> 137); not on Liu Kang himself
+ 141 | PROVEN      | roundhouse victim, part 2 | live P2 142-141-143-328 after 64
+ 142 | PROVEN      | roundhouse victim, part 1 | as 141
+ 143 | PROVEN      | roundhouse victim, part 3 | as 141
+ 151 | PROVEN      | thrown by Liu Kang clip 79 (victim start) | live P2 151-174-191 after 79; static throw switch 79 / opp 151
+ 152 | PROVEN      | thrown by clip 75 (victim start) | live P1 152-173-328 in VS when the CPU (id 0/6/14 fighter) threw him
+ 173 | PROVEN      | thrown by 75, middle | VS P1 152-173-328
+ 174 | PROVEN      | thrown by 79, middle | live P2 151-174-191
+ 182 | PROVEN      | bicycle-kick victim, part 2 / projectile reaction (shared) | live P2 136-182 after 68
+ 185 | PROVEN      | get-up after 131 | live P2 131-185
+ 186 | PROVEN      | jump-attack hit | live P2 186-188 after 96, 58
+ 188 | PROVEN      | recover after 186 | live 186-188
+ 189 | PROVEN      | launch (armed LP victim; air hit) | live P2 189-191 after armed LP 240 (rise 151459); P1 in VS (knocked out of the air)
+ 191 | PROVEN      | land / get-up after 189 and after throw 79 | live P2 189-191, 151-174-191
+ 192 | PROVEN      | sweep fall (his sweep 62) | live P2 192-194 after 62 and armed 62
+ 194 | PROVEN      | sweep get-up | live 192-194
+ 199 | PROVEN      | pulled-in victim, then 13 | VS P1 199-13 after the CPU opponent played clip 14
+ 208 | PROVEN      | weapon throw (B,F+LK while armed) | live armed B,F+LK -> 208; P2 131, dx +124605, rise 66945; the weapon flies (visible); then unarmed 287
+ 216 | PROVEN      | armed HP, second part | live 286-233-216-286
+ 218 | PROVEN      | armed crouch, going down | live armed D+HP 218-219-293
+ 219 | PROVEN      | armed crouch, held | as 218
+ 233 | PROVEN      | armed HP (weapon swing) | live 286-233-216-286; P2 311, dx +62244 (gap 60000)
+ 240 | PROVEN      | armed LP (weapon swing, launches) | live 286-240-286; P2 189-191, dx +126141, rise 151459 (gap 60000); +63279 (gap 40000); weapon visible
+ 244 | PROVEN      | weapon draw (B,F+LK) | live 271-287-266-287-244-286 (weapon visible); static weapon draw 0x4E92A8 -> 244
+ 246 | PROVEN      | armed block | live armed BL 286-246-286
+ 256 | PROVEN      | crouch block release | live D+BL 258-257-256
+ 257 | PROVEN      | crouch block | live D+BL; also D+BL during fatality inputs
+ 258 | PROVEN      | crouch held | live D
+ 259 | PROVEN      | crouch going down | live D
+ 260 | PROVEN      | crouch low punch (D+LP) | live 259-258-260
+ 261 | GUESS       | close-strike clip | static only: close-strike list 66 261 532 533
+ 262 | PROVEN      | close HP (close-HP table id mod 3 = 0) | live HP at gap 25000 and 40000: P1 262, P2 311
+ 263 | NOT HIS     | close HP (id mod 3 = 1) | PROVEN not his (Reiko plays 263)
+ 264 | NOT HIS     | close HP (id mod 3 = 2) | PROVEN not his (Quan Chi plays 264)
+ 266 | PROVEN      | walk forward | live F (F,F inputs play 266-287-266); VS
+ 267 | NOT HIS     | walk forward of other fighters | PROVEN not his: Liu Kang walks with 266
+ 269 | NOT HIS     | walk forward of other fighters | PROVEN not his (Scorpion 269)
+ 271 | PROVEN      | walk back | live B (before sweep 62, roundhouse 64, weapon draw); VS
+ 272 | NOT HIS     | walk back of other fighters | PROVEN not his: Liu Kang walks back with 271
+ 274 | NOT HIS     | walk back of other fighters | PROVEN not his (Scorpion 274)
+ 277 | PROVEN      | armed walk forward | live F while armed
+ 278 | PROVEN      | armed walk back | live B while armed (before armed 62)
+ 286 | PROVEN      | armed stance (holding the weapon) | live after every 244 and between armed moves
+ 287 | PROVEN      | idle / fighting stance | all live logs (Liu Kang idle)
+ 290 | NOT HIS     | idle of other fighters | PROVEN not his (Scorpion idle 290)
+ 291 | NOT HIS     | idle of other fighters | PROVEN not his (Raiden idle: a practice run that selected RAIDEN by mistake played intro 47, idle 291, walk 267)
+ 293 | PROVEN      | uppercut (D+HP) | live 259-258-293; P2 128-328, dx +96334, rise 157375; armed 218-219-293. Stage fatality arena 0 misc static -> 293 (LIKELY)
+ 294 | PROVEN      | low punch (LP) | live 294
+ 295 | LIKELY      | low-punch follow-on clip | static LP 294-295; not seen live
+ 296 | PROVEN      | high punch (HP) | live 296; VS
+ 297 | LIKELY      | high-punch follow-on clip | static HP code[297,296]; not seen live
+ 301 | PROVEN      | jump forward/back flip | live U+F / U+B
+ 304 | PROVEN      | jump straight up / landing | live U
+ 305 | PROVEN      | turn-around / re-face | live P1 / P2 305 after cross-ups (flying kick past the opponent)
+ 307 | PROVEN      | run loop | live F,F+RUN hold 266-317-307; pushes P2 +105504
+ 311 | PROVEN      | high hit reaction (shared) | live P2 after 262, 66, 233; P1 in VS
+ 314 | PROVEN      | close high kick (knee) | live close HK 314; P2 134, dx +27510
+ 315 | PROVEN      | crouch low kick (D+LK) | live 259-258-315; P2 134, dx +50763
+ 316 | GUESS       | sweep-fall variant, start | static sweep reaction 316-320-192-194; live showed 192-194 only
+ 317 | PROVEN      | run start | live 317-307
+ 320 | GUESS       | sweep-fall variant, middle | as 316
+ 323 | PROVEN      | standing block | live BL 287-323-287; BL during fatality inputs
+ 327 | NOT HIS     | jump-up kick of other fighters | PROVEN not his: Liu Kang plays 61 (Scorpion 327)
+ 328 | PROVEN      | flip get-up recovery (shared) | live 128-328, 142-141-143-328; P1 in VS 152-173-328
+ 389 | PROVEN      | fatality A victim, start (dragon bite) | live VS: P2 13 -> 389 -> 419 after F,F,F,D + BL (HK+LK held) at gap 150000, 3 of 3 runs; "FATALITY" on screen; dragon visible; 389 also starts the victim of Raiden fatality A (shared)
+ 419 | PROVEN      | fatality A victim, main (carried / eaten by the dragon) | as 389
+ 532 | GUESS       | close-strike clip | as 261
+ 533 | GUESS       | close-strike clip | as 261
+ 537 | PROVEN      | fatality B, part 1 (F,D,D,U+HP) | live VS: P1 537-538, P2 539-540 at gaps 50000 and 30000 (2 of 2) with BL held through F,D,D,U, BL released, then HP; "FATALITY" on screen
+ 538 | PROVEN      | fatality B, part 2 (victim explodes) | as 537
+ 539 | PROVEN      | fatality B victim, part 1 (spun into the air) | as 537
+ 540 | PROVEN      | fatality B victim, part 2 | as 537
+ 547 | GUESS       | run-related clip | static Run handler 0x4E2DB8 lists 547 548; run gave 317-307
+ 548 | GUESS       | run-related clip | as 547
+ 592 | GUESS       | fireball-related clip (proj[01] list) | static proj[01] 0x4F0710.. lists 592; never seen live
+ 596 | GUESS       | run-related clip | static Run handler 0x4E2850.. only
+ 605 | NOT HIS     | throw (id 13) second attacker clip | PROVEN not his (throw switch)
+ 609 | NOT HIS     | throw (id 15) - attacker | PROVEN not his (throw switch). Victim 610
+
+SUMMARY (118 clips listed)
+ PROVEN        81
+ LIKELY         3
+ GUESS          9
+ NOT HIS       25
+ UNKNOWN        0
+
+FATALITIES (VS, at FINISH HIM, victim in clip 13)
+ Fatality A (misc40, F,F,F,D+BL, condition 0x26 = distance >= 117964 (0x1CCCC) plus held-button check BL+HK+LK):
+   PROVEN live at gap 150000, 3 of 3 runs, two working inputs:
+   (1) hold BL, F,F,F,D slowly (70 ms taps, 60 ms gaps), then hold HK+LK, release BL, press BL again (250 ms);
+   (2) hold BL, then also hold HK+LK, F,F,F,D (fast 40/20 ms or slow 70/60 ms), release BL, press BL again, release all.
+   -> victim 13-389-419, Liu Kang turns into a dragon (his own clip slot goes invalid while the dragon plays),
+   "FATALITY" on screen.
+   No fatality: HK+LK pressed late with the fast taps (played crouch HK 54; gaps 150000 / 200000); BL released and
+   re-pressed without HK+LK held (gaps 150000 and 50000: nothing); plain / no-BL inputs (walk 266, nothing); gap 50000;
+   and input (2) at gap 200000 (nothing, 1 run; cause not known, GUESS: timing).
+ Fatality B (misc43, F,D,D,U+HP, condition 0x1B = distance <= 65536):
+   PROVEN live at gaps 50000 and 30000 (2 of 2): hold BL through F,D,D,U (so Up does not jump), release BL, press HP
+   -> P1 537-538, victim 13-539-540 (spun into the air, explodes), "FATALITY" on screen.
+   Not with BL still held at the HP press (no fatality), and not at gap 90000 (played HP 296).
+ Stage fatalities (arena 8 F,F,B+LP; arena 0 F,F,B+HK -> 293 static): not tried. LIKELY / GUESS.
+ Juggles: none produced on purpose. 293 launches (rise 157375); armed LP 240 launches (rise 151459).
+
+STILL OPEN
+ - Fatality A at gap 200000 failed once with input (2); the upper distance / timing limit is not known.
+ - The dragon clip itself (fatality A) is not in his clip slot; its id was not read.
+ - 295 / 297 (LP / HP follow-on clips): static only. LP,LP was not tested (the game stopped taking inputs after the
+   walk-forward/back test in two sessions; Block was still seen in every warm-up move: 287-323-287).
+ - 261, 532, 533, 547, 548, 592, 596: static-only clips in his handlers; never seen live.
+ - Static-only victim clips: 316-320, 137.
+ - Game crashes / hangs in the practice reset (placement before the next move): one session lost the game process,
+   one hung after a jump kick, one logged no clips for two moves. Lost moves were re-run.
+ - Clips outside the logs and his handlers were not surveyed (no full scan of all 612 clips for Liu Kang).
+
+OTHER FIGHTERS' ENTRIES IN THE SAME PER-FIGHTER TABLES (NOT HIS, PROVEN from the switch tables)
+ (Throw pairs are attacker/victim; Liu Kang plays the victim clip when one of those fighters throws him.)
+ throw 0x4E1784:          79/151 (ids 3 = his, 9), 75/152 (0,6,14), 80/154 (1,7,12), 76/153 (4,10), 78/156 (2,8), 81/158 (5,11), 83/145 then 605/607 (13), 609/610 (15)
+ round-start intro 0x4E8EE0: 44, 45, 46, 47, 49, 50, 51 (48 = his)
+ high kick 0x4E8C88: 71 (66 = his)    low kick 0x4E8D78: 70 (67 = his)    jump-up kick 0x4E91E0: 327 (61 = his)
+ angled jump LK 0x4E93C4: 59 (ids 1/4/7/10/13), 60 (2/5/8/11/14)    sweep 0x4E9780: 63 (62 = his)
+ close HP 0x4E9BF8 (id mod 3): 263, 264    victory 0x4E9A28: 111, 113-118, 120-125, 594 (119 = his)

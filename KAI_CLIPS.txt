@@ -1,0 +1,217 @@
+KAI (fighter id 11) - CLIP LIST AND STATUS
+Mortal Kombat 4 PC (retail MK4.EXE). netsider's MK4-RE project. Built 2026-10-23 ET from the live memory logs
+and the MK4.EXE static reading. Full detail: MK4_RE_NOTES_v3.txt (this repo), KAI section.
+
+WHAT IS LISTED
+Every clip number Kai's fighter object plays (as attacker OR as victim), every clip his own move scripts and
+per-fighter tables point at, and clips that turned up in his clip sets but belong to someone else.
+Clip number = index into the game's 612-entry clip table (record address 0x4FDD6C + 12*clip).
+Some shared move scripts pick the clip per fighter with a 16-entry FIGHTER_SWITCH (script opcode 0x3C, entries
+f0..f15 = fighter id). Kai takes entry f11 (PROVEN: throw 81/158, angled jump LK 60, close HP 264, HK 71, LK 70,
+jump-up kick 61 and victory 122 all matched live). Only the f11 entry is his. Victim / reaction clips are shared by all fighters.
+Live sources: practice mode P1 Kai vs P2 Kai (inactive dummy) and VS mode P1 Kai vs CPU opponents (memory logs),
+run natively on Windows (the retail game, not an emulator), with a private input hook in the game process.
+The in-game MOVES LIST (pause menu) was used for the special and fatality inputs.
+
+STATUS LABELS
+ PROVEN       = seen live in the running game (memory log of the clip slot while pressing the input), or read
+                directly in the game code and matched live.
+ LIKELY       = strong static (code) or indirect evidence, not seen live on Kai.
+ GUESS        = weak evidence (static listing only).
+ NOT HIS      = belongs to another fighter (or is another fighter's version of a shared move). The evidence
+                column says how sure (PROVEN or LIKELY).
+ UNKNOWN      = in his set, purpose not known.
+
+UNITS (raw game units only)
+ Positions are 16.16 fixed point: 65536 = 1 game unit = 256 mesh units (PROVEN). No metres are used.
+ dx   = victim X net displacement over the reaction (last - first). + = pushed away from the attacker,
+        - = pulled toward / behind the attacker.
+ rise = victim standing height minus its lowest height (how high it went).
+ Kai standing height -74829 (negative = up). "gap" = X distance set before the move.
+ Sequences like 158-171-328 are the clips in the order they play.
+
+clip | status      | name / description                                    | evidence / notes
+-----+-------------+-------------------------------------------------------+------------------
+   0 | PROVEN      | handstand HK kick | live practice: BL+LK handstand then HK: 1-4-0-4; victim 131-185, dx +289281, rise 89182 (gap 80000)
+   1 | PROVEN      | handstand start (BL+LK) | live 288-1-4 (every handstand test, 7x)
+   2 | PROVEN      | handstand LP spin, part 1 / 3 | live handstand then hold or tap LP: 4-2-3-2-4 (2x); no hit at gap 90000
+   3 | PROVEN      | handstand LP spin, part 2 | live 4-2-3-2-4 (2x)
+   4 | PROVEN      | handstand held / idle on hands | live after 1 in every handstand test; stays until a kick or BL
+   5 | PROVEN      | handstand walk | live handstand then F held: 1-4-5-4; dx +317480 on the dummy (pushed)
+   6 | PROVEN      | handstand LK kick | live handstand then LK: 1-4-6-4; victim 127, dx +98212 (gap 80000)
+  13 | PROVEN      | dazed / stagger at FINISH HIM (shared, opponent) | live VS: the CPU opponent plays 13 at FINISH HIM before every fatality attempt (20+ times)
+  21 | PROVEN      | falling fireball (B,B+HP; proj[08]) | live 270-288-270-288-21 (2x, gap 200000 and 350000); victim 132-328, dx +18347; CPU Kai in VS also played 21 -> P1 132-328
+  22 | PROVEN      | rising fireball (F,F+LP; proj[09]; also in the air) | live 265-265-22-310-304 (ground, 2x) and 301-22-310-304 / 304-22-310-304 (air, 3x); victim 179-328, rise 217304, dx -31230..-58950; Kai rises 124590 (ground) / 168018..205044 (air)
+  23 | LIKELY      | falling fireball, second / end clip (proj[08]) | static script reference next to 21 (earlier static pass); never seen live in a fighter slot
+  34 | PROVEN      | close LK special (VS) | live VS: LK at gap 40000 -> 34 (15x), victim 159-177 (KO); CPU Kai (mirror match) also played 34 -> P1 159-177. In practice the same LK at gap 40000 gave 70
+  45 | PROVEN      | round-start intro pose | live VS at every round start (26x)
+  52 | PROVEN      | crouch HK (D+HK) | live 259-258-52-258-259; no hit at gap 60000
+  55 | NOT HIS     | angled jump HK (other fighters) | PROVEN not his: Kai plays 57 live; Tanya plays 55, Raiden and Reptile play 56
+  56 | NOT HIS     | angled jump HK (other fighters) | PROVEN not his: Kai plays 57 live; Tanya plays 55, Raiden and Reptile play 56
+  57 | PROVEN      | jump forward/back HK (U+F/B then HK) | live 301-57-304 (forward and back); no hit logged; angled-HK lists 0x4E95D0.. -> 57 (also Fujin)
+  58 | NOT HIS     | angled jump LK (other ids) | static angled-LK switch: 58 belongs to other ids; Kai plays 60 live; CPU opponents played 58 in VS
+  59 | NOT HIS     | angled jump LK (other fighters) | static angled-LK switch: 59 belongs to other ids; Kai plays 60 live
+  60 | PROVEN      | jump forward/back LK (U+F/B then LK) | live 301-60-304 (forward and back); victim 186-188, dx +168944 (gap 200000); angled-LK switch ids 2,5,8,11,14,15 -> 60 (Kai = 11)
+  61 | PROVEN      | jump-up kick (U then LK or HK) | live 304-61 (LK and HK); jump-up switch 0x4E91E0 -> 61
+  62 | PROVEN      | leg sweep (B+LK) | live 270-62; victim 192-194, dx +118296 (gap 60000); armed 276-62 (same clip)
+  64 | PROVEN      | roundhouse (B+HK) | live 270-64; no hit at gap 45000
+  65 | NOT HIS     | high kick (other ids) | PROVEN not his (HK switch 0x4E8C88); Kai HK = 71
+  66 | NOT HIS     | close strike of other fighters | shared close-strike table entry for other ids (LIKELY); Kai close HP is 264 live; CPU opponents played 66 in VS
+  70 | PROVEN      | low kick (LK) | live 288-70 (gap 40000, 90000, 150000); victim 134, dx +48706 (gap 40000); armed 285-70 -> 134; LK switch 0x4E8D78 -> 70
+  71 | PROVEN      | high kick (HK) | live 288-71 (gap 40000, 90000); no hit in practice; armed 285-71 -> 311, dx +61540; also the result of fatality A inputs with BL released early; HK switch 0x4E8C88 -> 71
+  75 | NOT HIS     | throw (ids 0,6,14) - attacker | PROVEN not his (throw switch 0x4E1784); CPU threw Kai with it in VS (victim 152)
+  76 | NOT HIS     | throw (ids 4,10) - attacker | PROVEN not his (throw switch 0x4E1784); victim 153
+  78 | NOT HIS     | throw (id 2) - attacker | PROVEN not his (throw switch); victim 156
+  79 | NOT HIS     | throw (ids 3,9) - attacker | PROVEN not his (throw switch); CPU threw Kai with it in VS (victim 151)
+  80 | NOT HIS     | throw (ids 1,7,12) - attacker | PROVEN not his (throw switch); CPU threw Kai with it in VS (victim 154)
+  81 | PROVEN      | throw (close LP or F+LP) | live gap 40000: 81, victim 158-171-328, dx +328637 / +324835, rise 98654 (2x); CPU Kai in VS threw P1 the same way (81 -> P1 158-171-328); throw switch 0x4E1784: 81/158 for ids 5,11 (Kai = 11)
+  83 | NOT HIS     | throw (id 13) - attacker | PROVEN not his (throw switch); victim 145
+  94 | GUESS       | clip in the handstand handler list (special[0d]) | static script reference (earlier static pass); never in the Kai slot live
+  96 | PROVEN      | jump LP (straight) | live 304-96-304; no hit
+  97 | PROVEN      | jump HP (straight and forward; also air B,B+HP / D,F+HP inputs) | live 304-97-304 / 301-97-304; Kai rise 112119 (straight), 137766 (forward)
+ 122 | PROVEN      | round-win victory pose | live VS after every won round (25x); victory switch 0x4E9A28 -> 122
+ 127 | PROVEN      | hit by the handstand LK (victim, shared) | live P2 127 after 6 (2x)
+ 128 | PROVEN      | launched by an uppercut (victim, shared) | live VS: Kai 128-328 after the CPU uppercut 293 (10x)
+ 130 | PROVEN      | hit by a projectile (victim, shared) | live VS: Kai 130 after CPU projectiles 26/27/592 (11x)
+ 131 | PROVEN      | knocked back / down (victim, shared) | live P2 131-185 after 0 and 551; P2 131 after 208; VS Kai 131 after 208, 103, 134
+ 132 | PROVEN      | hit by the falling fireball / armed LP (victim, shared) | live P2 132-328 after 21 (2x) and 229 (2x); VS Kai 132-328 after CPU Kai 21
+ 134 | PROVEN      | hit low / body (victim, shared) | live P2 134 after 70 (gap 40000, unarmed and armed)
+ 137 | PROVEN      | opponent pose after losing the round (shared) | live VS P2 137 while Kai plays 122
+ 141 | LIKELY      | hit by roundhouse, part 2 (victim, shared) | static script reference (roundhouse victim set); Kai roundhouse 64 did not hit live
+ 142 | LIKELY      | hit by roundhouse, part 1 (victim, shared) | static (see 141)
+ 143 | LIKELY      | hit by roundhouse, part 3 (victim, shared) | static (see 141)
+ 146 | PROVEN      | victim of a fighter-specific special (shared) | live VS: Kai 146-166-328 after CPU clip 31 (3x)
+ 151 | PROVEN      | thrown by ids 3,9 (victim of 79, part 1) | live VS: Kai 151-174-191 after CPU throw 79 (2x)
+ 152 | PROVEN      | thrown by ids 0,6,14 (victim of 75, part 1) | live VS: Kai 152-173-328 after CPU throw 75 (4x)
+ 154 | PROVEN      | thrown by ids 1,7,12 (victim of 80, part 1) | live VS: Kai 154-172-328 after CPU throw 80 (2x)
+ 157 | PROVEN      | victim of CPU clip 37 (shared) | live VS: Kai 157-586 (1x)
+ 158 | PROVEN      | thrown by Kai throw 81 (victim, part 1) | live P2 158-171-328 after 81 (practice 2x); VS Kai 158-171-328 after CPU Kai 81
+ 159 | PROVEN      | victim of the close LK special 34, part 1 | live VS P2 159-177 after 34 (KO, many times); Kai 159-177 after CPU Kai 34
+ 162 | PROVEN      | victim of CPU clip 42 (shared) | live VS: Kai 162 (2x)
+ 164 | PROVEN      | victim of CPU clip 30 (shared) | live VS: Kai 164 (2x)
+ 166 | PROVEN      | knockdown follow-on (victim, shared) | live VS: Kai 146-166-328 and 131-146-166-328
+ 171 | PROVEN      | thrown by throw 81, landing (victim) | live P2 158-171-328 after 81
+ 172 | PROVEN      | thrown by throw 80, landing (victim) | live VS Kai 154-172-328
+ 173 | PROVEN      | thrown by throw 75, landing (victim) | live VS Kai 152-173-328
+ 174 | PROVEN      | thrown by throw 79, landing (victim) | live VS Kai 151-174-191
+ 177 | PROVEN      | victim of the close LK special 34, part 2 | live VS P2 159-177
+ 179 | PROVEN      | hit by the rising fireball (victim, launched) | live P2 179-328 after 22 (5x), rise 217304
+ 180 | PROVEN      | victim of a CPU handstand kick (shared) | live VS Kai 311-180-131-185
+ 182 | PROVEN      | carried / pushed far (victim, shared) | live VS Kai 182 after CPU 437 / 602
+ 183 | PROVEN      | hit in the air / by the armed HP (victim, shared) | live P2 183-185 after 230 (2x); VS Kai 183-185
+ 185 | PROVEN      | knocked down after an air hit (victim, shared) | live P2 131-185, 183-185
+ 186 | PROVEN      | hit by an angled jump LK, part 1 (victim, shared) | live P2 186-188 after 60; VS Kai 186-188 (12x)
+ 188 | PROVEN      | hit by an angled jump LK, part 2 (victim, shared) | live (see 186)
+ 189 | PROVEN      | victim of an armed LP (shared) | live VS Kai 189-191 after CPU 237
+ 191 | PROVEN      | knockdown end (victim, shared) | live VS Kai 151-174-191, 189-191
+ 192 | PROVEN      | swept, part 1 (victim) | live P2 192-194 after 62; VS Kai 192-194
+ 194 | PROVEN      | swept, part 2 (victim) | live (see 192)
+ 195 | PROVEN      | swept, other side, part 1 (victim) | live VS Kai 311-195-197 after CPU sweep 63 (3x)
+ 197 | PROVEN      | swept, other side, part 2 (victim) | live VS Kai 195-197
+ 206 | PROVEN      | opponent falls / lies dead after FINISH HIM ends (shared) | live VS P2 206 after fatality B (13-130-206, falls in blood) and after missed fatalities (Kai 122, P2 206); exact meaning LIKELY
+ 208 | PROVEN      | weapon throw (armed D,B+LP) | live armed D,B+LP: 285-217-219-259-285-208-288 (afterwards unarmed 288); victim 131, dx +23296, rise 66945
+ 209 | GUESS       | RUN-button action clip | static RUN-button action reference; RUN tap gave nothing live
+ 217 | PROVEN      | armed crouch, going down | live armed D+HP 285-217-219-293 and armed D,B+LP 285-217-219
+ 219 | PROVEN      | armed crouch, held | live (see 217)
+ 229 | PROVEN      | armed LP (knife) | live 285-229-285 (2x); victim 132-328, dx +86686 (gap 60000) / +27958 (gap 40000)
+ 230 | PROVEN      | armed HP (knife) | live 285-230-285 (2x); victim 183-185, dx +353536 (gap 60000) / +123166 (gap 40000), rise 92443
+ 244 | PROVEN      | weapon draw (D,B+LP) | live 259-258-259-288-244-285; static weapon-draw table -> 244 (shared with other fighters)
+ 246 | PROVEN      | armed block | live armed BL: 285-246-285
+ 256 | PROVEN      | crouch block held | live 259-258-257-256-257-258-259
+ 257 | PROVEN      | crouch block (going down / up) | live (see 256)
+ 258 | PROVEN      | crouch held (shared locomotion) | live D held, before every crouch move
+ 259 | PROVEN      | crouch down / up (shared locomotion) | live
+ 260 | PROVEN      | crouch LP | live 259-258-260-258-259; no hit at gap 70000
+ 261 | GUESS       | close-strike set | static close-strike table entry; not produced live
+ 262 | NOT HIS     | close HP (id mod 3 = 0) | close-HP switch by id mod 3; Kai (11) gets 264, PROVEN live
+ 263 | NOT HIS     | close HP (id mod 3 = 1) | close-HP switch by id mod 3; Kai (11) gets 264, PROVEN live
+ 264 | PROVEN      | close HP | live HP,HP at gap 40000: 264-533, victim 311; close-HP switch: id mod 3 = 2 -> 264 (Kai = 11); CPU Kai in VS also played 264 -> P1 311
+ 265 | PROVEN      | walk forward (his own locomotion clip) | live F held: 288-265; also the run lead-in 265-317-307
+ 267 | NOT HIS     | walk forward of other fighters | Kai walks forward with 265 live
+ 270 | PROVEN      | walk back (his own locomotion clip) | live B held: 288-270; also before B+LK / B+HK
+ 272 | NOT HIS     | walk back of other fighters | Kai walks back with 270 live
+ 275 | PROVEN      | armed walk forward | live armed F: 275-285
+ 276 | PROVEN      | armed walk back | live armed B: 285-276-285; armed B+LK 276-62
+ 285 | PROVEN      | armed stance (knife) | live after every 244 and between armed moves
+ 288 | PROVEN      | idle stance | live every session (practice and VS)
+ 293 | PROVEN      | uppercut (D+HP) | live 259-258-293; no hit at gap 60000; armed D+HP 217-219-293
+ 294 | PROVEN      | LP | live 288-294 (gap 60000 and 90000); LP,LP at gap 60000 -> victim 311
+ 295 | LIKELY      | LP follow-on (LP chain) | static LP table 294-295; LP,LP at gap 60000 gave 294 only
+ 296 | PROVEN      | HP | live 288-296 (gap 25000, 40000, 90000); no hit
+ 297 | LIKELY      | HP follow-on | static HP code 297/296; live HP gave 296, HP,HP close gave 264-533
+ 298 | PROVEN      | air fist (D,F+HP; special[11]) | live 259-258-259-288-298-310 (3x, gap 90000/200000/300000); Kai rises 158856; the opponent turns (305), no hit
+ 301 | PROVEN      | flip / forward jump roll (shared locomotion) | live in angled jumps
+ 304 | PROVEN      | jump (shared locomotion) | live
+ 305 | PROVEN      | turn around (shared) | live P2 305 after 298 (air fist passes over) and after a jump over; VS Kai 305 (12x)
+ 307 | PROVEN      | run loop | live F,F+RUN hold: 265-317-307; pushes the dummy +77939
+ 308 | NOT HIS     | low kick (other ids) | PROVEN not his (LK switch 0x4E8D78); Kai LK = 70
+ 310 | PROVEN      | air / falling clip after the rising fireball and the air fist | live 22-310-304 and 298-310-288 (8x)
+ 311 | PROVEN      | hit high (victim, shared) | live P2 311 after 294 (LP,LP), 264/533, armed 71; VS Kai 311 (24x)
+ 315 | PROVEN      | crouch LK | live 259-258-315-258-259; no hit at gap 60000
+ 317 | PROVEN      | run start | live 265-317-307
+ 323 | PROVEN      | block (standing) | live BL; also the start of every BL-held fatality input
+ 327 | NOT HIS     | jump-up kick (other fighter) | static jump-up switch: 327 for another id; Kai plays 61 live
+ 328 | PROVEN      | get up after a knockdown (victim, shared) | live P2 ...-328 after 21, 22, 81, 229; VS Kai 328 (28x)
+ 389 | PROVEN      | fatality A victim, part 1 (at the input; shared with Raiden fatality A) | live VS P2 389 then 441 (2x)
+ 440 | PROVEN      | fatality A (hold BL, U,F,U,B, HK with BL still held): Kai holds the opponent overhead / tears him in half | live VS 2x at gap 40000: Kai 440-445-440-443, victim 389-441-444-441; screenshots
+ 441 | PROVEN      | fatality A victim, torn in half / the halves | live VS 2x P2 389-441-444-441; screenshots
+ 443 | PROVEN      | fatality A end pose, the halves on the floor, FATALITY (also Raiden fatality A end pose) | live VS 2x (see 440); screenshot
+ 444 | PROVEN      | fatality A victim, held overhead | live VS 2x (see 441); screenshot
+ 445 | PROVEN      | fatality A: lifts the opponent overhead | live VS 2x (see 440); screenshot
+ 486 | PROVEN      | fatality B (hold BL, U,U,U,D, release BL, BL): Kai raises his fist | live VS 3x (gaps 150000 2x, 120000): Kai 493-486-487, victim 13-130-206 (slow 70 ms taps); screenshots
+ 487 | PROVEN      | fatality B: the opponent is hit and bursts in blood (arms torn off: GUESS from screenshots) | live VS (see 486); screenshots
+ 493 | PROVEN      | fatality B start: Kai floats up, arms spread (Reptile also plays 493 before his fatality B: shared) | live VS (see 486); Reptile plays 493 before his fatality B too
+ 532 | GUESS       | close-strike set | static close-strike table entry; Kai HP,HP gave 533
+ 533 | PROVEN      | close HP follow-on (close HP, HP) | live HP,HP at gap 40000: 264-533, victim 311; static close-strike table -> 533
+ 547 | GUESS       | run-related clip | static run table 547-548; live run gave 265-317-307
+ 548 | GUESS       | run-related clip | static run table 547-548; live run gave 265-317-307
+ 551 | PROVEN      | super roundhouse (D,F+LK; special[21]) | live 259-258-259-288-551 (2x); victim 131-185, dx +289641, rise 89182 (gap 90000); no hit at gap 200000
+ 586 | PROVEN      | victim follow-on of CPU clip 37 / 282 (shared) | live VS Kai 157-586
+ 596 | GUESS       | run-related clip | static run table 596; live run gave 265-317-307
+ 606 | PROVEN      | thrown by id 13 (victim, part 1) | live VS Kai 606-607-152-173-328 after CPU 604/605
+ 607 | PROVEN      | thrown by id 13 (victim, part 2; throw switch 605/607) | live (see 606); static throw switch pairs 605 with victim 607
+ 609 | NOT HIS     | throw (id 15) - attacker | PROVEN not his (throw switch); victim 610
+
+SUMMARY (139 clips listed)
+ PROVEN        107
+ LIKELY          6
+ GUESS           7
+ NOT HIS        19
+ UNKNOWN         0
+
+MOVES WITH NO CLIP OF THEIR OWN / FATALITY INPUTS
+ Inputs are from the in-game MOVES LIST (pause menu, PROVEN): weapon D,B+LP; falling fireball B,B+HP; rising fireball F,F+LP (also in air);
+ air fist D,F+HP; super roundhouse D,F+LK; handstand BL+LK (hold LP = spin, LK / HK = kicks); fatality (hold BL) U,F,U,B+HK;
+ fatality II U,U,U,D+BL; stage fatalities B,F,D+HK (spike) and F,F,D+BL (fan).
+ All fatality tries: VS vs CPU, opponent dazed (13) at FINISH HIM, X gap set by writing both X positions just before the input.
+ Fatality A (hold BL, U,F,U,B, then HK WITH BL STILL HELD; condition 0x2D, held mask BL+HK at 0x4E70A0):
+   REACHED live 2x at gap 40000 (40 ms taps / 20 ms gaps, HK pressed before BL is released).
+   Clips Kai 440-445-440-443, victim 389-441-444-441 (PROVEN). Screenshots: Kai lifts the opponent overhead and tears him in half;
+   KAI WINS / FATALITY.
+   No fatality: BL released before HK (4x, gaps 30000/40000/50000: plain HK 71); slow taps at 50000 (nothing);
+   plain input without BL (jump 304); gap 90000 (Kai 323 then the round ended: too far, PROVEN close-only for this input).
+ Fatality B / "Fatality II" (hold BL, U,U,U,D, release BL, press BL; condition 0x25 = X distance >= 117964, FAR):
+   REACHED live 3x (gaps 150000 2x, 120000). Clips Kai 493-486-487, victim 13-130-206 (PROVEN). Screenshots: Kai floats up,
+   raises his fist, the opponent bursts in blood and falls; KAI WINS. Failed at 40000 (below the bound) and 200000 (upper limit, cause not found).
+   Taps had to be slow: 70 ms taps with 60 ms gaps worked; 40 ms / 20 ms taps failed at 150000 and 200000 (Kai only crouched,
+   259-258-257-256). Also failed at 150000: D still held when BL is pressed again (crouch block), and the Legacy Kollection form
+   (release BL after U,U,U, then D+BL together). Plain U,U,U,D+BL without the hold: jump 304.
+ Stage fatalities (spike B,F,D+HK, fan F,F,D+BL): not tried (stage-specific). LIKELY from the moves list only.
+ Shinnok's morph into Kai: not tested.
+
+STILL OPEN
+ - Fatality B upper distance limit: works at 120000 and 150000, fails at 200000 (slow taps); cause not found.
+ - Stage fatalities and the Shinnok morph to Kai: not tried.
+ - 23, 295, 297 (LIKELY); 94, 209, 261, 532, 547, 548, 596 (GUESS): static-only clips in his handlers, not produced live.
+ - 141-143 (roundhouse victim set): Kai's roundhouse 64 did not hit live.
+ - Air fist 298 never hit the dummy (gaps 90000 - 300000); its victim clip is not known.
+ - 206: shared opponent clip after FINISH HIM; meaning GUESS.
+ - No frame sheets / video for Kai (PC run logged memory only); names come from the inputs, the moves list and fatality screenshots.
+ - Clips outside the logs and his handlers were not surveyed (no full scan of all 612 clips for Kai).
+
+OTHER FIGHTERS' ENTRIES IN THE SAME PER-FIGHTER TABLES (NOT HIS, PROVEN from the switch tables)
+ (Throw pairs are attacker/victim; Kai plays the victim clip when one of those fighters throws him.)
+ throw 0x4E1784:          75/152 (ids 0,6,14), 80/154 (1,7,12), 79/151 (3,9), 76/153 (4,10), 78/156 (2), 81/158 (5, 11 = his), 83/145 then 605/607 (13), 609/610 (15)
+ high kick 0x4E8C88: 65, 66 (71 = his)    low kick 0x4E8D78: 67, 308 (70 = his)    jump-up kick 0x4E91E0: 327 (61 = his)
+ angled jump LK 0x4E93C0: 59 (ids 1,4,7,10,13), 58 (other ids) (60 = his: ids 2,5,8,11,14,15)    angled jump HK: 55 (Tanya), 56 (Raiden, Reptile) (57 = his, also Fujin)
+ close HP (id mod 3): 262 (mod 0), 263 (mod 1) (264 = his, 11 mod 3 = 2)
