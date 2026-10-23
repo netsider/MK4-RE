@@ -9,6 +9,11 @@ The mesh layout is the one mk4decomp's geo_mesh.py checked against the
 game: 16-byte blocks, field-relative offsets, 12-byte int16 verts,
 triangle strips, then 8-byte UV rows. Type 1 is the first set of parts.
 Type 0 repeats the same counts, so it stays out of the file.
+Files without type-1 parts (logos: type 0x4; arenas/effects: 0, 0x2, 0x40, 0x100) export
+all their 3D parts instead. Records with byte 0 bit 7 set (0x80/0x81) are 2D sprite
+records, not meshes; they are skipped. UV row byte 0 is the GEO-local texture page
+(MK4.EXE VA 0x4BB943); when a mesh uses more than one page the pages are stacked into
+one atlas PNG and the UVs are remapped.
 
 Positions are the game's int16, divided by 100, Y up. One PNG from the
 GEO is embedded. metallicFactor is 0 so Lumen does not darken it.
@@ -62,9 +67,12 @@ def parse_blocks(data):
     tex_off, size = struct.unpack_from("<II", data, 4)
     blocks = []
     o = 0x0C
-    while o + 16 <= tex_off and len(blocks) < 80:
+    while o + 16 <= tex_off and len(blocks) < 4096:
         typ, cnt, a, b, c = struct.unpack_from("<HHiii", data, o)
-        if typ not in (0, 1) or cnt == 0:
+        if typ & 0x80:
+            o += 16          # 2D sprite record (draw code VA 0x4BB180), not a mesh
+            continue
+        if cnt == 0:
             break
         vtx_off = o + 4 + a
         strip_off = o + 8 + b
@@ -161,7 +169,7 @@ def triangles_of(data, block):
                 order[1], order[2] = order[2], order[1]
             if flag & 1:
                 order[1], order[2] = order[2], order[1]
-            tri = [(verts[vi], uv_of[vi], raw[1]) for vi in order]
+            tri = [(verts[vi], uv_of[vi], raw[0]) for vi in order]   # raw[0] = texture page
             out.append(tri)
         cursor += n + 3
     return out
@@ -343,15 +351,51 @@ def load_named(fs, disc_name):
     raise SystemExit("missing " + disc_name)
 
 
+def mesh_blocks(blocks):
+    """Fighters: the type-1 set. Files without type 1 (logos 0x4, arenas, effects): every 3D part."""
+    if any(b["type"] == 1 for b in blocks):
+        return [b for b in blocks if b["type"] == 1]
+    return blocks
+
+
+def atlas_pages(textures, tris):
+    """If the triangles use more than one texture page, stack the pages vertically and remap the UVs."""
+    used = sorted({c[2] for t in tris for c in t})
+    if len(used) <= 1 or max(used) >= len(textures):
+        tex = textures[used[0]] if used and used[0] < len(textures) else textures[0]
+        return tex, tris
+    W = max(t.size[0] for t in textures)
+    H = sum(t.size[1] for t in textures)
+    atlas = Image.new("RGB", (W, H))
+    yoff = []
+    y = 0
+    for t in textures:
+        atlas.paste(t, (0, y))
+        yoff.append(y)
+        y += t.size[1]
+    out = []
+    for t in tris:
+        nt = []
+        for xyz, (u, v), page in t:
+            pw, ph = textures[page].size
+            nu = u * pw / W
+            nv = 1.0 - (yoff[page] + (1.0 - v) * ph) / H
+            nt.append((xyz, (nu, nv), page))
+        out.append(nt)
+    return atlas, out
+
+
 def export_one(fs, disc_name):
     blob, idx, size = load_named(fs, disc_name)
     tex_off, blocks = parse_blocks(blob)
     textures = decode_rle555(blob, tex_off)
     tris = []
-    for block in blocks:
-        if block["type"] != 1:
-            continue
+    for block in mesh_blocks(blocks):
         tris.extend(triangles_of(blob, block))
+    if not tris:
+        raise SystemExit("no 3D parts in " + disc_name)
+    tex, tris = atlas_pages(textures, tris)
+    textures = [tex] + textures[1:]
     label = ROSTER.get(disc_name, disc_name.rsplit(".", 1)[0].lower())
     os.makedirs(OUT, exist_ok=True)
     tex_path = os.path.join(OUT, label + "_tex.png")
@@ -369,7 +413,7 @@ def export_one(fs, disc_name):
     print(label, "idx", idx, "file", size, "tex", len(textures), textures[0].size,
           "tris", len(tris), "glb", nbytes)
     print("  box", " ".join("%.2f" % v for v in box))
-    print("  slots", slots)
+    print("  pages", slots, " part types", sorted({b["type"] for b in mesh_blocks(blocks)}))
     print("  ", glb_path)
     print("  ", prev)
     return glb_path, prev, tex_path

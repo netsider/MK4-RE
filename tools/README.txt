@@ -12,15 +12,25 @@ fsys_tool.py          FILESYS.DAT lister/extractor. Recovers all 799 entry names
                         python fsys_tool.py FILESYS.DAT MK4.EXE list
                         python fsys_tool.py FILESYS.DAT MK4.EXE extract OUTDIR
                         python fsys_tool.py FILESYS.DAT - hash "C:\SOURCE\MK4\WIN\GEOGFX\SZ_GEO.GEO"
-export_pc_geo.py      .GEO mesh exporter: GEO parts + first texture page -> GLB, plus texture PNG and a front/side
-                      preview (guide section 3).  Deps: Pillow.
+export_pc_geo.py      .GEO mesh exporter: GEO parts + texture -> GLB, plus texture PNG and a front/side preview
+                      (guide section 3). Fighters: the type-1 parts. Files with no type-1 parts (logos midway_g /
+                      MKlogo_g / attract_ = type 0x4, buyin_ge, arenas): every 3D part. 2D sprite records are
+                      skipped. UV byte 0 = texture page; if a mesh uses several pages they are stacked into one
+                      atlas PNG.  Deps: Pillow.
                         python export_pc_geo.py FILESYS.DAT OUTDIR SB_GEO.GEO      (or ALL = every fighter, per-part GLB)
+                        python export_pc_geo.py FILESYS.DAT OUTDIR MIDWAY_G.GEO MKLOGO_G.GEO ATTRACT_.GEO
 extract_textures.py   Every RLE-555 texture page of every GEO -> PNG, one contact sheet per GEO, and MENU.TGA
                       (guide section 3).  Deps: Pillow; uses fsys_tool.py and export_pc_geo.py from this folder.
                         python extract_textures.py FILESYS.DAT MK4.EXE OUTDIR
 esf2wav.py            ESF sounds -> WAV (8-bit PCM or 4-bit IMA ADPCM; 11025/22050 Hz) (guide section 4).  Deps: stdlib.
                         python esf2wav.py FILESYS.DAT OUTDIR
                         python esf2wav.py --file SOUND.ESF OUT.WAV
+ecm_tool.py           ECM video decoder (M_*.ECM): EDL decompressor, 320x240 frames -> PNG, IMA ADPCM sound -> WAV
+                      (guide section 5). Output matches MK4.EXE's own routines except the game's random softening
+                      of solid-colour blocks.  Deps: Pillow (frames only); info and wav use the stdlib.
+                        python ecm_tool.py M_MIDWAY.ECM info
+                        python ecm_tool.py M_MIDWAY.ECM frames OUTDIR [first last step]
+                        python ecm_tool.py M_MIDWAY.ECM wav OUT.wav
 anim_emu.py           Animation frame decoder that runs MK4.EXE's own decompressor (VA 0x4013A0) in an emulator, so
                       output matches the game exactly (guide sections 5-6).  Deps: numpy, unicorn.
                         python anim_emu.py DIR info               (DIR holds MK4.EXE, ANIMDAT4.AP0, ANIMDAT4.AP1;
@@ -29,6 +39,12 @@ script_decoder_v2.py  MK4.EXE script / command-list / strike / reaction decoder:
                       per-fighter move tables (guide sections 8, 8A, 8B).  Deps: stdlib.  Reads the EXE read-only.
                         python script_decoder_v2.py MK4.EXE lists | fighter N | table | csv | strikes | reactions
                         python script_decoder_v2.py MK4.EXE actions | script 0xADDR [fid]
+script_decoder_v3.py  v2 plus: opcode reference (all 128 script opcodes, operand counts, effect, PROVEN/LIKELY/GUESS),
+                      condition table 0x4E7EA8 meanings, sound tables -> pcmkNNNN.esf names, per-move sounds and damage,
+                      button/player table map, annotated script listing (guide sections 8A, 8B).  Deps: stdlib.
+                        python script_decoder_v3.py MK4.EXE ops | conds | sounds | buttons
+                        python script_decoder_v3.py MK4.EXE movesounds [fid] | dis 0xADDR [fid]
+                        (all v2 commands still work; optional --sounds LIST adds your own per-file notes)
 
 Live-game tools (your own running copy)
 ---------------------------------------
