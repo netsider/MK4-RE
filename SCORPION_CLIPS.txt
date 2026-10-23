@@ -1,0 +1,177 @@
+SCORPION (fighter id 0) - CLIP LIST AND STATUS
+Mortal Kombat 4 PC (retail MK4.EXE). netsider's MK4-RE project. Built 2026-10-23 ET from the live memory logs
+and the MK4.EXE static reading. Full detail: MK4_RE_NOTES_v3.txt (this repo), SCORPION section.
+
+WHAT IS LISTED
+Every clip number Scorpion's fighter object plays (as attacker OR as victim), every clip his own move scripts and
+per-fighter tables point at, and clips that turned up in his clip sets but belong to someone else.
+Clip number = index into the game's 612-entry clip table (record address 0x4FDD6C + 12*clip).
+Some shared move scripts pick the clip per fighter with a 16-entry FIGHTER_SWITCH (script opcode 0x3C, entries
+f0..f15 = fighter id). Scorpion takes entry f0 (PROVEN). Only the f0 entry is his; the other 15 entries are other
+fighters' clips (see "OTHER FIGHTERS' ENTRIES" at the end). Victim / reaction clips are shared by all fighters.
+Live sources: practice mode P1 Scorpion vs P2 Scorpion (inactive dummy) and VS mode P1 Scorpion vs CPU opponents (memory logs).
+No clip in this list has a visual ID by eye from the owner yet; roles come from the input that played them (frame sheets checked by eye).
+
+STATUS LABELS
+ PROVEN       = seen live in the running game (memory log of the clip slot while pressing the input), or read
+                directly in the game code and matched live.
+ LIKELY       = strong static (code) or indirect evidence, not seen live on Scorpion.
+ GUESS        = weak evidence (static listing only).
+ NOT HIS      = belongs to another fighter (or is another fighter's version of a shared move). The evidence
+                column says how sure (PROVEN or LIKELY).
+ UNKNOWN      = in his set, purpose not known.
+
+UNITS (raw game units only)
+ Positions are 16.16 fixed point: 65536 = 1 game unit = 256 mesh units (PROVEN). No metres are used.
+ dx   = victim X net displacement over the reaction (last - first). + = pushed away from the attacker,
+        - = thrown behind the attacker.
+ rise = victim standing height minus its lowest height (how high it went).
+ Speeds are units/tick (1 tick ~ 1/60 s, PROVEN). Scorpion standing height -76873 (negative = up).
+ Practice start X -85196 / +85196 (gap 170392). Sequences like 154-172-328 are the clips in the order they play.
+
+clip | status      | name / description                                    | evidence / notes
+-----+-------------+-------------------------------------------------------+------------------
+  13 | PROVEN      | dazed / FINISH HIM stance (shared) | live P2 199-13 after the spear 14 (practice); every CPU victim plays 13 at FINISH HIM
+  14 | PROVEN      | B,B+LP spear (proj[06]) | live 274-290-274-290-14 at gap 200000, 350000 and close: P2 199-13 (pulled in and dazed), dx -196605 / -340782 / -78642; static proj[06] 0x4F0430 -> 14 / victim 199
+  37 | PROVEN      | close LK special (grab and flip) | live gap 40000 / 25000: P1 37-282, P2 157-586, dx +28140 / +30170, rise 42717; close-LK table 0x4E0FA0 idx 0 -> 0x42BDD0 -> script 0x4E12E0 (clip 37, opp 157, damage 11796 = 18.0%)
+  43 | GUESS       | close LK special, second static clip (opp 163) | static script 0x4E12E0 lists 43 / 163; live close LK (2 runs) played 37-282 only
+  45 | PROVEN      | round-start intro pose | live every practice start and every VS round (P1 Scorpion; the Scorpion CPU also plays 45); intro switch 0x4E8EE0 f0 -> 45
+  50 | NOT HIS     | round-start intro of another fighter (Reptile) | PROVEN not his: VS opponent with REPTILE on the HUD played intro 50, idle 289
+  52 | LIKELY      | crouch HK of other fighters (in his crouch-kick list) | his crouch HK played 54 live (far and close); 52 in the shared list
+  54 | PROVEN      | crouch high kick (D+HK) | live 259-258-54 (gap 60000 and 120000, no hit logged); crouch-kick lists 0x4E9008 / 0x4E8FB8
+  55 | PROVEN      | jump forward/back high kick | live 304-301-55 forward (P2 131-185, dx +203148, rise 87412) and back; angled-jump-HK list 55/56/57
+  56 | NOT HIS     | angled jump HK of other fighters | LIKELY not his: Scorpion plays 55
+  57 | NOT HIS     | angled jump HK of other fighters (Quan Chi) | PROVEN not his: Quan Chi plays 57; Scorpion plays 55
+  58 | PROVEN      | jump forward/back low kick | live 304-301-58 forward (P2 186-188, dx +172996) and back (301-58, no hit); switch 0x4E93C4 ids 0/3/6/9/12 -> 58
+  59 | NOT HIS     | angled jump LK (ids 1/4/7/10/13) | PROVEN not his from the switch 0x4E93C4
+  60 | NOT HIS     | angled jump LK (ids 2/5/8/11/14) | PROVEN not his from the switch 0x4E93C4 (Quan Chi plays 60)
+  61 | NOT HIS     | jump-up kick of other fighters | LIKELY not his: switch 0x4E91E0; Scorpion plays 327 live
+  62 | NOT HIS     | sweep (odd ids) | PROVEN not his: sweep switch 0x4E9780; Scorpion plays 63
+  63 | PROVEN      | leg sweep (B+LK) | live 274-63; P2 195-197, dx +114028; armed 278-63 the same; sweep switch even ids -> 63
+  64 | NOT HIS     | roundhouse of other fighters | PROVEN not his: roundhouse switch 0x4E97E8; Scorpion plays 313
+  66 | PROVEN      | high kick (HK) | live 66 at gap 90000: P2 311, dx +68187; armed 66 the same; HK switch 0x4E8C88 f0 -> 66
+  67 | PROVEN      | low kick (LK) | live 67 at gap 90000: P2 134, dx +68187; armed 67 the same; LK switch 0x4E8D78 f0 -> 67
+  70 | NOT HIS     | low kick of other fighters (Quan Chi) | PROVEN not his: LK switch (Quan Chi plays 70)
+  71 | NOT HIS     | high kick of other fighters (Quan Chi) | PROVEN not his: HK switch (Quan Chi plays 71)
+  75 | PROVEN      | throw (close LP or F+LP) | live gap 40000: P1 75 (F+LP: 269-75), P2 152-173-328, dx -287678 / -283741 (thrown behind), rise 65200; throw switch 0x4E1784 f0 -> 75 / victim 152
+  78 | NOT HIS     | throw (ids 2,8) - attacker | PROVEN not his (Quan Chi plays 78). Victim 156
+  80 | NOT HIS     | throw (ids 1,7,12) - attacker | PROVEN not his (throw switch; Reiko). Victim 154
+  82 | PROVEN      | air throw (BL near a jumping opponent) | live 3 of 4 (P2 jumping, P1 jumps and presses BL; gap 50000 / 80000): P1 304-82-304, P2 304-202-185, dx -222567..-236467 (thrown behind); static misc[22] 0x4E8E10 -> 82 / victim 202
+  96 | PROVEN      | jump low punch (LP, straight or angled) | live 304-96-304 and 301-96-304: P2 186-188, dx +172996; static jump-LP list 0x4E9710 -> 96
+  97 | PROVEN      | jump high punch (HP, straight or angled) | live 304-97-304 and 301-97-304; P2 311; P1 min height -188992 / -215392; static 0x4E9658 -> 97
+ 115 | PROVEN      | victory pose, part 1 (SCORPION WINS) | live VS: P1 115-116-117-118 after each match win (3 times: vs Reptile, vs Scorpion CPU, and in the fatality runs); "SCORPION WINS" on screen (frame checked); victory switch 0x4E9A28
+ 116 | PROVEN      | victory pose, part 2 | as 115
+ 117 | PROVEN      | victory pose, part 3 | as 115
+ 118 | PROVEN      | victory pose, part 4 (held) | as 115
+ 128 | PROVEN      | uppercut knockdown (shared) | live P2 128-328 after 293 (rise 155605)
+ 131 | PROVEN      | knockdown (jump HK 55, weapon throw 208) | live P2 131-185 after 55; P2 131 after 208, dx +130440, rise 65175
+ 134 | PROVEN      | low/body hit reaction (shared) | live P2 134 after 67, 314
+ 137 | PROVEN      | defeated loser pose (shared) | live VS: losing CPU plays 137 while Scorpion plays 115-118 (3 times)
+ 141 | PROVEN      | roundhouse victim, part 2 | live P2 142-141-143-328 after 313 at gap 45000, dx +150696, rise 57524
+ 142 | PROVEN      | roundhouse victim, part 1 | as 141
+ 143 | PROVEN      | roundhouse victim, part 3 | as 141
+ 152 | PROVEN      | thrown by Scorpion clip 75 (victim start) | live P2 152-173-328 after 75
+ 157 | PROVEN      | close-LK victim (Scorpion clip 37), part 1 | live P2 157-586 after 37-282 (2 runs); matches the Quan Chi VS log (157-586 after opponent 37 / 282)
+ 163 | GUESS       | close-LK victim, second static clip | static script 0x4E12E0 opp 163; not seen
+ 173 | PROVEN      | thrown by 75, landing | live P2 152-173-328
+ 180 | PROVEN      | armed LP / HP (sword) hit reaction | live P2 180 after armed 235 / 236, dx +98248 (gap 60000), +43469 (gap 40000)
+ 182 | PROVEN      | D,F+LP fire projectile hit reaction | live P2 182 after 448, dx +98248
+ 183 | PROVEN      | hit reaction (also teleport-punch victim second clip) | live VS: CPU 183-185 after the jump-up kick 327; static special[00] victim 311-183 (the teleport punch itself showed 311 only, LIKELY)
+ 185 | PROVEN      | get-up after 131 / 202 / 183 | live P2 131-185, 202-185, 183-185
+ 186 | PROVEN      | jump-attack hit | live P2 186-188 after 58 and 96 (practice and VS)
+ 188 | PROVEN      | recover after 186 | live 186-188
+ 189 | PROVEN      | hit in the air (shared) | live VS: jumping CPU hit by 66 plays 189-191
+ 191 | PROVEN      | landing after 189 | live VS 189-191
+ 195 | PROVEN      | sweep fall (sweep 63) | live P2 195-197 after 63 (also armed)
+ 197 | PROVEN      | sweep get-up | live 195-197
+ 199 | PROVEN      | spear victim (pulled in), then 13 | live P2 199-13 after 14 (2 of 2)
+ 202 | PROVEN      | air-thrown by 82 (victim) | live P2 304-202-185 after 82 (3 runs); static misc[22] opp 202
+ 206 | PROVEN      | defeated loser pose after FINISH HIM time-out (shared) | live VS: CPU 13 (dazed) then 206 while Scorpion plays 115-118 (1 time, no finishing move done)
+ 208 | PROVEN      | weapon throw (F,F+HK while armed) | live 286-277-286-277-286-208-290; P2 131, dx +130440, rise 65175; then unarmed idle 290 and LP 294 (input LIKELY: the draw input repeated)
+ 209 | GUESS       | RUN-button action clip | static generic RUN action misc[03] -> 209; RUN tap did nothing (290 only)
+ 218 | PROVEN      | armed crouch, going down | live armed D+HP 286-218-219-293
+ 219 | PROVEN      | armed crouch, held | as 218
+ 235 | PROVEN      | armed HP (sword swing) | live 286-235-286 at gap 60000; P2 180, dx +98248
+ 236 | PROVEN      | armed LP (sword swing) | live 286-236-286 at gap 60000 and 40000; P2 180, dx +98248 / +43469
+ 244 | PROVEN      | weapon draw (F,F+HK) | live 290-269-290-269-290-244-286 (blade visible in the frames); static misc[29] 0x4E92A8 -> 244
+ 246 | PROVEN      | armed block | live armed BL 286-246-286
+ 256 | PROVEN      | crouch block release | live D+BL 257-256-257
+ 257 | PROVEN      | crouch block | live D+BL 258-257
+ 258 | PROVEN      | crouch held | live D
+ 259 | PROVEN      | crouch going down | live D (also inside the D,B / D,F motions)
+ 260 | PROVEN      | crouch low punch (D+LP) | live 259-258-260 (gap 70000, no hit)
+ 261 | GUESS       | close-strike clip | static only: close-strike list 66 261 532 533
+ 262 | PROVEN      | close HP (close-HP table id mod 3 = 0: ids 0,3,6,9,12) | live HP at gap 25000 and 40000: P1 290-262-290, P2 311; static close-HP table 0x4E9BF8 -> 262
+ 263 | NOT HIS     | close HP (id mod 3 = 1) | PROVEN not his: close-HP table (Reiko plays 263)
+ 264 | NOT HIS     | close HP (id mod 3 = 2) | PROVEN not his: close-HP table (Quan Chi plays 264)
+ 269 | PROVEN      | walk forward | live F (also the F taps of F,F+HK and F+LP)
+ 274 | PROVEN      | walk back | live B (also the B taps of B,B+LP, B+LK, B+HK)
+ 277 | PROVEN      | armed walk forward | live F while armed
+ 278 | PROVEN      | armed walk back | live B while armed (before armed 63)
+ 282 | PROVEN      | close-LK follow-on (after 37) | live 37-282 (2 runs)
+ 283 | NOT HIS     | idle of other fighters (Quan Chi) | PROVEN not his (Quan Chi idle 283)
+ 284 | NOT HIS     | idle of other fighters (Reiko) | PROVEN not his (Reiko idle 284)
+ 286 | PROVEN      | armed stance (holding the sword) | live after 244 and between armed moves
+ 289 | NOT HIS     | idle of another fighter (Reptile) | PROVEN not his: VS Reptile idle 289
+ 290 | PROVEN      | idle / fighting stance | all live logs (Scorpion idle)
+ 293 | PROVEN      | uppercut (D+HP) | live 259-258-293; P2 128-328, dx +96334, rise 155605; armed 218-219-293. Also stage fatality arena 0 misc42 (static, LIKELY)
+ 294 | PROVEN      | low punch (LP) | live 294 (far; LP,LP gave 294 only)
+ 295 | LIKELY      | low-punch follow-on clip | static LP 294-295; not seen live (LP,LP at 60000 / 90000 played 294 only)
+ 296 | PROVEN      | high punch (HP) | live 296 at gap 90000 (HP,HP gave 296 only)
+ 297 | LIKELY      | high-punch follow-on clip | static HP code[297,296]; not seen live
+ 301 | PROVEN      | jump forward/back flip | live U+F / U+B
+ 304 | PROVEN      | jump straight up / landing | live U
+ 305 | PROVEN      | turn-around / re-face | live P2 305 when the teleport punch crosses over; P1 305 after cross-ups
+ 307 | PROVEN      | run loop | live F,F+RUN hold 269-317-307; pushes P2 +105504
+ 311 | PROVEN      | high hit reaction (shared) | live P2 after 66, 262, 97, 312, 327, LP,LP
+ 312 | PROVEN      | D,B+HP teleport punch (special[00]) | live 259-258-259-290-312-290 at gap 200000 and 90000: P1 rises (min height -111925) and reappears on the other side; P2 305-311, dx -68259; static 0x4EB798 -> 312 / victim 311-183
+ 313 | PROVEN      | roundhouse (B+HK) | live 274-313; gap 45000: P2 142-141-143-328, dx +150696, rise 57524
+ 314 | PROVEN      | close high kick (knee) | live gap 40000: P1 314, P2 134, dx +22029
+ 315 | PROVEN      | crouch low kick (D+LK) | live 259-258-315 (gap 60000, no hit logged)
+ 317 | PROVEN      | run start | live 317-307
+ 323 | PROVEN      | standing block | live BL 290-323-290
+ 324 | PROVEN      | knockout fall (shared) | live VS: CPU 324 when the HP hit 296 ended the match, then 137
+ 327 | PROVEN      | jump-up kick (U then LK or HK) | live 304-327-304 for U+LK and U+HK; U+HK hit: P2 311; static 0x4E91E0 -> 327
+ 328 | PROVEN      | flip get-up recovery (shared) | live 128-328, 152-173-328, 142-141-143-328
+ 448 | PROVEN      | D,F+LP fire projectile (misc[28]) | live 259-258-259-290-448-290 at gap 150000 and 60000: P2 182, dx +98248; flames visible in the frames; static misc[28] 0x4E8B40 -> 448
+ 547 | GUESS       | run-related clip | static Run handler 0x4E2DB8 lists 547 548; run gave 317-307
+ 548 | GUESS       | run-related clip | as 547
+ 586 | PROVEN      | close-LK victim, part 2 | live P2 157-586
+ 596 | GUESS       | run-related clip | static Run handler 0x4E2850.. only
+
+SUMMARY (107 clips listed)
+ PROVEN        80
+ LIKELY         3
+ GUESS          7
+ NOT HIS       17
+ UNKNOWN        0
+
+MOVES WITH NO CLIP OF THEIR OWN
+ Fatalities: fatality A (misc40, static input B,F,F,B+BL) and fatality B (misc43, static B,F,D,U+HP) were tried live in VS
+   at FINISH HIM (victim in 13, gap 80000) as fast taps, slow taps, BL held long (A) and BL held through the input (B): no fatality
+   came out. The direction taps played walk 274 / 269 and crouch 259-258; the final BL gave block 323; in B the U+HP gave a jump
+   and jump punch 97. Every attempt ended in the victory pose 115-118 (PROVEN). The B / BL-held try lost the game process during
+   the FINISH HIM placement (game window gone, no dialog). Fatality clips unresolved (the static input decode may be wrong, GUESS).
+   Stage fatalities: arena 0 misc42 (static B,F,F+LK) played the low kick 67 (opponent 134); arena 8 misc41 (static F,D,D+LK)
+   played crouch moves only; the VS stage is random and was not confirmed to be arena 0 / 8, so these tries prove nothing. Unresolved.
+ Juggles: none produced on purpose. 293 launches (rise 155605).
+
+STILL OPEN
+ - Fatality A / B clips and the stage fatalities (see above).
+ - 43 / 163 (second clip pair of the close-LK special): static only; close LK (2 runs) played 37-282 / 157-586.
+ - 295 / 297 (LP / HP follow-on clips): static only; LP,LP and HP,HP played 294 / 296 only.
+ - 209, 261, 547, 548, 596 (and 532 / 533 from the close-strike list): static-only clips in his handlers; never seen live.
+ - 52: in his crouch-kick list; his crouch HK played 54.
+ - Weapon: a sword (blade visible in the frames, LIKELY). Armed jump / run / armed D+LK not logged.
+ - Game crashes / hangs: 6 practice sessions stopped part-way (exceptions at 0x00409B55 and in the practice
+   reset placement, plus two input hangs); every lost move was re-run in a later session. One VS fatality run also lost
+   the game process during the FINISH HIM placement. Cause GUESS (the practice / FINISH HIM placement writes, LIKELY).
+ - Clips outside the logs and his handlers were not surveyed (no full scan of all 612 clips for Scorpion).
+
+OTHER FIGHTERS' ENTRIES IN THE SAME PER-FIGHTER TABLES (NOT HIS, PROVEN from the switch tables)
+ (Throw pairs are attacker/victim; Scorpion plays the victim clip when one of those fighters throws him.)
+ throw 0x4E1784:          75/152 (ids 0 = his, 6, 14), 80/154 (1,7,12), 79/151 (3,9), 76/153 (4,10), 78/156 (2,8), 81/158 (5,11), 83/145 then 605/607 (13), 609/610 + 604/606 (15)
+ round-start intro 0x4E8EE0: 44, 45 (his), 46, 47, 48, 49, 50 (50 = Reptile, seen live)
+ high kick 0x4E8C88: 66 (his; 71 = Quan Chi)    low kick 0x4E8D78: 67 (his; 70 = Quan Chi)    jump-up kick 0x4E91E0: 327 (his), 61
+ angled jump LK 0x4E93C4: 58 (ids 0/3/6/9/12, his), 59 (1/4/7/10/13), 60 (2/5/8/11/14)    sweep 0x4E9780: 63 (even ids, his), 62 (odd ids)
+ roundhouse 0x4E97E8: 313 (his), 64    close HP 0x4E9BF8 (id mod 3): 262 (his), 263, 264    victory 0x4E9A28: 111, 113, 114, 115-124 (115-118 his), 594

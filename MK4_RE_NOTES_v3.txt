@@ -578,3 +578,44 @@ Frame sheets (8 frames per clip) of the captured video were checked by eye for 5
    315 has no frame sheet for that reason.
 7) Open: 22; 295, 297 (LP/HP follow-ons; LP,LP and HP,HP gave only 294/296); 261/532/533; 209; 547/548/596; 208 clean repeat;
    static-only victim clips 145, 154, 156, 195-197, 316-320, 549-550, 607, 610. See TANYA_CLIPS.txt "STILL OPEN".
+
+==== SCORPION (fighter id 0): LIVE PASS, SPECIALS, WEAPON, CLIP LIST (2026-10-23, ~5:20 AM - 6:40 AM ET) ====
+Full clip list with status per clip: SCORPION_CLIPS.txt (this repo; 107 clips: 80 PROVEN, 3 LIKELY, 7 GUESS, 17 NOT HIS).
+Method as for Reiko / Quan Chi: P1 Scorpion with scripted inputs, live memory log of both clip slots (practice vs an inactive Scorpion,
+and VS vs CPU), plus the static decoder (script_decoder_v3.py, fighter 0) and entry f0 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
+Why Scorpion: next fighter picked by netsider after Quan Chi. Name from the practice menu, the VS HUD and "SCORPION WINS".
+VS select grid: Scorpion is cell 5 (row 1, col 0); the select screen shows no name text, so the cell was picked by the face and confirmed live.
+Raw units only (65536 = 1 game unit = 256 mesh units). Scorpion idle 290, armed stance 286, standing height -76873, practice start gap 170392.
+
+1) PROVEN live (P1 Scorpion):
+   45 round intro (switch 0x4E8EE0 f0; every VS round start + every practice start) | 115-116-117-118 match-win pose "SCORPION WINS"
+   75 throw, close LP / F+LP (throw switch 0x4E1784 f0 -> 75 / victim 152) -> victim 152-173-328, dx -287678 / -283741, rise 65200 (thrown behind)
+   37-282 close LK grab (table 0x4E0FA0 idx 0 -> 0x42BDD0 -> script 0x4E12E0: clip 37, opp 157, damage 11796 = 18.0%) -> victim 157-586, dx +28140 / +30170
+   262 close HP at gap 25000 / 40000 (table 0x4E9BF8, id mod 3 = 0) -> victim 311 | 314 close HK knee -> victim 134, dx +22029
+   294 LP | 296 HP | 66 HK -> 311 | 67 LK -> 134 | 293 uppercut -> 128-328, dx +96334, rise 155605
+   63 sweep (even-id switch) -> 195-197, dx +114028 | 313 roundhouse -> 142-141-143-328, dx +150696, rise 57524 (gap 45000)
+   260 crouch LP | 54 crouch HK | 315 crouch LK | 257/256 crouch block | 323 block
+   97 jump HP -> 311 | 96 jump LP -> 186-188, dx +172996 | 327 jump-up kick (LK and HK) -> 311 | 55 jump forward/back HK -> 131-185, dx +203148
+   58 jump forward/back LK (switch 0x4E93C4 f0 -> 58) -> 186-188
+   Shared locomotion: 269 walk F, 274 walk B, 259/258 crouch, 304 jump, 301 flip, 305 turn, 317-307 run (pushes the opponent +105504).
+2) Specials (PROVEN live):
+   14  B,B+LP spear (proj[06] 0x4F0430) -> victim 199-13 (pulled in and dazed), dx -196605 / -340782 / -78642 (far / farther / close)
+   448 D,F+LP fire projectile (misc[28] 0x4E8B40) -> victim 182, dx +98248
+   312 D,B+HP teleport punch (special[00] 0x4EB798) -> P1 rises and reappears on the far side; victim 305-311, dx -68259
+   82  air throw: BL in the air while the opponent jumps (misc[22] 0x4E8E10) -> victim 202-185, dx -222567..-236467 (thrown behind)
+   Static only, not seen: 43 / victim 163 (second clip pair of the close-LK script), 209 (RUN action; a RUN tap did nothing). GUESS.
+3) Weapon (PROVEN live; roles from the input that played them; a sword blade is visible in the frames, LIKELY):
+   244 draw F,F+HK -> 286 armed stance | 277 / 278 armed walk F / B | 246 armed block | 218-219 armed crouch
+   236 armed LP / 235 armed HP -> victim 180, dx +98248 (gap 60000) / +43469 (gap 40000)
+   208 weapon throw: the draw input again while armed -> victim 131, dx +130440, rise 65175; then unarmed idle 290 (input LIKELY).
+   Armed LK / HK / B+LK keep their normal clips (67, 66, 63); armed D+HP -> 218-219-293.
+4) As victim (practice and VS vs a Scorpion CPU): 13 (via 199), 128-328, 131-185, 134, 152-173-328, 157-586, 180, 182, 183-185, 186-188,
+   189-191, 195-197, 202-185, 305-311, 311, 142-141-143-328; losers 324 (KO fall), 137 / 206 (defeated poses). PROVEN played.
+   Other fighter seen: Reptile (VS HUD) intro 50, idle 289 (NOT HIS).
+5) Fatalities: fatality A (static B,F,F,B+BL) and fatality B (static B,F,D,U+HP) tried at FINISH HIM with
+   fast / slow / block-held variants: no fatality came out, every attempt ended in the victory pose 115-118. Clips unresolved (GUESS;
+   the static input decode may be wrong). The stage fatality inputs were also tried, but the VS stage is random and was not confirmed to be arena 0 / 8.
+6) Capture stops (PROVEN, cause GUESS): 6 practice sessions stopped part-way (2 exceptions, one at 00409B55; 2 input hangs; 2 stops in the
+   practice reset); one VS fatality run lost the game process during the FINISH HIM
+   placement. Every lost practice move was re-run and logged.
+7) Open: 43/163, 295, 297, 261/532/533, 209, 547/548/596, 52; fatality clips; armed jump / run. See SCORPION_CLIPS.txt "STILL OPEN".
