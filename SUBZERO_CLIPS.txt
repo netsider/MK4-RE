@@ -1,0 +1,213 @@
+SUB-ZERO (fighter id 4) - CLIP LIST AND STATUS
+Mortal Kombat 4 PC (retail MK4.EXE). netsider's MK4-RE project. Built 2026-10-23 ET from the live memory logs,
+the MK4.EXE static reading and netsider's IDs / confirmations. Full detail: MK4_RE_NOTES_v3.txt (this repo), sections
+"SUB-ZERO OWN CLIPS", "SONYA OPEN ITEMS + SUB-ZERO 19-CLIP PASS + UNITS" and "SUB-ZERO PART 2". The older mixed P1/P2
+capture list is superseded where they disagree.
+
+WHAT IS LISTED
+Every clip number Sub-Zero's fighter object plays (as attacker OR as victim), every clip his own move scripts and
+per-fighter tables point at, the clips of the old capture list, and clips that turned up in his sets but belong to
+someone else.
+Clip number = index into the game's 612-entry clip table (record address 0x4FDD6C + 12*clip).
+Some shared move scripts pick the clip per fighter with a 16-entry FIGHTER_SWITCH (script opcode 0x3C, entries
+f0..f15 = fighter id). Sub-Zero takes entry f4 (PROVEN). Only the f4 entry is his; the other entries are other
+fighters' clips (see "OTHER FIGHTERS' ENTRIES" at the end). Victim / reaction clips and weapon clips are shared.
+Live sources: practice mode P1 Sub-Zero vs P2 Sub-Zero (inactive dummy; P2 victim clips are his too) and
+VS/arcade mode P1 Sub-Zero vs CPU opponents (8 rounds won) (memory logs).
+
+STATUS LABELS
+ PROVEN       = seen live in the running game (memory log of the clip slot while pressing the input), or read
+                directly in the game code and matched live. "netsider confirmed" = he also checked it visually.
+ NETSIDER-ID  = named by netsider from the clip viewer (DONE), in his words.
+ LIKELY       = strong static (code) or indirect evidence, or PROVEN on another fighter for a shared clip, not
+                seen live on Sub-Zero.
+ GUESS        = weak evidence (static listing only, or the old mixed capture list only).
+ NOT HIS      = belongs to another fighter (or is another fighter's version of a shared move). The evidence
+                column says how sure (PROVEN or LIKELY).
+ UNKNOWN      = in his set, purpose not known.
+
+UNITS (raw game units only)
+ Positions are 16.16 fixed point: 65536 = 1 game unit = 256 mesh units (PROVEN). No metres are used.
+ dx   = victim X net displacement over the reaction (last - first). + = pushed away from the attacker,
+        - = thrown behind the attacker.
+ rise = victim standing height minus its lowest height (how high it went).
+ Speeds are units/tick (1 tick ~ 1/60 s, PROVEN). Sub-Zero standing height -77660 (negative = up).
+ Practice start gap 170392. Sequences like 153-173-328 are the clips in the order they play.
+
+clip | status      | name / description                                    | evidence / notes
+-----+-------------+-------------------------------------------------------+------------------
+   9 | LIKELY      | continue screen: well fall, part 2 (shared) | in the throw handler code list (static); PROVEN on Sonya's continue screen; never seen on Sub-Zero
+  13 | LIKELY      | dazed / stun (shared) | PROVEN on his VS opponents (FINISH HIM daze, after his throws); not seen on Sub-Zero himself (he lost no round). In the old mixed P1/P2 capture list only
+  16 | PROVEN      | Ice Blast (D,F+LP) | live 259-258-259-292-16 (no hit at the gaps tried); static proj[04] D,F+LP -> 16 17 19. A D,B+LP try at gap 35000 also gave 259-16 (input timing, GUESS)
+  17 | GUESS       | Ice Blast follow-on clip | static proj[04] list 16 17 19 only; never seen live
+  19 | GUESS       | Ice Blast follow-on clip | as 17
+  26 | NOT HIS     | D,F+P projectile throw of Tanya f9 / Kitana f16 / Noob Saibot f17 | LIKELY not his (decoder lists; Noob is aliased to Sub-Zero id 4 in the dispatchers, so it sits in his set). Live VS: opponent 26 -> Sub-Zero 130
+  41 | PROVEN      | close F+LK special (close LK) | netsider confirmed. Live: close LK / F+LK at gap 40000-45000 -> P1 41, P2 165-200, dx +77771..+83081, rise 486; close-LK table 0x4E0FA0 idx 4 -> script 0x4E1478
+  42 | NOT HIS     | close F+LK special of fighter 9 (Tanya) | LIKELY not his: close-LK table idx 9 -> 42/162; his entry is 41/165
+  46 | NOT HIS     | round-start intro of f2/f9 (Sonya) | PROVEN not his: intro switch 0x4E8EE0 f2/f9 -> 46; his is 47. In the old mixed P1/P2 capture list only
+  47 | PROVEN      | round-start intro | netsider confirmed. Live VS: P1 47 at every round start; intro switch 0x4E8EE0 f4/f1 -> 47
+  52 | PROVEN      | crouch high kick (D+HK) | live 259-258-52-258-259 (no hit at that gap); static crouch kicks aux[0d] -> 52, victim r1a -> 128
+  55 | NOT HIS     | angled jump HK of Shinnok | PROVEN not his: Shinnok plays 55 live; his is 56 (angled-HK list 56 55 57)
+  56 | PROVEN      | jump forward/back high kick (U+F/B then HK) | live 304-301-56, P2 131-185, dx +166813, rise 89182; P1 min height -214793
+  57 | NOT HIS     | angled jump HK of Sonya / Fujin | PROVEN not his: Sonya and Fujin play 57 live; his is 56
+  58 | NOT HIS     | angled jump LK of f0/f3/f6/f9/f12 (Shinnok's jump LK) | LIKELY not his: switch 0x4E93C4 f4 -> 59; 9 of 9 live airborne LK tries -> 59; Shinnok plays 58 live; VS opponent 58 hit Sub-Zero -> 186-188. The old "58 = crouch LK [PROVEN]" label is wrong (crouch LK = 315)
+  59 | PROVEN      | jump forward/back low kick (U+F/B then LK) | live 304-301-59 (9 of 9), P2 186-188, dx +123100..+197240; switch 0x4E93C4 f4 -> 59
+  60 | NOT HIS     | angled jump LK of Sonya / Fujin | PROVEN not his: switch f2/f5; Sonya and Fujin play 60 live
+  61 | NOT HIS     | Fujin's jump-up kick | PROVEN not his: Fujin plays 61 live (switch 0x4E91E0); his jump-up kick is 327. In the old mixed P1/P2 capture list only
+  62 | NOT HIS     | sweep for odd fighter ids | PROVEN not his: sweep script 0x4E9780 (62 odd ids, 63 even). Live VS: opponent 62 -> Sub-Zero 192-194
+  63 | PROVEN      | leg sweep (B+LK) | live 272-63, P2 195-197, dx +114028 / +111650
+  66 | NOT HIS     | Shinnok's high kick (also in the close-strike list) | PROVEN not his as HK: HK switch 0x4E8C88, Shinnok plays 66 live, Sub-Zero HK = 71. Close-strike list 66/261/532/533 owner per fighter not resolved (GUESS)
+  67 | NOT HIS     | Shinnok's low kick | PROVEN not his: LK switch 0x4E8D78; Sub-Zero LK = 70. Live VS: opponent 67 -> Sub-Zero 134
+  70 | PROVEN      | low kick (LK; also F+LK from far) | live 70, P2 134, dx +68187 (far) / +22672 (F+LK); static LK -> 70, victim 134-254
+  71 | PROVEN      | high kick (HK; also F+HK from far) | live 71 (far HK, F+HK at gap 40000; no hit); static HK misc[05] -> 71, victim r10 -> 311
+  75 | NOT HIS     | throw of f0/f6/f14 (Shinnok) - attacker | PROVEN not his (throw switch 0x4E1784). Victim 152
+  76 | PROVEN      | his throw (close LP, F+LP or B+LP) | netsider confirmed. Live practice and VS: P1 76, P2 153-173-328, dx -265480..-310897 (thrown behind), rise 75382; throw switch f4/f10 -> 76/153. His only close throw
+  78 | NOT HIS     | Sonya's throw - attacker | PROVEN not his (throw switch f2/f8). Victim 156
+  79 | NOT HIS     | throw of f3/f9 (Tanya) - attacker | LIKELY not his: throw switch f3/f9 -> 79/151, reaction 0x68; never produced by Sub-Zero live. The old "LP/object pickup -> 79/151" label came from mixed logs and is wrong
+  80 | NOT HIS     | throw of f1/f7/f12 - attacker | PROVEN not his (switch + live: CPU threw him with 80 3x). Victim 154. Disproven as his second throw
+  81 | NOT HIS     | throw of f5/f11 (Fujin) - attacker | PROVEN not his (switch + live VS 2x). Victim 158
+  83 | NOT HIS     | throw of f13 - attacker | PROVEN not his (throw switch: 83/145 then 605/607)
+  95 | PROVEN      | Slide (B+LP+BL+LK) | live 294-95 (no hit); static special[02] -> 95, victim r7a -> 179
+  96 | PROVEN      | jump punch LP (U then LP) | live 304-96; vs a jumping opponent hit 2 of 3 timings -> P2 186-188 (dx +140231 / +87807); static victim r27 -> 186
+  97 | PROVEN      | jump punch HP (U then HP) | live 304-97 (no hit logged); static victim r26 -> 311
+ 103 | NOT HIS     | Tanya split kick (special[12] F,D,B+LK in f9's list) | LIKELY not his (decoder)
+ 115 | PROVEN      | round-win victory pose, part 1 | netsider confirmed. Live VS: after each of 8 won rounds P1 76 -> 115 -> 116 -> 117 -> 118, then 47; victory switch 0x4E9A28 f0/f4 -> 0x4E9ABC
+ 116 | PROVEN      | round-win victory pose, part 2 | as 115 (netsider confirmed)
+ 117 | PROVEN      | round-win victory pose, part 3 | as 115 (netsider confirmed)
+ 118 | PROVEN      | round-win victory pose, part 4 (held) | as 115 (netsider confirmed)
+ 128 | PROVEN      | uppercut launch (shared knockdown) | live P2 128-328 after his 293 (dx +96334, rise 157375); VS: opponent 293 -> Sub-Zero 128-328
+ 130 | PROVEN      | hit by the D,F+P projectile (opponent clip 26) | live VS 1x: opponent 26 -> Sub-Zero 130. Role from context only
+ 131 | PROVEN      | knockdown (jump HK) | live P2 131-185 after 56 (dx +166813, rise 89182)
+ 132 | LIKELY      | hit reaction (shared), then 328 | PROVEN on Shinnok (after opponent clip 21); in the old mixed P1/P2 capture list only
+ 134 | PROVEN      | low/body hit reaction (shared) | live after 70 and 314; VS after opponent 67 and 308
+ 137 | LIKELY      | loser fall at round end (shared) | PROVEN on his VS opponents after every KO; Sub-Zero lost no round, so not seen on him
+ 141 | PROVEN      | roundhouse victim, part 2 | live 142-141-143-328 after 313 (dx +150696, rise 59294)
+ 142 | PROVEN      | roundhouse victim, part 1 | as 141
+ 143 | PROVEN      | roundhouse victim, part 3 | as 141
+ 145 | LIKELY      | thrown by the f13 fighter (opponent clip 83) | static throw switch; not seen on Sub-Zero
+ 151 | LIKELY      | thrown by an f3/f9 fighter (opponent clip 79) | static throw switch, reaction 0x68 = 151-174-176-142-141-143; not seen on Sub-Zero
+ 152 | LIKELY      | thrown by an f0/f6/f14 fighter (opponent clip 75) | static; PROVEN on Shinnok (152-173-328); not seen on Sub-Zero
+ 153 | PROVEN      | thrown by his throw 76 (victim start) | netsider confirmed 153-173-328. Live P2 in practice and VS opponents
+ 154 | PROVEN      | thrown by an f1/f7/f12 fighter (opponent clip 80) | live VS 3x: Sub-Zero 154-172-328
+ 156 | LIKELY      | thrown by Sonya (opponent clip 78) | static throw switch; PROVEN on Sonya's victims; not seen on Sub-Zero
+ 158 | PROVEN      | thrown by an f5/f11 fighter (opponent clip 81) | live VS 2x: Sub-Zero 158-171-328
+ 162 | LIKELY      | victim of Tanya's close F+LK 42 | static close-LK table idx 9 -> 42/162; shared victim clip, he would play it only when an f9 fighter does 42 (earlier live table: NOT his / LIKELY); not seen
+ 165 | PROVEN      | close F+LK special victim, start | netsider confirmed. Live P2 165-200 after 41
+ 171 | PROVEN      | landing after throw 81 | live VS 158-171-328
+ 172 | PROVEN      | landing after throw 80 | live VS 154-172-328
+ 173 | PROVEN      | landing after throw 76 | live 153-173-328
+ 174 | LIKELY      | victim landing after 151 (79 throw); also in fall chain 0x4ECB28 | static only (reaction 0x68); not seen live as P1 or P2
+ 176 | LIKELY      | 79-throw victim chain, after 174 | static reaction 0x68 151-174-176-142-141-143; not seen
+ 179 | GUESS       | Slide victim | static special[02] reaction r7a -> 179; his slide never hit live. In the old mixed P1/P2 capture list only
+ 182 | GUESS       | second hit-reaction clip after 311 | static LP/HP reaction r25 -> 311-182; never seen live
+ 183 | PROVEN      | air hit, falling | live P2 (jumping) 304-183-185 after his HP 296 (dx +159926, rise 165268) and after jump-up kick 327 (dx +233631)
+ 185 | PROVEN      | get-up after 131 / 183 | live 131-185 and 183-185
+ 186 | PROVEN      | jump-attack hit (also on a standing victim) | netsider confirmed 186-188 (face grab correct). Live P2 186-188 after 59 and 96; VS: standing Sub-Zero hit by opponent jump kick 58 -> 186-188 (2x)
+ 188 | PROVEN      | recover after 186 | as 186 (netsider confirmed)
+ 191 | LIKELY      | get-up from lying arms-out (shared) | PROVEN on Sonya / Shinnok (189-191); in the old mixed P1/P2 capture list only
+ 192 | PROVEN      | knockdown forward (sweep variant) | live VS: opponent sweep 62 -> Sub-Zero 192-194; static sweep reaction r13 -> 316-320-192-194
+ 194 | PROVEN      | get-up from upside-down | live VS 192-194
+ 195 | PROVEN      | sweep fall | live P2 195-197 after 63
+ 196 | GUESS       | run-collision victim, end | static run reaction rb5 -> 549-550-196; never seen on Sub-Zero
+ 197 | PROVEN      | sweep get-up | live 195-197
+ 200 | PROVEN      | close F+LK special victim, end | netsider confirmed. Live 165-200
+ 208 | GUESS       | armed weapon throw (shared weapon clip) | Fujin (armed HK) and Shinnok (armed B,F+LP) play 208 live -> victim 131; Sub-Zero armed attacks not tried. In the old mixed P1/P2 capture list only
+ 209 | GUESS       | RUN-button action clip | static generic RUN action misc[03] -> 209 only
+ 217 | NETSIDER-ID | weapon stance into shooting (like his ice) | netsider: "weapon stance into shooting (like his ice)" (DONE). Shared weapon clip (Fujin: armed D -> 217-219). Not seen live on Sub-Zero (armed moves not tried)
+ 219 | LIKELY      | weapon-held crouch / shoot pose after 217 (shared) | PROVEN on Sonya and Fujin (217-219); not seen on Sub-Zero
+ 244 | NETSIDER-ID | weapon draw | netsider: "weapon draw" (DONE). Live: D,F+HK -> 244-286; static misc[29] weapon draw -> 244
+ 254 | GUESS       | low-hit reaction follow-on after 134 | static LK / crouch LP reaction 134-254; live showed 134 only
+ 256 | LIKELY      | crouch block held / release (shared) | static crouch block aux[0f]; PROVEN on Sonya / Fujin / Shinnok; Sub-Zero crouch block not logged. In the old mixed P1/P2 capture list only
+ 257 | LIKELY      | crouch block start (shared) | static aux[0f] -> 257; PROVEN on the other fighters; not logged on Sub-Zero
+ 258 | PROVEN      | crouch held | live D
+ 259 | PROVEN      | crouch going down (reversed = standing up) | live D
+ 260 | PROVEN      | crouch low punch (D+LP) | live 259-258-260 (no hit at that gap); static victim r1d -> 134-254
+ 261 | GUESS       | close-strike clip | static close-strike list 66 261 532 533; owner not resolved
+ 262 | NOT HIS     | close HP for ids 0,3,6,9,12 (Shinnok's close HP) | PROVEN not his: table 0x4E9BF8 id mod 3; his close HP = 263
+ 263 | PROVEN      | close high punch (close HP / F+HP) | live P1 263, P2 311 (gap 40000-45000); table 0x4E9BF8 id mod 3 = 1 -> 263
+ 264 | NOT HIS     | close HP for ids 2,5,8,11,14 | PROVEN not his (table 0x4E9BF8). Live VS: opponent 264 -> Sub-Zero 311
+ 265 | NOT HIS     | another fighter's stance clip | LIKELY not his: VS opponent stood in 265 between walks; his idle is 292. In the old mixed P1/P2 capture list only
+ 266 | GUESS       | walk-related transition | owner not known; his live walks are 267 / 272. In the old mixed P1/P2 capture list only
+ 267 | PROVEN      | walk forward | live F
+ 270 | GUESS       | walk/stance transition | owner not known. In the old mixed P1/P2 capture list only
+ 271 | GUESS       | walk-back transition | owner not known; his live walk back is 272. In the old mixed P1/P2 capture list only
+ 272 | PROVEN      | walk back | live B
+ 275 | NOT HIS     | Sonya's weapon-held walk forward | LIKELY not his: PROVEN Sonya weapon walk; netsider named 279 as Sub-Zero's forward weapon walk. In the old mixed P1/P2 capture list only
+ 276 | NOT HIS     | Sonya's weapon-held walk back | LIKELY not his: as 275 (his = 280)
+ 279 | NETSIDER-ID | forward weapon walk | netsider: "forward weapon walk" (DONE). Shared weapon clip (Fujin plays 279 live when armed); not seen live on Sub-Zero
+ 280 | NETSIDER-ID | backward weapon walk | netsider: "backward weapon walk" (DONE). Shared weapon clip (Fujin plays 280 live when armed); not seen live on Sub-Zero
+ 285 | NOT HIS     | Sonya's weapon-held stance | LIKELY not his: Sonya plays 285 after her draw; Sub-Zero's draw goes 244 -> 286. In the old mixed P1/P2 capture list only
+ 286 | PROVEN      | weapon-held stance (after the draw) | live 244-286 (role LIKELY; Shinnok also plays 286 as armed stance)
+ 292 | PROVEN      | idle / fighting stance | all live logs
+ 293 | PROVEN      | uppercut (D+HP) | live 259-258-293, P2 128-328, dx +96334, rise 157375; also stage fatality arena 0 misc[42] (static, LIKELY)
+ 294 | PROVEN      | low punch (LP, also B+LP / F+LP from far) | live 294; B+LP at gap 45000 -> P2 311
+ 295 | LIKELY      | low-punch follow-on clip | static LP 294-295; never seen live
+ 296 | PROVEN      | high punch (HP; F+HP / B+HP from far) | live 296; B+HP close -> P2 324; vs a jumping opponent -> 183-185
+ 297 | LIKELY      | high-punch follow-on clip | static HP 297-296; never seen live
+ 301 | PROVEN      | jump forward/back flip | live U+F / U+B; also in D,B+LP (Ice Clone try: 259-258-259-292-301-304)
+ 304 | PROVEN      | jump straight up / landing | live U; straight-jump P1 min height -189779 (rise 112119)
+ 305 | PROVEN      | turn-around / re-face | live practice reset and VS when the opponent jumps over him
+ 307 | PROVEN      | run loop | live 267-317-307 (run dx 309974)
+ 308 | NOT HIS     | Fujin's low kick | PROVEN not his: LK switch 0x4E8D78, Fujin plays 308 live. Live VS: opponent 308 -> Sub-Zero 134
+ 311 | PROVEN      | high hit reaction (shared) | live after 263 and 294; VS after opponent 264
+ 312 | GUESS       | Ice Clone (D,B+LP) clip | static special[01] -> 312 301; live D,B+LP gave 301-304 or 16, never 312
+ 313 | PROVEN      | roundhouse (B+HK) | live 272-313, P2 142-141-143-328, dx +150696, rise 59294
+ 314 | PROVEN      | close high kick (close HK / F+HK) | live P1 314, P2 134, dx +27405..+34718
+ 315 | PROVEN      | crouch low kick (D+LK) | live 259-258-315 (no hit at that gap)
+ 316 | GUESS       | sweep-fall variant, start | static sweep reaction r13 -> 316-320-192-194; never seen live
+ 317 | PROVEN      | run start | live 317-307
+ 320 | GUESS       | sweep-fall variant, middle | as 316
+ 322 | NOT HIS     | Sonya's weapon stance -> normal stance | LIKELY not his (Sonya NETSIDER-ID weapon clip). In the old mixed P1/P2 capture list only
+ 323 | LIKELY      | standing block held (shared) | PROVEN on Sonya / Fujin / Shinnok; Sub-Zero block not logged. In the old mixed P1/P2 capture list only
+ 324 | PROVEN      | close-HP / face hit reaction | live P2 324 after his B+HP close; static LP/HP reaction r20 -> 324
+ 327 | PROVEN      | jump-up kick (U then HK or LK) | live 304-327; vs a jumping opponent -> 183-185 (dx +233631); static victim r15 -> 311
+ 328 | PROVEN      | flip get-up recovery (shared) | live 153-173-328, 142-141-143-328, 128-328; VS 154-172-328, 158-171-328
+ 532 | GUESS       | close-strike clip | static only; owner not resolved
+ 533 | GUESS       | close-strike clip | static only; owner not resolved
+ 547 | GUESS       | run-related clip | static Run handler lists 547 548 596 307 317; normal run gave 317-307
+ 548 | GUESS       | run-related clip | as 547
+ 549 | GUESS       | run-collision victim, start | static run reaction rb5 -> 549-550-196; never seen live
+ 550 | GUESS       | run-collision victim, middle | as 549
+ 596 | GUESS       | run-related clip | as 547
+ 605 | NOT HIS     | throw of f13, second attacker clip | PROVEN not his (throw switch: 83/145 then 605/607)
+ 607 | LIKELY      | thrown by the f13 fighter (part 2) | static throw switch; not seen on Sub-Zero
+ 609 | NOT HIS     | throw of f15 - attacker | PROVEN not his (throw switch 609/610)
+ 610 | LIKELY      | thrown by the f15 fighter | static throw switch; not seen on Sub-Zero
+
+SUMMARY (137 clips listed)
+ PROVEN        63
+ NETSIDER-ID    4
+ LIKELY        20
+ GUESS         22
+ NOT HIS       28
+ UNKNOWN        0
+
+MOVES WITH NO CLIP OF THEIR OWN
+ Air throw: none. Air LP vs a jumping opponent is a hit (96 -> 186-188), air BL does nothing (PROVEN).
+ Ice Clone (D,B+LP): static special[01] lists 312 301; live gave 301-304 (or 16), no 312 seen (GUESS which clip).
+ Fatalities: fatality A (misc40) and B (misc43), stage fatality arena 8 (misc41): input words read statically
+   (LIKELY), clips filled at run time; not attempted live. Stage fatality arena 0 (misc42, D,D,D+LK) reuses the
+   uppercut 293 (static, LIKELY).
+
+STILL OPEN
+ - Armed moves after the draw 244-286 not tried live: confirm 279 / 280 / 217 (netsider IDs) and 208 on Sub-Zero.
+ - 312 (Ice Clone) and 17 / 19 (Ice Blast list) never seen; Ice Blast and Slide never hit, so 179 is unconfirmed.
+ - 295, 297, 261, 532, 533, 209, 547, 548, 596: static-only clips in his handlers; never seen live.
+ - Static-only victim clips on Sub-Zero: 254, 182, 316-320, 549-550-196, 174-176, and the other fighters' throw
+   victims 145 / 151 / 152 / 156 / 607 / 610; 162 (Tanya's 42).
+ - Old capture list only: 266, 270, 271 (walk transitions, owner unknown), 132, 191.
+ - 13, 137, 256, 257, 323: shared clips not logged on Sub-Zero (he lost no round; block not tested).
+ - Fatalities and stage fatalities (see above).
+
+OTHER FIGHTERS' ENTRIES IN THE SAME PER-FIGHTER TABLES (NOT HIS, PROVEN from the switch tables)
+ (Throw pairs are attacker/victim; Sub-Zero plays the victim clip when one of those fighters throws him.)
+ throw 0x4E1784:          76/153 (ids 4,10; 4 = his), 75/152 (0,6,14), 80/154 (1,7,12), 79/151 (3,9), 78/156 (2, Sonya), 81/158 (5,11), 83/145 then 605/607 (13), 609/610 + 604/606 (15)
+ round-start intro 0x4E8EE0: 47 = his (f4/f1); 44, 45, 46, 48, 49, 50, 51 others (45/46/49/50 seen live on his VS opponents)
+ high kick 0x4E8C88: 65, 66    low kick 0x4E8D78: 67, 308    jump-up kick 0x4E91E0: 61 (Fujin)
+ angled jump HK: 55 (Shinnok), 57    angled jump LK 0x4E93C4: 58, 60    sweep 0x4E9780: 62 (odd ids)
+ close HP 0x4E9BF8 (id mod 3): 262, 264    close F+LK 0x4E0FA0: 42/162 (idx 9), 43/163 (Sonya)
+ victory 0x4E9A28: 111 (Shinnok), 113, 114 (Sonya), 115-118 = his, 119, 120 (Fujin), 121-125, 594
+
+CORRECTIONS MADE WHILE BUILDING THIS LIST (2026-10-23 ~2:20 AM ET; also fixed in the notes)
+ - Air LP vs a jumping opponent hit 2 of 3 timings (250 / 350 ms), not 3 of 3; at 450 ms 96 played but missed.
+ - The VS 186-188 was not an air hit on Sub-Zero: he was standing and the opponent's jump kick 58 hit him (2x).

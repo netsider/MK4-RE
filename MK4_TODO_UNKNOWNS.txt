@@ -127,6 +127,13 @@ C5. Who owns which clip (fighter-specific vs shared) beyond Sonya
     Status: partial-LIKELY (static tables)
     Get it: live per-fighter runs as done for Sonya.
 
+C6. Extra skeleton nodes
+    Done (2026-10-23): node counts per fighter (guide section 7): Sonya and Fujin 17 (extra head node 4), Sub-Zero 19
+    (zero-offset extras 10, 14, 18). None is animated.
+    Missing: what Sonya's head node 4 at (0, -4128, 6365) is (GUESS: ponytail; the hair is modelled into the head mesh,
+    LIKELY) and why Fujin / Sub-Zero carry zero-offset placeholders.
+    Status: PROVEN (counts, offsets) / GUESS (purpose)
+    Get it: look for code that reads node 4 / kind 0x11 records at run time.
 ==========================================================================================
 D. MOVE SCRIPTS / EXE CODE
 ==========================================================================================
@@ -188,6 +195,7 @@ E. FIGHTERS
 E1. Per-fighter verification
     Missing: live checks of each fighter's move table; only Sonya is done (77 PROVEN clips).
     Also done (2026-10-23): Fujin (id 5) live pass, see E5.
+    Also done (2026-10-23): Shinnok (id 6) live pass, see E6.
     Status: partial-LIKELY (16 other fighters statically decoded; 166 GUESS rows in the per-fighter table)
     Get it: repeat the Sonya live procedure per fighter (logger + scripted inputs).
 E2. Sub-Zero: 19 clips he plays but nobody has identified yet
@@ -221,6 +229,17 @@ E5. Fujin (fighter id 5): live pass done 2026-10-23 (notes "FUJIN"; FUJIN_CLIPS.
     Status: PROVEN (59 clips) / LIKELY-GUESS rest (see FUJIN_CLIPS.txt)
     Get it: same live procedure; close-range sweep; B,F,D+LK timing sweep; run the other fighters' throws on him; fatality runs.
 
+E6. Shinnok (fighter id 6): live pass done 2026-10-23 (notes "SHINNOK"; SHINNOK_CLIPS.txt, 61 PROVEN)
+    Open: armed clips 286 / 277 / 278 / 208 named from input and X movement only (no visual check); other armed inputs
+          (armed LP / HP / HK / LK, armed D, armed block) not tried - more weapon clips likely exist.
+    Open: static-only clips in his handlers: 295, 297, 261, 532, 533, 209, 547, 548, 596.
+    Open: victim clips not yet seen on him: 141-142-143 (his roundhouse 313 never hit), 324, 254, 182, 316-320-192-194,
+          172, 549-550-196, and the other fighters' throw victims 145 / 151 / 153 / 154 / 607 / 610.
+    Open: 132, 180, 199 seen only as reactions to opponent clips 21, 1 and 14; which moves those are.
+    Open: morphs - Scorpion and Kai inputs did not work, 10 others not tried; no morph clip exists (moveset swap only).
+    Open: fatalities and stage fatalities not attempted.
+    Status: PROVEN (61 clips) / LIKELY-GUESS rest (see SHINNOK_CLIPS.txt)
+    Get it: same live procedure; armed-move sweep; other fighters' throws on him; fatality runs.
 ==========================================================================================
 F. VICTIM REACTIONS
 ==========================================================================================
@@ -258,6 +277,13 @@ G4. Fatality effect GEOs (ra/sb/sc/fj_fat_g, no 3D blocks)
     Status: GUESS (2D effects)
     Get it: see A3.
 
+G5. Leg Twist gore: what is still unknown (split, blood and replay are decoded: guide section 10A)
+    Missing: the code that sets the per-part hide flag (0x2000, LIKELY) and spawns the drops / spurts / pools; the
+    spawn RNG for drop velocities; why gravity scales 1x / 2x / 3x per replay pass; the spurt w2 data; where SHARED_G
+    splat parts 5-12 are used; the replay camera per pass.
+    Status: UNKNOWN (mechanics PROVEN from one capture)
+    Get it: find the writer of object flag 0x2000 and the allocator calls with descriptor 0x5091E8; capture other gore
+    fatalities.
 ==========================================================================================
 H. SONYA LEFTOVERS
 ==========================================================================================
@@ -309,6 +335,23 @@ J2. Object meshes and throw paths
     Status: UNKNOWN
     Get it: locate the object GEO parts; log object positions live.
 
+J3. Code-driven stage motion
+    Done (2026-10-23): arena descriptors, spawn records and flipbook lists decoded (guide section 3A).
+    Missing: Wind World (no flipbooks; callback starts processes 0x42A050 / 0x42A2B0 / 0x42A960, LIKELY the flying
+    debris), the Prison fan (callback 0x42ACD0, GUESS), Shaolin flicker (LIKELY), the Lair rock / heads pickups (J1),
+    Skull animation groups 2-4 (no spawned object), descriptor word w4, w7-w15, the real flipbook tick length.
+    Status: UNKNOWN (data layout PROVEN)
+    Get it: follow the per-arena callbacks; log object positions on those stages.
+J4. 2D sprite records inside arena GEOs (Wind World 42, Ice Pit 1)
+    Missing: how they are placed in 3D (Wind World records give x, y but no z).
+    Status: UNKNOWN
+    Get it: find the code that draws sprite records for arena objects (VA 0x4BB180 callers).
+J5. Non-arena 3D GEOs: shinx_ge, cliff_ge, cage_end (and ladder_g)
+    Done: ped_geo = champion pedestal (LIKELY); skbgnd_g = skull "PRESS KEY TO CONTINUE" screen (PROVEN by content).
+    Missing: what shinx_ge (spawned by VA 0x418498) is; cliff_ge / cage_end lists are not referenced statically; ladder_g
+    = ladder screen is a GUESS.
+    Status: UNKNOWN / GUESS
+    Get it: watch the ladder, ending and continue screens and log which handles are spawned.
 ==========================================================================================
 K. TOOLS NOT YET IN tools\
 ==========================================================================================
@@ -348,3 +391,7 @@ K6. Public assembler for fighter parts (GEO parts placed on the skeleton)
 
 
 [TODO 2026-10-23] Decode the PC CD's .ECM movie files (DATA\*.ECM, 35 files): B_<fighter> = bios (~3 MB), E_<fighter> = endings (3-18 MB), M_EURO / M_INTRO / M_KOMERC / M_MIDWAY = main movies (LIKELY, from names). Header 'ECM' + 0x02, then uint32 count (B_SCORPN: 225, PROVEN), then a uint32 offset table (LIKELY one per frame). Codec, resolution, fps and audio unknown. Output plan: MP4s, personal use only, no game data in this repo.
+    Update (2026-10-23 ~2:45 AM ET, header check only, nothing decoded): all 35 files use the A1 layout - "ECM" 0x02,
+    u32 frames, 900 x u32 chunk sizes, 0xE18 + sum = file size, ceil(frames / 15) non-zero chunks (PROVEN). So the
+    "offset table" above is the chunk-size table. 16 B_ bios, 225 frames each (15 s at 15 fps); 15 E_ endings,
+    223-1144 frames. The A1 decoder (tools\ecm_tool.py) LIKELY works on them unchanged (not run).

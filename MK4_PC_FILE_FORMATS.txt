@@ -196,6 +196,66 @@ Tools: tools\export_pc_geo.py (GEO -> GLB + texture + preview; fighters use the 
   tools\extract_textures.py (all texture pages -> PNG).
 
 ==========================================================================================
+3A. ARENAS - DESCRIPTORS, SPAWN RECORDS, PROPS AND FLIPBOOKS
+==========================================================================================
+Static reading of MK4.EXE (2026-10-23). The arena GEOs (section 3) hold the parts; MK4.EXE says where each part goes,
+which parts animate, and which parts are moved by code.
+Arena number = [0x53849C] (LIKELY, section 9); the tables below are indexed by it.
+Arena -> GEO (PROVEN): the start-up fixup table at VA 0x4D9460 fills one 64-byte descriptor per arena at
+  VA 0x4E0948 + 64 * arena; words 0/1 = model handle. Names match the Kombat-Zone kode strings in the same order and the
+  Practice "Background" list in reverse:
+    0 Goro's Lair     lair_geo         6 Shaolin Temple  shaolin_
+    1 The Well        well_geo         7 Living Forest   forest_g
+    2 Elder Gods      elder_ge         8 The Prison      prison_g
+    3 The Tomb        tomb_geo         9 Ice Pit         ice_pit_
+    4 Wind World      wind_geo        10 "Skull"         skull_ge  (Practice-menu name; no Kombat-Zone kode; real name UNKNOWN)
+    5 Reptile's Lair  snake_ge
+Descriptor (64 bytes; pointers are stored as VA >> 2 and fixed up at start-up):
+  w0, w1  model handle (both loaded, VA 0x429AB0)                                                    PROVEN
+  w2      per-arena callback, called after the spawn (VA 0x429DE3)                                   PROVEN (call)
+          tomb / skull: 0x429F10 = ret. wind: 0x429F20 starts processes 0x42A050 / 0x42A2B0 / 0x42A960
+          (LIKELY the flying debris). shaolin: 0x42AC10 cycles the 16.16 list at VA 0x4E0E20 (0.90..0.99)
+          (LIKELY light flicker). forest 0x42AB60; prison 0x42ACD0 (120-tick timer adding 0x41, GUESS light / fan);
+          ice pit 0x42ACC0.
+  w3      spawn list -> VA 0x407330 / 0x406DD0                                                        PROVEN
+  w4      list -> VA 0x407620 (mostly zeros)                                                          UNKNOWN
+  w5      animation list -> VA 0x4090E0                                                               PROVEN (format LIKELY)
+  w7..w14 copied to globals / camera (LIKELY lighting / colour); w15 a function                       LIKELY / UNKNOWN
+Spawn record, 28 bytes = 7 x u32 (PROVEN, VA 0x406DD0). It is the same record and the same builder routine as the skeleton
+  bone records of section 7:
+  +0x00 u32 flags. Bits 20-27 = animation group id (-> object +0x1C). Low 20 bits | 0x8000000 -> object +0x20.
+        bit 0x08 clear = children follow (recurse); bit 0x10 = last sibling;
+        bit 0x04 = no mesh / group node (LIKELY: every such record is a parent using part 0)
+  +0x04 model handle (12 bytes {FILESYS entry ptr, loaded ptr, 0})
+  +0x08 pointer to an AABB of 6 x s32 16.16 {x0, y0 (up positive), z0, x1, y1, z1}, or 0. AABB / 256 = the part's mesh
+        extents exactly (e.g. lair part 0: x 4..4782, height 1258).                                  PROVEN
+  +0x0C / +0x10 / +0x14 s32 x, y, z 16.16 -> object +0x30 / +0x34 / +0x38 (VA 0x406E31..0x406E7B)       PROVEN
+        Applied as a translation of (x, y, z) / 256 mesh units: LIKELY (the Prison wall fan only lands on its wall this
+        way). Non-zero in only 4 arenas. Records hold no rotation.
+  +0x18 u32 part index = GEO block number (the draw reads record +0x18, VA 0x4BA000)                  PROVEN
+Animation list (w5): zero-terminated u32 list of (group << 24 | script pointer); VA 0x4ABF50 splits the byte and
+  VA 0x408B90 finds the object whose group equals it. PROVEN.
+  Script: zero-terminated u32 list of (ticks << 24 | pointer to a 28-byte record whose +0x18 is the part to show) =
+  a flipbook. LIKELY (consumer VA 0x409260 not followed to the end); 0 = loop (GUESS).
+  Flipbooks found (groups: frames): Lair 1 (6 frames, 30-tick loop; flames LIKELY); Well 3 (10/10/10); Elder Gods one
+  9-frame group + four 12-frame ping-pong groups with 60/120-tick holds; Tomb 4 x 6; Reptile's Lair 11 and 8;
+  Shaolin 30; Living Forest 6 tree faces (ping-pong, 60-120-tick holds); Skull 4 groups sharing frames 2-7 plus a
+  10-frame group (groups 2-4 have no spawned object - maybe spawned by code, UNKNOWN). Wind World, Prison and Ice Pit
+  have no flipbooks: their motion is code-driven (UNKNOWN).
+Texture key: arena pages use the same texel-0x0000 transparency key as everything else (section 3).  PROVEN
+2D sprite records inside arena GEOs (wind 42, ice pit 1): how they are placed in 3D is UNKNOWN (wind records give x, y
+  but no z).
+Other 3D GEOs that are not arenas:
+  ped_geo   handle used at VA 0x4A7300 next to "CONGRATULATIONS / IS TODAYS CHAMPION" -> champion pedestal  LIKELY
+  ladder_g  loaded by VA 0x46420B; the ladder / tower screen                                           GUESS
+  shinx_ge  spawned by VA 0x418498 (list 0x50B8F4); use                                               UNKNOWN
+  cliff_ge, cage_end: record lists at 0x50228C / 0x502CB8 exist but nothing references them statically  UNKNOWN
+  skbgnd_g  2D sprite GEO: the skull "PRESS KEY TO CONTINUE" screen (not a sky)                       PROVEN (content)
+  opt GEO   2D sprite GEO: options / practice menu art                                                 LIKELY
+  No separate sky GEO was found: backdrops are arena parts.                                            LIKELY
+Still UNKNOWN: the real flipbook tick length (1 tick = 1/60 s assumed), w4, the code-driven motion (Wind World debris,
+  Prison fan, Goro's Lair rock / heads pickups).
+==========================================================================================
 4. SOUNDS (ESF)
 ==========================================================================================
 674 ESF files in FILESYS.DAT (PROVEN). Decoder found in MK4.EXE code at file offset 0xAFA8D.  PROVEN
@@ -236,6 +296,9 @@ Player code: VA 0x4AFC60 (player), VA 0x4AFFC0 (file reader thread), VA 0x4BDD50
 Files (version studied): M_MIDWAY 152 frames (Midway logo), M_EURO 203 (Eurocom logo), M_KOMERC 331 (trailer: Quan
   Chi, Shinnok, MK4 logo), M_INTRO 1000 (intro, Raiden). 15 frames per second, 320x240, mono 22050 Hz sound.  PROVEN
   MK4.EXE also names e_*.ecm / b_*.ecm (endings / bios) that are not in the studied copy.
+  Update (2026-10-23): the game CD's DATA folder holds 35 .ECM files: 16 B_ bios (225 frames each = 15 s), 15 E_
+  endings (223-1144 frames) and the 4 M_ movies. All 35 have the header below (0xE18 + sum = file size).  PROVEN
+  (header check only; the bios / endings were not decoded yet)
 File header, 0xE18 bytes (PROVEN, all four files incl. M_INTRO):
   +0x0 4 bytes "ECM" 0x02
   +0x4 u32 frames
@@ -330,6 +393,8 @@ Game-driven motion (LIKELY, strong): for travelling and airborne moves the clip 
   frames forward, holds one, may play them in reverse, and moves the body itself (section 10). So a clip exported
   "as is" can look short or odd. Clips are short pieces that game code chains together. The chaining, the
   attacker/victim pairing and the launch velocities are mostly data: see section 8A.
+Throw-victim clips (144-165, 535, 606, 607): frame 0 is a stored thrower -> victim placement, not a pose; the game
+  plays them from frame 1 (section 10B). PROVEN for Sonya's 156, LIKELY for the rest.
 
 ==========================================================================================
 7. SKELETONS - LINKING ANIMATIONS TO MESHES
@@ -367,6 +432,12 @@ Special skeletons found (PROVEN unless noted):
 Sonya has one extra head bone (PROVEN from arcade RAM; GUESS: ponytail). Joint offset (0, -4128, 6365) raw =
   (0, -0.063, 0.097) game units = (0, -16.1, 24.9) mesh units. The same kind-0x11 record is in MK4.EXE, e.g. at
   file 0x114844 (PROVEN). The old value (0, -17, 26.2) used the wrong x270 factor.
+Node counts per fighter (PROVEN, arcade RAM skeleton dumps; Sonya's extra record is also in MK4.EXE, above):
+  Sonya 17 nodes: the extra is node 4, a child of the head, never animated, offset (0, -4128, 6365) raw (above).
+  Fujin 17 nodes: the extra is node 4, a child of the head, never animated, offset (0, 0, 0) - a placeholder.
+  Sub-Zero 19 nodes: non-animated extras with offset (0, 0, 0): node 10 (pelvis level) and nodes 14 and 18 (one per leg
+    chain). What they are for: UNKNOWN.
+  Hair is modelled into the head mesh, so the extra head nodes move nothing visible.  LIKELY (by look)
 
 ==========================================================================================
 8. MK4.EXE - KEY CODE AND TABLES
@@ -814,6 +885,62 @@ Playback pattern (LIKELY, strong): e.g. slide clip 95 = frames 1->9, hold frame 
   moves the body. Hit range: a gap of ~30,000-45,000 units between fighters (LIKELY).
 
 ==========================================================================================
+10A. GORE - SONYA'S LEG TWIST SPLIT AND BLOOD
+==========================================================================================
+Source: a live capture of the Leg Twist (victim clips 558-563) with the whole object pool dumped every tick, plus the
+SHARED_G / SHARE2_G GEOs. Raw units. Game Y is negative-up (Y = 0 is the floor).
+Object pool (PROVEN): VA 0x5224F0, 196 objects x 0x84 bytes (P1 and P2 are the first two). Dwords: w9 clip record ptr
+  (clip = ((v << 2) - 0x4FDD6C) / 12), w10 frame, w14 model descriptor >> 2, w21-w23 X / Y / Z, w24 pitch, w25 yaw
+  (16.16 radians), w27-w29 velocity per tick.
+The split (PROVEN): at victim clip 562 frame 1 a SECOND object starts clip 563 at the victim's exact X / Y / Z and yaw,
+  with the same fighter model. From then the victim object draws only parts 2-9 (chest, arms, head) and the new object
+  draws parts 1 and 10-15 (pelvis and legs). Per-part hide flag 0x2000: LIKELY.
+  Neither half moves as an object: all motion is in clips 562 (upper body, holds at frame 40) and 563 (legs, runs to
+  frame 50), one frame per tick, both skip frame 25. The legs object turns by -19660 yaw at frame 26 (last pass only).
+  Yaw convention: world = O + Ry(w25) * local, Ry = [[c,0,s],[0,1,0],[-s,0,c]] (LIKELY: drops and pools only line up
+  with the bones this way).
+Instant replay (PROVEN): the split plays 3 times: frames 1-24, frames 1-24, then in full. Passes 1-2 reset the victim to
+  561 frame 78 and the attacker to 560 frame 0. All drops and splats are freed at each reset. The camera changes per
+  pass (not decoded).
+Blood models (PROVEN, by model descriptor in w14):
+  SHARED_G part 0  flying drop (16 tris; parts 1-3 have identical geometry)        descriptor VA 0x5091E8
+  SHARED_G part 4  floor splat (every landing drop in the capture)                 descriptor VA 0x509258
+  SHARED_G parts 0xE / 0xF / 0x10  spurts at the cut                               descriptors VA 0x509370 / 0x50938C / 0x5093A8
+  SHARE2_G 2D sprite record 0x57  blood pool (page 2, 188 x 148, offset -88,-64, texels 113,93 size 23 x 18)
+  SHARED_G splat parts 5-12 were not used in this capture (UNKNOWN where they are used).
+Drop physics (PROVEN: reproduces all 106 splats of the capture exactly), per tick:
+  if Y > 0: the drop becomes a splat (part 4) at (X, -1966, Z); else vy += g; position += velocity.
+  g = 1310 / 2620 / 3930 per tick^2 in replay passes 1 / 2 / 3 (why it scales: GUESS, a replay-pass multiplier).
+  Two streams, 1 drop per tick for ~10 ticks then 1 per 2 ticks; 40, 40, 50 drops per pass.
+  Drop orientation: w24 = atan2(horizontal speed, -vy), w25 = heading of the velocity (LIKELY).
+  Splats live 18 ticks (a few 17), then are freed. Spurts: 21 in total, ~45 ms apart at the cut, live 36-37 ticks,
+  no scale or rotation animation. Pools: 6, laid flat (w24 = pi/2) at Y = -1310 with random yaw, all in the last pass,
+  kept to the end.
+UNKNOWN: the code that sets the hide flag and spawns the particles; the spawn RNG (drop start velocities); the spurt
+  w2 data; the replay camera.
+
+==========================================================================================
+10B. ROUND END AND THROW PLACEMENT (live)
+==========================================================================================
+Round end (PROVEN from VS logs with Fujin and Shinnok as P1):
+  - Non-deciding round lost by a throw: the loser stays in the thrown clip (e.g. 173 / 171).
+  - Lost by a standing hit: 311 / 324 -> 137 (collapse). Lost while airborne: 183 -> 131.
+  - Deciding round: the loser goes dizzy in clip 13 ("FINISH HIM"): 311 -> 13, or thrown -> 328 -> 13.
+  - If the time runs out at FINISH HIM: 13 -> 137 (after a hit) or 13 -> 206 (to the knees, after a throw). Which rule
+    picks 137 or 206: GUESS (only these two cases seen).
+  - The winner plays the per-fighter victory clip (switch 0x4E9A28), e.g. Sonya 114, Fujin 120, Shinnok 111,
+    Sub-Zero 115-118.
+Jump-ins on a STANDING victim (PROVEN): jump LK / jump LP -> 186-188 (knocked off the feet, then lands), so 186-188 is
+  not only an airborne reaction; jump-forward HK -> 131-185 knockdown; jump HP / jump-up kick -> 311. An airborne victim
+  hit by a jump HP -> 183-185.
+Throw-victim clips, frame 0 (PROVEN for Sonya's throw 78 -> 156-176-191; same record shape LIKELY for clips 144-165,
+  535, 606, 607 in every kit): frame 0 is not a pose. Its root position holds the thrower -> victim placement (Sonya 156:
+  77009 along the thrower's facing, dy 3514, dz 3072). The game plays these clips from frame 1. During the throw
+  the victim takes the thrower's facing bit and exact yaw, and its X relative to the thrower follows a fixed per-frame
+  curve (identical at different start gaps; it passes over the thrower and lands behind, ~-301600 total). It is not
+  attached to a thrower bone (LIKELY). A player that starts these clips at frame 0, or keeps the victim's own facing,
+  draws the victim ~77000-105000 units on the wrong side ("flips where it stands").
+==========================================================================================
 11. GAPS - NOT YET UNDERSTOOD
 ==========================================================================================
 Full list with status and suggested next steps: MK4_TODO_UNKNOWNS.txt (next to this file). Short version:
@@ -833,6 +960,10 @@ Full list with status and suggested next steps: MK4_TODO_UNKNOWNS.txt (next to t
   naming is now PROVEN.
 - Unmatched odd clips 386 (6 bones), 422/423, 426/427, 446/447 (3 bones): no skeleton found (GUESS: severed limbs).
 - Arena music is CD audio (section 4, PROVEN); which arena uses which track is LIKELY only (table VA 0x4DDD18).
+- Arenas: code-driven stage motion (Wind World, Prison, pickups), arena 2D sprite placement, descriptor words w4 and
+  w7-w15 (section 3A).
+- Gore: the code that hides body parts and spawns the blood, the spawn RNG, the per-pass gravity scale (section 10A).
+- Extra skeleton nodes (Sonya / Fujin head node 4, Sub-Zero 10 / 14 / 18): purpose not known (section 7).
 
 ==========================================================================================
 12. QUICK REFERENCE
@@ -844,6 +975,7 @@ FILE OFFSETS
   GEO +0x00 / +0x04 / +0x0C   "0.1v" magic / tex_off / block table (16-byte records)           PROVEN
   ESF +0x04                   u32 len(24) | flags(8): 0x20 ADPCM, 0x40 22 kHz, 0x80 loop        PROVEN
   ECM +0x00                   "ECM" 0x02, u32 frames, 900 x u32 chunk sizes; data at 0xE18     PROVEN
+  arena spawn record          28 bytes = 7 x u32 (same as a skeleton bone record; VA 0x406DD0) PROVEN
   MK4.EXE file 0xFC76C        clip table (VA 0x4FDD6C), 612 x 12                               PROVEN
   MK4.EXE file 0xAFA8D        ESF decoder                                                      PROVEN
   MK4.EXE file ~0xF3918       model-name table                                                 PROVEN
@@ -864,6 +996,7 @@ CODE VAs (VA = file + 0x400C00)
   0x48D420/0x48D440/0x48D460/0x48D480/0x48D4A0 hit checks | 0x48D700 strike -> reaction         PROVEN
 DATA VAs (VA = file + 0x401600)
   0x4FDD6C clip table {+0 data ptr (filled at load), +4 frames, +8 nodes<<16 | 0x8000 compressed} PROVEN
+  0x4E0948 + 64*n arena descriptors (filled by fixup table 0x4D9460; n = arena number)        PROVEN
   0x5220D8 AP0 table copy | 0x5222D8 AP1 buffer pointer                                        PROVEN
   0x4E6970 script opcode table (opcodes 0x00-0x7F)                                             PROVEN
   0x4D6E80 / 0x4DC3F8 fixup pair lists (*dest |= value >> 2)                                   PROVEN
@@ -883,6 +1016,7 @@ RUNTIME
   0x521A60 / 0x521A64 / 0x521AA4  global decoder frame / clip ptr / frame count                PROVEN
   0x522514 / 0x522518 / 0x52251C  P1 clip record>>2 / frame / frame ptr>>2                     PROVEN
   0x522598 / 0x52259C / 0x5225A0  P2 same (P1 + 0x84)                                          PROVEN
+  object pool 0x5224F0, 196 x 0x84 bytes: w9 clip ptr, w10 frame, w14 model, w21-23 X/Y/Z, w25 yaw  PROVEN
   fighter object P1 0x5224F0 ([0x5360D8]), P2 0x522574 ([0x5360DC]): +0x48 standing height | +0x4C gravity |
     +0x50 camera depth | +0x54 X | +0x58 height (negative = up) | +0x5C Z | +0x6C/+0x70/+0x74 vx/vy/vz       PROVEN
   P1 X 0x522544, height 0x522548, Z 0x52254C | P2 X 0x5225C8, height 0x5225CC, Z 0x5225D0, vy 0x5225E4      PROVEN

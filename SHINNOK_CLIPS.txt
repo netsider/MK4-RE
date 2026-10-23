@@ -1,0 +1,173 @@
+SHINNOK (fighter id 6) - CLIP LIST AND STATUS
+Mortal Kombat 4 PC (retail MK4.EXE). netsider's MK4-RE project. Built 2026-10-23 ET from the live memory logs and
+the MK4.EXE static reading (no visual IDs by netsider yet). Full detail: MK4_RE_NOTES_v3.txt (this repo), SHINNOK section.
+
+WHAT IS LISTED
+Every clip number Shinnok's fighter object plays (as attacker OR as victim), every clip his own move scripts and
+per-fighter tables point at, and clips that turned up in his clip sets but belong to someone else.
+Clip number = index into the game's 612-entry clip table (record address 0x4FDD6C + 12*clip).
+Some shared move scripts pick the clip per fighter with a 16-entry FIGHTER_SWITCH (script opcode 0x3C, entries
+f0..f15 = fighter id). Shinnok takes entry f6 (PROVEN). Only the f6 entry is his; the other 15 entries are other
+fighters' clips (see "OTHER FIGHTERS' ENTRIES" at the end). Victim / reaction clips are shared by all fighters.
+Live sources: practice mode P1 Shinnok vs P2 Shinnok (inactive dummy) and VS mode P1 Shinnok vs CPU Kai, then Scorpion (memory logs).
+Morphs: Shinnok morphing into another fighter keeps him on idle 283 but swaps his moveset; clips played while morphed
+are the other fighter's (listed as NOT HIS).
+
+STATUS LABELS
+ PROVEN       = seen live in the running game (memory log of the clip slot while pressing the input), or read
+                directly in the game code and matched live.
+ LIKELY       = strong static (code) or indirect evidence, not seen live on Shinnok.
+ GUESS        = weak evidence (static listing only).
+ NOT HIS      = belongs to another fighter (or is another fighter's version of a shared move). The evidence
+                column says how sure (PROVEN or LIKELY).
+ UNKNOWN      = in his set, purpose not known.
+ (No visual IDs by netsider for Shinnok yet.)
+
+UNITS (raw game units only)
+ Positions are 16.16 fixed point: 65536 = 1 game unit = 256 mesh units (PROVEN). No metres are used.
+ dx   = victim X net displacement over the reaction (last - first). + = pushed away from the attacker,
+        - = thrown behind the attacker.
+ rise = victim standing height minus its lowest height (how high it went).
+ Speeds are units/tick (1 tick ~ 1/60 s, PROVEN). Shinnok standing height -73531 (negative = up).
+ Practice start gap 170392. Sequences like 152-173-328 are the clips in the order they play.
+
+clip | status      | name / description                                    | evidence / notes
+-----+-------------+-------------------------------------------------------+------------------
+   9 | LIKELY      | continue screen: well fall, part 2 (shared) | in his throw handler code[9] (static); PROVEN on Sonya's continue screen; never seen on Shinnok
+  13 | PROVEN      | dazed / stun (shared) | live VS: Shinnok plays 199-13 after Scorpion's spear clip 14 (several times). Also the FINISH HIM daze (generic, PROVEN from the VS logs)
+  31 | PROVEN      | close LK special (grab and stomp) | live: P1 31-301, P2 146-166-328, dx -33086, P1 min height -201413; close-LK table 0x4E0FA0 idx 6 -> script 0x4E1070 (clip 31, opp 146, reaction 134, damage 6553 and 9175)
+  44 | PROVEN      | round-start intro pose | live VS 5 of 5 round starts; intro switch 0x4E8EE0 f6 -> 44
+  52 | NOT HIS     | crouch kick variant (Sub-Zero D+HK) | LIKELY not his: in his crouch-kick lists with 54/315; Sub-Zero plays 52 live (PROVEN); Shinnok's D+HK is 54. (earlier live table said LIKELY)
+  54 | PROVEN      | crouch high kick (D+HK) | live 258-54, P2 311, dx +68187; crouch-kick lists 0x4E9008 / 0x4E8FB8
+  55 | PROVEN      | jump forward/back high kick (U+F/B then HK) | live 304-301-55, P2 131-185, dx +203148, rise 89182; angled-jump-HK list 0x4E9540 -> 55
+  56 | NOT HIS     | angled jump HK variant (Sub-Zero) | LIKELY not his: Sub-Zero plays 56 live (PROVEN); his is 55. (earlier live table said LIKELY)
+  57 | NOT HIS     | angled jump HK variant (Sonya / Fujin) | PROVEN not his: Sonya and Fujin play 57 live; his is 55. (earlier live table said LIKELY)
+  58 | PROVEN      | jump forward/back low kick (U+F/B then LK) | live 304-301-58 and 301-58 (jump back), P2 186-188, dx +172996 (+172884); switch 0x4E93C0 f6 -> 58. VS: hit in the air by opponent HK 71 -> Shinnok 189-191
+  59 | NOT HIS     | angled jump LK (ids 1/4/7/10/13) | PROVEN not his: switch 0x4E93C0 (f6 -> 58); Sub-Zero plays 59 live
+  60 | NOT HIS     | angled jump LK (Sonya / Fujin) | PROVEN not his: switch entry f2/f5; Sonya and Fujin play 60 live
+  63 | PROVEN      | leg sweep (B+LK) | live 272-63, P2 195-197, dx +93583; sweep switch 0x4E9780: 63 for even ids
+  65 | NOT HIS     | Sonya's high kick, played by Shinnok while morphed into Sonya | PROVEN live: after F,D,F+HP (Sonya morph) his HK plays 65; HK switch f2 -> 65. Not his own move
+  66 | PROVEN      | high kick (HK) | live 66; HK switch 0x4E8C88 -> 66. Also in the close-strike list (0x4E9BF8 / 0x4E9C38)
+  67 | PROVEN      | low kick (LK) | live 67; LK switch 0x4E8D78 -> 67
+  71 | NOT HIS     | Raiden's high kick, played by Shinnok while morphed into Raiden | PROVEN live: after D,F,F+HP (Raiden morph) his HK plays 71. Not his own move
+  75 | PROVEN      | throw (close LP or F+LP): lifts overhead, slams behind | live: P1 75, P2 152-173-328, dx -287678 (thrown behind), rise 66970; also VS throws; throw switch 0x4E1784 f6 -> 75 / victim 152
+  76 | NOT HIS     | throw (ids 4,10) - attacker | PROVEN not his (throw switch). Victim 153
+  80 | NOT HIS     | throw (ids 1,7,12) - attacker | PROVEN not his (throw switch). Victim 154
+  81 | NOT HIS     | throw (ids 5,11) - attacker | PROVEN not his (throw switch); Fujin's throw (PROVEN live). Victim 158
+  83 | NOT HIS     | throw (id 13) - attacker | PROVEN not his (throw switch). Victim 145
+  96 | PROVEN      | jump punch LP (U or U+F then LP) | live 304-96 and 301-96, standing P2 186-188, dx +172996
+  97 | PROVEN      | jump punch HP (U or U+F then HP) | live 304-97 and 301-97, standing P2 311
+ 111 | PROVEN      | round-win victory pose (arms raised; SHINNOK WINS) | live VS 5 of 5 won rounds; victory switch 0x4E9A28 f6 -> 111
+ 128 | PROVEN      | uppercut launch (shared knockdown) | live 128-328 after 293 (dx +95844, rise 157375); also as P1 victim in VS
+ 131 | PROVEN      | knockdown (jump HK, thrown weapon 208) | live 131-185 after 55; 131 after armed 208 (dx +196590, rise 66945); VS: 180-131-185, and 131 after opponent clip 208
+ 132 | PROVEN      | hit reaction to opponent clip 21, then 328 | live VS 3x: opponent 21 -> Shinnok 132-328. Role from context only (LIKELY a projectile / special hit)
+ 134 | PROVEN      | low/body hit reaction (shared) | live after 314 (dx +27510) and 315 (dx +50763); also as P1 victim in VS
+ 141 | LIKELY      | roundhouse victim, part 2 | static B+HK reaction 142-141-143; his 313 did not hit at gap 80000
+ 142 | LIKELY      | roundhouse victim, part 1 | as 141
+ 143 | LIKELY      | roundhouse victim, part 3 | as 141
+ 145 | LIKELY      | thrown by the id 13 fighter (opponent clip 83) | static throw switch; in his static victim list; not seen on Shinnok
+ 146 | PROVEN      | close-LK special victim, start | live 146-166-328 after 31 (dx -33086); script 0x4E1070 opp 146
+ 151 | LIKELY      | thrown by an id 3/9 fighter (opponent clip 79) | static throw switch f3/f9 -> 79 / 151; not seen on Shinnok
+ 152 | PROVEN      | thrown by Shinnok clip 75 (victim start) | live 152-173-328 in practice and as P1 victim in VS (thrown by a 75 throw)
+ 153 | LIKELY      | thrown by an id 4/10 fighter (opponent clip 76) | static; PROVEN on Sonya (153-173-328); not seen on Shinnok
+ 154 | LIKELY      | thrown by an id 1/7/12 fighter (opponent clip 80) | static; PROVEN on Sonya / Sub-Zero (154-172-328); not seen on Shinnok
+ 158 | PROVEN      | thrown by an id 5/11 fighter (opponent clip 81) | live VS: Shinnok 158-171 (thrown by 81)
+ 166 | PROVEN      | close-LK special victim, middle | live 146-166-328 after 31
+ 171 | PROVEN      | landing after throw 81 | live VS 158-171
+ 172 | LIKELY      | throw landing (after 154) | static throw reaction r6b -> 172; PROVEN on Sonya; not seen on Shinnok
+ 173 | PROVEN      | landing after throw 75 | live 152-173-328 (practice and VS)
+ 180 | PROVEN      | hit reaction to opponent clip 1, then 131-185 | live VS: opponent 1 -> Shinnok 180-131-185. Role from context only
+ 182 | GUESS       | second hit-reaction clip after 311 | static LP/HP reaction r25 -> 311-182; never seen live
+ 185 | PROVEN      | get-up after 131 | live 131-185 (practice and VS)
+ 186 | PROVEN      | jump-attack hit (also on a standing victim) | live 186-188 after 96 and 58 (dx +172996); VS after opponent 60
+ 188 | PROVEN      | recover after 186 | live 186-188
+ 189 | PROVEN      | air hit by HK | live VS: Shinnok in his jump kick 58 hit by opponent HK 71 -> 189-191
+ 191 | PROVEN      | get-up after 189 | live VS 189-191
+ 192 | LIKELY      | knockdown forward (sweep variant) | static sweep reaction r13 -> 316-320-192-194; PROVEN on Sonya; not seen on Shinnok
+ 194 | LIKELY      | get-up from upside-down | as 192
+ 195 | PROVEN      | sweep fall | live 195-197 after 63 (dx +93583); also as P1 victim in VS (after opponent 63)
+ 196 | GUESS       | run-collision victim, end | static run reaction rb5 -> 549-550-196; never seen on Shinnok
+ 197 | PROVEN      | sweep get-up | live 195-197
+ 199 | PROVEN      | hit by Scorpion spear (opponent clip 14), then 13 | live VS several times: opponent 14 -> Shinnok 199-13
+ 208 | PROVEN      | armed weapon throw (B,F+LP while armed) | live: armed B,F+LP -> 208, P2 131, dx +196590, rise 66945; Shinnok back to unarmed idle 283. CORRECTED: the table had this 131 hit under the HP that followed (296 starts ~1.2 s later, no hit)
+ 209 | GUESS       | RUN-button action clip | static only: generic RUN action misc[03] starts 209; RUN tap gave nothing
+ 244 | PROVEN      | weapon draw (B,F+LP; bladed staff) | live 272-267-244-286; static misc[29] 0x4E92A8 -> 244
+ 254 | GUESS       | low-hit reaction follow-on after 134 | static LK / crouch LP reaction 134-254; live showed 134 only
+ 256 | PROVEN      | crouch block held / release | live D+BL 258-257-256
+ 257 | PROVEN      | crouch block start | live D+BL
+ 258 | PROVEN      | crouch held | live D
+ 259 | PROVEN      | crouch going down (reversed = standing up) | live D
+ 260 | PROVEN      | crouch low punch (D+LP) | live 259-258-260
+ 261 | GUESS       | close-strike clip | static only: close-strike list 66 261 532 533; owner per fighter not resolved
+ 262 | PROVEN      | close high punch | live P1 262, P2 311; close-HP table 0x4E9BF8 id mod 3 = 0 -> 262
+ 267 | PROVEN      | walk forward | live F
+ 272 | PROVEN      | walk back | live B
+ 277 | PROVEN      | weapon-held walk forward | live: F while armed (X increases), between 286 stances
+ 278 | PROVEN      | weapon-held walk back | live: B while armed (X decreases), between 286 stances
+ 283 | PROVEN      | idle / fighting stance | all live logs
+ 286 | PROVEN      | weapon-held stance | live after 244 every time and between armed moves (role LIKELY)
+ 293 | PROVEN      | uppercut (D+HP) | live 259-258-293; victim 128-328 dx +95844, rise 157375. Also listed as stage fatality arena 0 misc[42] (D,F,B+HP, LIKELY static) and in the roundhouse list
+ 294 | PROVEN      | low punch (LP) | live 294
+ 295 | LIKELY      | low-punch follow-on clip | static LP 294-295; never seen live
+ 296 | PROVEN      | high punch (HP) | live 296
+ 297 | LIKELY      | high-punch follow-on clip | static HP code[297,296]; never seen live
+ 301 | PROVEN      | jump forward/back flip | live U+F / U+B; also after 31
+ 304 | PROVEN      | jump straight up / landing | live U
+ 305 | PROVEN      | turn-around / re-face | live: practice reset (both fighters) and VS when the opponent jumps over him (301). Role LIKELY
+ 307 | PROVEN      | run loop | live 267-317-307
+ 311 | PROVEN      | high hit reaction (shared) | live after 262, 54, 97, 327; as P1 victim in VS
+ 313 | PROVEN      | roundhouse (B+HK) | live 272-313 (no hit at gap 80000); switch 0x4E97E8 -> 313
+ 314 | PROVEN      | close high kick (knee) | live P1 314, P2 134, dx +27510; also in his crouch-kick list
+ 315 | PROVEN      | crouch low kick (D+LK) | live 258-315, P2 134, dx +50763
+ 316 | GUESS       | sweep-fall variant, start | static sweep reaction r13 -> 316-320-192-194; never seen live
+ 317 | PROVEN      | run start | live 317-307
+ 320 | GUESS       | sweep-fall variant, middle | as 316
+ 323 | PROVEN      | standing block held | live BL
+ 324 | LIKELY      | close-HP / face (high) hit reaction | static LP/HP reaction r20 -> 324; PROVEN on Sonya; not seen on Shinnok
+ 327 | PROVEN      | jump-up kick (U then LK or HK) | live 304-327, standing P2 311; switch 0x4E91E0 -> 327
+ 328 | PROVEN      | flip get-up recovery (shared) | live 152-173-328, 146-166-328, 128-328; VS
+ 532 | GUESS       | close-strike clip | static only (0x4E99B0); owner not resolved
+ 533 | GUESS       | close-strike clip | static only (0x4E9A10); owner not resolved
+ 547 | GUESS       | run-related clip | static Run handler 0x4E2DB8 lists 547 548; normal run gave 317-307. (earlier live table: LIKELY shared variant)
+ 548 | GUESS       | run-related clip | as 547
+ 549 | GUESS       | run-collision victim, start | static run reaction rb5 -> 549-550-196; never seen live
+ 550 | GUESS       | run-collision victim, middle | as 549
+ 596 | GUESS       | run-related clip | static Run handler 0x4E2850.. only
+ 605 | NOT HIS     | throw (id 13) second attacker clip | PROVEN not his (throw switch: 83/145 then 605/607). Victim 607
+ 607 | LIKELY      | thrown by the id 13 fighter (part 2) | static throw switch 605/607; in his static victim list; not seen on Shinnok
+ 609 | NOT HIS     | throw (id 15) - attacker | PROVEN not his (throw switch: 609/610). Victim 610
+ 610 | LIKELY      | thrown by the id 15 fighter | static throw switch 609/610; in his static victim list; not seen on Shinnok
+
+SUMMARY (104 clips listed)
+ PROVEN        61
+ LIKELY        16
+ GUESS         14
+ NOT HIS       13
+ UNKNOWN        0
+
+MOVES WITH NO CLIP OF THEIR OWN
+ Morphs (14 inputs, e.g. F,D,F+HP Sonya, D,F,F+HP Raiden): no morph clip; he stays on idle 283 and the moveset
+   changes (PROVEN for Sonya -> HK 65 and Raiden -> HK 71). Scorpion F,B+LP did not trigger; Kai F,F,F+LK went dead.
+   In our test setup the screen showed LOADING with both fighters invisible after a morph (real-PC behaviour GUESS).
+ Fatalities: fatality A (misc40, D,B,F,D+RUN), fatality B (misc43, D,U,U,D+BL), stage fatality arena 8 (misc41,
+   D,D,F+HK): input words read statically (LIKELY), clips filled at run time; not attempted live.
+   Stage fatality arena 0 (misc42, D,F,B+HP) reuses the uppercut 293 (static, LIKELY).
+
+STILL OPEN
+ - 286 / 277 / 278 / 208: roles from the live input and X movement only; no visual check yet. Other armed inputs
+   (armed LP/HP/HK/LK, armed D, armed block) not tried - more weapon clips likely exist.
+ - 295, 297, 261, 532, 533, 209, 547, 548, 596: static-only clips in his handlers; never seen live.
+ - Static-only victim clips on Shinnok: 141-142-143 (his roundhouse 313 never hit), 324, 254, 182, 316-320-192-194,
+   172, 549-550-196, and the other fighters' throw victims 145 / 151 / 153 / 154 / 607 / 610.
+ - 132, 180, 199: seen only as reactions to opponent clips 21, 1 and 14 in VS; confirm which moves those are.
+ - Morphs: Scorpion and Kai inputs did not work; the other 10 morphs not tried; morph screen / crashes in our test setup.
+ - Fatalities and stage fatalities (see above).
+ - Clips outside the logs and his handlers were not surveyed (no full scan of all 612 clips for Shinnok).
+
+OTHER FIGHTERS' ENTRIES IN THE SAME PER-FIGHTER TABLES (NOT HIS, PROVEN from the switch tables)
+ (Throw pairs are attacker/victim; Shinnok plays the victim clip when one of those fighters throws him.)
+ throw 0x4E1784:          75/152 (ids 0,6,14; 6 = his), 80/154 (1,7,12), 79/151 (3,9), 76/153 (4,10), 78/156 (2, Sonya), 81/158 (5,11), 83/145 then 605/607 (13), 609/610 + 604/606 (15)
+ round-start intro 0x4E8EE0: 45, 46, 47, 48, 49, 50, 51 (45/50 seen live on his VS opponents)
+ high kick 0x4E8C88: 65, 71    low kick 0x4E8D78: 308, 70    jump-up kick 0x4E91E0: 61 (Fujin)
+ angled jump LK 0x4E93C4: 59, 60    sweep 0x4E9780: 62 (odd ids)    roundhouse 0x4E97E8: 64
+ close HP 0x4E9BF8 (id mod 3): 263, 264    victory 0x4E9A28: 113, 114 (Sonya), 115-118 (Sub-Zero), 119, 120 (Fujin), 121-125, 594

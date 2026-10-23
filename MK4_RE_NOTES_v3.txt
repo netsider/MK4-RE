@@ -321,7 +321,8 @@ So a clip in Sub-Zero's clip table is only "his" if the switch sends f4 to it.
      If he is thrown by an f3/f9 fighter, 151 would be his victim clip (GUESS, not seen live).
      The older "Sub-Zero LP/object pickup -> 79/151" labels came from mixed P1/P2 logs and are wrong.
    - Sub-Zero has no air throw. Air LP vs a jumping opponent gives P1 304 -> 96, P2 304 -> 186 -> 188.
-     PROVEN (3 of 3 timings at 250/350/450 ms; this is a hit, not a throw).
+     PROVEN (2 of 3 timings hit: 250/350 ms; at 450 ms 96 played but missed; this is a hit, not a throw).
+     CORRECTION (2026-10-23): this line said 3 of 3; a re-read of the log shows the 450 ms try missed (P2 stayed in 304). No air throw still stands (air BL did nothing).
 
 2) CLIP 58 (angled jump kick switch; misc[11] native 0x46dfa0 -> script 0x4e93c0)
    f0/f3/f6/f9/f12 -> 58      f1/f4/f7/f10/f13 -> 59      f2/f5/f8/f11/f14/f15 -> 60
@@ -342,7 +343,8 @@ So a clip in Sub-Zero's clip table is only "his" if the switch sends f4 to it.
    So it is a shared VICTIM clip, LIKELY reached from a specific knock-down reaction, not a Sub-Zero attack.
 
 5) Other Sub-Zero victim clips seen live in VS this run (PROVEN as clips he plays):
-   154 -> 172 -> 328 (vs 80 throw); 158 -> 171 -> 328 (vs 81 throw); 186 -> 188 (hit in the air); 192 -> 194; 128.
+   154 -> 172 -> 328 (vs 80 throw); 158 -> 171 -> 328 (vs 81 throw); 186 -> 188 (standing, hit by the opponent's jump kick 58); 192 -> 194; 128.
+   CORRECTION (2026-10-23): this line said 186 -> 188 was a hit in the air; a re-read of the VS log shows Sub-Zero was on the ground (292/272/294) when the opponent's jump kick 58 hit him (2 times).
    Compare images: SubZero_clip171/172_PROVEN_compare.png.
 
 6) Sonya clips 25/26 live: not attempted (not cheap; both need another fighter's special as P2). Still LIKELY from the earlier static work.
@@ -395,3 +397,56 @@ Raw units only (65536 = 1 game unit = 256 mesh units). Fujin idle 291, standing 
    HK 65. It belongs to 208: armed HK played 208 and the victim's 131 started during 208; 65 only started ~1.1 s later, after
    Fujin was back to unarmed idle 291. PROVEN (re-read of the live log). FUJIN_CLIPS.txt has it right (rows 65, 131, 208).
 6) Open items: MK4_TODO_UNKNOWNS.txt E5.
+==== SHINNOK (fighter id 6): LIVE PASS, CLIP LIST (2026-10-23, ~1:10 AM - 2:20 AM ET) ====
+Full clip list with status per clip: SHINNOK_CLIPS.txt (this repo; 104 clips: 61 PROVEN, 16 LIKELY, 14 GUESS, 13 NOT HIS).
+Why Shinnok: next fighter after Fujin in the game's move-table order (fighter ids 5 Fujin, 6 Shinnok); entry f6 of the
+16-entry FIGHTER_SWITCH tables (op 0x3C).
+Method as for Sonya / Fujin: P1 Shinnok with scripted inputs, live memory log of both clip slots (practice vs an inactive
+Shinnok, and VS vs CPU Kai, then Scorpion), plus the static decoder (tools\script_decoder_v3.py, fighter 6).
+Raw units only (65536 = 1 game unit = 256 mesh units). Shinnok idle 283, standing height -73531, practice start gap 170392.
+
+1) PROVEN live (P1 Shinnok):
+   44 round intro (switch 0x4E8EE0 f6; 5 of 5 round starts) | 111 victory pose (switch 0x4E9A28 f6; 5 of 5 won rounds)
+   75 throw, close LP / F+LP (throw switch 0x4E1784 f6 -> 75 / victim 152) -> victim 152-173-328, dx -287678 (thrown behind), rise 66970
+   31 close LK special (table 0x4E0FA0 idx 6 -> script 0x4E1070, opp 146, reaction 134, damage 6553 and 9175) -> victim 146-166-328, dx -33086
+   262 close HP (table 0x4E9BF8, id mod 3 = 0) -> victim 311 | 314 close HK knee -> victim 134, dx +27510
+   294 LP | 296 HP | 66 HK | 67 LK | 293 uppercut -> 128-328, dx +95844, rise 157375 | 63 sweep (even ids) -> 195-197, dx +93583 | 313 roundhouse
+   260 crouch LP | 54 crouch HK -> 311, dx +68187 | 315 crouch LK -> 134, dx +50763 | 257/256 crouch block
+   97 jump HP -> 311 | 96 jump LP -> 186-188, dx +172996 | 327 jump-up kick -> 311 | 55 jump-forward HK -> 131-185, dx +203148, rise 89182
+   58 angled jump LK (switch 0x4E93C0 f6 -> 58) -> 186-188, dx +172996
+   244 weapon draw (B,F+LP; bladed staff) -> 286 weapon stance; armed walks 277 (F) / 278 (B); armed B,F+LP -> 208 weapon throw -> victim 131,
+   dx +196590, rise 66945, then back to unarmed idle 283.
+   Shared locomotion: 267 walk F, 272 walk B, 259/258 crouch, 304 jump, 301 flip, 323 block, 317-307 run.
+   As victim (VS vs CPU): 158-171 (thrown by 81), 13, 132-328 (after opponent clip 21), 180-131-185 (after opponent 1),
+   199-13 (after opponent 14, Scorpion's spear), 189-191 (in his jump kick 58, hit by opponent HK 71), 195-197, 311, 134.
+2) Morphs: the Sonya (F,D,F+HP) and Raiden (D,F,F+HP) morphs change his moveset (HK -> 65 / 71) but play no morph clip;
+   he stays on idle 283 (PROVEN). Scorpion F,B+LP did not trigger; Kai F,F,F+LK went dead. In our test setup the screen
+   showed LOADING with both fighters invisible after a morph and a second morph in the same run could crash the game
+   (real-PC behaviour: GUESS).
+3) Round end (generic, PROVEN from the Fujin and Shinnok VS logs): see MK4_PC_FILE_FORMATS.txt section 10B.
+4) Static only, not seen live: 295, 297 (LIKELY follow-on clips); 261, 532, 533 (close-strike set), 209, 547, 548, 596 (GUESS).
+5) CORRECTION (2026-10-23 ~2:20 AM ET): the earlier live table put "HP afterwards -> P2 131, dx +196590" under the HP
+   after the weapon throw. It belongs to 208: armed B,F+LP played 208 and the victim's 131 started during 208; the HP
+   (296) only started ~1.2 s later and hit nothing. PROVEN (re-read of the live log). The same log shows 278 = armed walk
+   back (B) and 277 = armed walk forward (F). SHINNOK_CLIPS.txt has it right (rows 131, 208, 277, 278).
+6) Open items: MK4_TODO_UNKNOWNS.txt E6.
+==== STAGES, GORE, THROW PLACEMENT, ROUND END, SKELETONS, CD MOVIES (2026-10-23, ~2:10 AM - 2:45 AM ET) ====
+Short log of tonight's format findings; the full text is in MK4_PC_FILE_FORMATS.txt (sections given) and the open items in
+MK4_TODO_UNKNOWNS.txt. Raw units only.
+1) Arenas (guide 3A, PROVEN unless noted): arena number -> GEO from the fixup table VA 0x4D9460 / descriptors VA 0x4E0948
+   (11 arenas: Goro's Lair, The Well, Elder Gods, The Tomb, Wind World, Reptile's Lair, Shaolin Temple, Living Forest,
+   The Prison, Ice Pit, and "Skull" (Practice-menu name only)). 28-byte spawn records = the skeleton bone record format,
+   same builder VA 0x406DD0. Flipbook animation lists per arena (format LIKELY). Texel 0x0000 is the transparency key here
+   too. Code-driven motion (Wind World debris, Prison fan, Lair pickups) and arena 2D sprites: UNKNOWN (TODO J3-J5).
+   Other 3D GEOs: champion pedestal (LIKELY), ladder (GUESS), shinx / cliff / cage_end (UNKNOWN), skull continue screen (PROVEN).
+2) Gore (guide 10A): Sonya's Leg Twist splits the victim into two objects at victim clip 562 frame 1 (legs = new object on
+   clip 563, parts 1 and 10-15; upper body keeps parts 2-9) - PROVEN. Blood = SHARED_G parts 0 (drop), 4 (splat),
+   0xE-0x10 (spurts) + SHARE2_G sprite 0x57 (pool); drop physics PROVEN; the split plays 3 times (instant replay).
+3) Throw-victim clips (guide 10B): frame 0 is a stored thrower -> victim placement, not a pose; the game plays from
+   frame 1 and the victim takes the thrower's facing and yaw during the throw. PROVEN (Sonya throw 78; Sub-Zero 76 LIKELY).
+4) Round end (guide 10B): loser 137 after a standing-hit KO; deciding round loser dizzy in 13 (FINISH HIM); time-out
+   13 -> 137 (after a hit) or 13 -> 206 (after a throw); jump LK / LP on a standing fighter -> 186-188. PROVEN.
+5) Skeletons (guide 7): Sonya and Fujin 17 nodes (extra head node 4, never animated; Sonya's at (0, -4128, 6365), GUESS
+   ponytail; Fujin's zero-offset), Sub-Zero 19 nodes (zero-offset extras 10, 14, 18). Hair is part of the head mesh (LIKELY).
+6) CD movies (TODO A1 / last TODO entry): all 35 .ECM files in the game CD's DATA folder (bios, endings, menu movies) share
+   the decoded A1 header layout (PROVEN by header check); not decoded yet.
