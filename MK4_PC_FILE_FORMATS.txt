@@ -336,10 +336,21 @@ Game-driven motion (LIKELY, strong): for travelling and airborne moves the clip 
 ==========================================================================================
 Skeleton tables live in MK4.EXE. Address mapping (PROVEN): code VA = file + 0x400C00; data VA = file + 0x401600.
 Bone record, 7 x u32 (PROVEN):
-  w0 = kind << 16 | flags        flags 0x100 = animated; 0x10 clear = push current node; 0x08 = end of branch (pop)
+  w0 = kind << 20 | flags        flags 0x100 = animated; 0x10 clear = push current node; 0x08 = end of branch (pop)
+                                 (node builder VA 0x406DD0: kind = w0 sar 20 -> node+0x1C, flags = w0 & 0xFFFFF -> node+0x20)
   w1 = stream pointer
-  w2 = pointer to the part's size box (7 words: min xyz, max xyz, 0; 16.16 fixed; x270 = animation units)
-  w3..w5 = joint offset (16.16 fixed; multiply by 270 for animation units)
+  w2 = pointer to the part's size box (7 words: min xyz, max xyz, 0; 16.16 fixed), or 0. It is 0 in every fighter
+       skeleton checked; arena and creature skeletons use it.
+  w3..w5 = joint offset, 16.16 fixed: 65536 = 1 game unit = 256 mesh units. Copied unchanged to node+0x30..0x38 by
+       VA 0x406DD0 (PROVEN, code).
+Joint-offset scale (PROVEN, code): the renderer (VA 0x4B9C7B-0x4B9CF9) computes each node's position as parent
+  position + parent rotation * joint offset (VA 0x4BCF20 -> 0x4B2A90; the matrix is 4.12 fixed, 0x1000 = 1.0, so there is
+  no scale), then shifts it right by 8 (VA 0x4B9CD8) and adds the part's s16 GEO vertices. So 1 raw unit of joint
+  offset = 1/256 mesh unit, and offset x 256 / 65536 gives mesh units. Size boxes agree: SC_FAT2_.GEO parts measure
+  about 250-256 mesh units per game unit of box size (LIKELY, data).
+  An older factor of 270 (offset in game units x 270 = mesh units) came from the arcade (MAME) RAM skeleton dumps,
+  where the same offsets are stored as floats with identical values (e.g. 0.58485 = 38328 / 65536). The 270 was
+  never derived from code (GUESS: a visual fit). It is wrong for this build; use 256.
   w6 = node index
 Parents come from walking the flags as a push/pop tree (rule above); this reproduces RAM-dumped trees exactly.  PROVEN
 Animated records take frame words in order of their kind.  PROVEN
@@ -353,7 +364,9 @@ Special skeletons found (PROVEN unless noted):
   file 0x109BF4  Liu Kang dragon, 10-link chain, mesh lk_fat_g.geo (10 parts); clip 418
   file 0x109DB4  Shinnok giant hand, 19 records (17 animated); clips 434/541 (match HIGH, LIKELY)
   file 0x11F318  1 animated bone; fits 1-bone clips 429/430 by count (GUESS, untested)
-Sonya has one extra head bone at (0, -17, 26.2) (PROVEN from arcade RAM; GUESS: ponytail).
+Sonya has one extra head bone (PROVEN from arcade RAM; GUESS: ponytail). Joint offset (0, -4128, 6365) raw =
+  (0, -0.063, 0.097) game units = (0, -16.1, 24.9) mesh units. The same kind-0x11 record is in MK4.EXE, e.g. at
+  file 0x114844 (PROVEN). The old value (0, -17, 26.2) used the wrong x270 factor.
 
 ==========================================================================================
 8. MK4.EXE - KEY CODE AND TABLES
@@ -723,14 +736,24 @@ Per-player fighter animation struct (PROVEN): P1 at 0x522514, P2 = P1 + 0x84.
   +0x04   0x522518  0x52259C  u32   current frame index (advances ~60/s)
   +0x08   0x52251C  0x5225A0  u32   frame data pointer >> 2 (= clip data + 72 * frame)
   Writing the record every few ms forces any clip; also pinning frame + pointer freezes an exact frame.  PROVEN
-Position fields in the same struct (PROVEN as observed, meaning partly LIKELY):
-  0x522540 (P1)            s32  vertical, ground ~460000-469000 in the practice stage (varies a little per clip)
-  0x522544 (P1) / 0x5225C8 (P2)  s32  X (practice start -85196 / +85196, mirrored)
-  0x522538, 0x522548 (P1)  s32  Z/depth as first logged (-73629)
-  0x5225CC (P2)            s32  height used in the physics measurements (section 10), ground -77660, negative = up
-  0x5225E4 (P2)            s32  vertical velocity
-  NOTE: 0x5225CC - 0x84 = 0x522548, so the P1 field logged as "Z" is LIKELY the same height field as P2's 0x5225CC;
-  the two logs used different stages/coordinates. Treat the P1 vertical/depth naming as LIKELY until re-checked.
+Fighter object (PROVEN, code + live logs on PC, 2026-10-22): P1 object = [0x5360D8] = 0x5224F0, P2 = [0x5360DC] =
+  0x522574 (= P1 + 0x84). The animation struct above is object + 0x24. Same offsets for P1 and P2.
+  offset  P1        P2        size  meaning
+  +0x48   0x522538  0x5225BC  s32   standing (ground) height of this fighter's root; equals +0x58 when standing.
+                                     Per fighter, same stage: Sonya -73629, Liu Kang -70320, Sub-Zero -77660 (LIKELY:
+                                     the landing level; the skeleton root offset is -1.122 units = -73531 for humans)
+  +0x4C   0x52253C  0x5225C0  s32   gravity, added to vy each tick by the integrator VA 0x490CB0
+  +0x50   0x522540  0x5225C4  s32   camera-space depth of the fighter (written at VA 0x4B988D from the view transform);
+                                     NOT a world position. ~450k-640k in practice, same value for both fighters.
+  +0x54   0x522544  0x5225C8  s32   X (practice start -85196 / +85196, mirrored)
+  +0x58   0x522548  0x5225CC  s32   Y = height of the root, negative = up (floor at 0: LIKELY, from the +0x48 values)
+  +0x5C   0x52254C  0x5225D0  s32   Z depth (changes in throws, sweeps, roundhouse knockdowns)
+  +0x6C / +0x70 / +0x74             vx / vy / vz per tick (16.16; op 58 at VA 0x45AF40 writes vx, vz via the facing
+                                     multiply VA 0x404AF0, then vy and gravity +0x4C)
+  Earlier names corrected: 0x522540 is NOT "vertical" (it is camera depth); 0x522548 is NOT Z (it is the height, the
+  same field as P2's 0x5225CC); 0x522538 is the standing height. Both fighters' height fields were checked live:
+  P1 jump moves 0x522548; P2 launched by an uppercut / flying kick / slide moves 0x5225CC (with vy at 0x5225E4).
+  The older "ground -77660" for P2 is Sub-Zero's standing height (LIKELY: that capture's P2 was Sub-Zero).
 Worked example: P1 plays clip 293 -> record = 0x4FDD6C + 12*293 = 0x4FEB28 -> 0x522514 holds 0x13FACA.
   Reverse: clip = ((0x13FACA << 2) - 0x4FDD6C) / 12 = 293.
 
@@ -739,26 +762,56 @@ Worked example: P1 plays clip 293 -> record = 0x4FDD6C + 12*293 = 0x4FEB28 -> 0x
 ==========================================================================================
 Tick rate: 60 game ticks per second, 1 animation frame per tick.                         PROVEN (measured ~61/s)
 Measured jump-launch (Sonya's uppercut, D+HP = clip 293; victim plays 128 -> 328 -> stance, 6/6 runs):  PROVEN
-  P2 height  0x5225CC, ground value -77660, negative = up
-  P2 vertical velocity 0x5225E4
+  Height = object +0x58 (P1 0x522548 / P2 0x5225CC), vertical velocity = +0x70 (P2 0x5225E4), negative = up.
   launch velocity  -12583 units/tick (upward). The move script sets -13107 (= -0.2 in 16.16) and gravity 524; the
                    first tick you can observe already includes one tick of gravity (section 8A, worked example 1).  PROVEN
-                   The script also sets an X velocity of -1966 (push-back direction LIKELY).
+                   The victim gets X velocity 1966/tick away from the attacker for the whole flight.             PROVEN
   gravity          +524 units/tick per tick (added to velocity each tick). 524 (0x20C) is also written as an
                    immediate at ~20 places in the code, e.g. VA 0x40DC45 and VA 0x41E416 (stores into object +0x4C)
-  airborne         48 ticks = 0.80 s at 60/s (0.73 s measured wall-clock under emulation timing)
+  airborne         48-49 ticks = 0.80 s at 60/s (0.73 s measured wall-clock under emulation timing)
   peak height      157,375 units above ground at ~0.37 s  (check: 12583^2 / (2*524) ~ 151,000, consistent)
-Scale: ~64,000 units = 1 metre (LIKELY). Derivation: 64,000 = 256 x 250, the same divisor that turns exported model
-  coordinates into metres. Checks: live hit gap ~45k units = 0.70 m vs a measured fist reach of 0.92 m on the exported
-  model; practice start gap ~170k = 2.66 m; stage edge ~640k = ~10 m vs the Shaolin room radius of 9.6 m.
-  (An earlier estimate of ~238,800 units/m from walk speed was off by ~x3.73 and is withdrawn.)
-  -> peak 157,375 / 64,000 ~ 2.46 m; launch 12583 * 60 / 64,000 ~ 11.8 m/s; gravity 524 * 60^2 / 64,000 ~ 29.5 m/s^2
-     per pure tick math (~35 m/s^2 from the measured wall-clock arc). Game gravity is not real-world gravity (LIKELY).
-  Push-back on hit ~2.5 m measured at the stage edge (LIKELY; open-floor distance unconfirmed).
-Floor travel (from arcade per-tick captures, same engine logic, units = arcade world units):  LIKELY
-  walk forward +0.059/tick, walk back -0.042/tick, slide constant 0.150/tick; flying kick gravity ~+0.004/tick^2.
+  Re-measured on PC 2026-10-22 (Sub-Zero uppercut on Sonya, open floor): identical -12583 / 524 / 157,375.  PROVEN
+Units (PROVEN, code): positions and velocities are 16.16 fixed point; 65536 = 1.0 game unit = 256 mesh (GEO vertex)
+  units. The renderer copies the object position (+0x54/+0x58/+0x5C) at VA 0x4B9751, subtracts the camera, transforms
+  it, and at VA 0x4B9CD8 shifts the view-space translation right by 8 (sar 8) before adding the s16 mesh vertices
+  (sar 0x11 when flag 0x60 is set). Arcade world units = PC 16.16 units (walk speeds match, below).
+All distances, heights, speeds and accelerations in this guide are raw 16.16 units: units, units/tick and
+  units/tick^2 (decimals in brackets, e.g. 0.060, are game units = raw / 65536). No metre values are used.
+  Side note, GUESS only: the game has no metre constant; if Sonya were ~1.78 m tall, ~77,000 units would be 1 m.
+  This conversion is not used anywhere in this guide.
+Reference distances (raw units, measured on PC):                                                             PROVEN
+  Sonya on screen ~133,000-141,000 tall (two screenshots, known X gap at the same depth); standing root height 73,629
+    (1.12 game units; the EXE skeleton root offset is -1.122)
+  practice start gap 170,392; contact gap ~28,800 (Sonya vs Sonya) to ~37,700 (Sub-Zero vs Sonya)
+  left wall X ~-615,000 to -637,000; the right side was still open past +478,000 in the WELL stage
+Floor travel on PC (logged per tick, 2026-10-22; units/tick, 16.16):                                         PROVEN
+  walk forward 3932 (0.060) - Sonya, Liu Kang, Sub-Zero; walk back 2754 (0.042) Sonya / 2753 Sub-Zero
+    (same as the arcade 0.059/0.042)
+  run (run button + toward) 8519 (0.130), Sub-Zero; clip 317 then 307
+  Sub-Zero slide (B+LP+BL+LK, clip 95) 9830 (0.150) for 26 ticks = 255,580, whether it hits or not; it passes
+    through the victim
+  Liu Kang flying kick (F,F+HK, clip 92) 9175 (0.140) until contact (29+ ticks seen); on contact clip 93 and vx 1310
+    (0.020) while the victim flies
+  neutral jump (Sonya): vy -11141 first tick, gravity 655, ~32 ticks airborne, peak ~111,500, vx 0
+Push-back on hit, open floor (mid-stage, victim inactive, logged on PC 2026-10-22; victim displacement, signs as
+  logged with the victim on the +X side unless noted):                                                        PROVEN
+  move (attacker)                    victim clips        victim velocity /tick             victim moved
+  HK, Sonya (2/2)                     134                 vx 1310 for 21 ticks              27,510 X
+  HP, Sonya (3 logs)                  311                 none                              0
+  uppercut D+HP, Sub-Zero             128 (airborne)      vx 1966, vy -12583, g 524, 49 t   96,334 X
+  flying kick, Liu Kang (2/2)         131 (airborne)      vx 6553, vy -8586, g 589, 30 t    196,590 X
+  slide, Sub-Zero                     179 (airborne)      vx -2622, vy -11796, g 655, 37 t  -97,014 X (slider passes
+                                                                                          through; victim flies back
+                                                                                          the way the slider came)
+  roundhouse B+HK, Sonya              142 -> 141 -> 143   vx 3276, vz -3277, vy -4798, ~45t 150,696 X, -150,742 Z
+  sweep B+LK, Sonya (fighters already offset in Z) 195 -> 197, vx 995, vz -5021, ~30 t: 28,855 X, -145,609 Z
+  Throws (close LP/LK) carry the victim much further (156 -> 176 -> 191: ~250k X plus Z).
+  The attacker does not move on open floor. Against the wall the victim is pinned and the ATTACKER is pushed instead:
+  uppercut at the wall -> attacker vx 17693 decaying x0.9 per tick, 157,498 total (this is the push-back first seen
+  at the stage edge). Knockdown direction in Z (roundhouse, sweep) is LIKELY a fixed per-move
+  vector; the reason for the 45-degree roundhouse path is not known (GUESS: knockdown table velocity, VA 0x4ED1E0).
 Playback pattern (LIKELY, strong): e.g. slide clip 95 = frames 1->9, hold frame 9 ~17 ticks, then 9->0, while game code
-  moves the body. Hit range: a gap of ~30-45k units (~0.47-0.70 m) between fighters (LIKELY).
+  moves the body. Hit range: a gap of ~30,000-45,000 units between fighters (LIKELY).
 
 ==========================================================================================
 11. GAPS - NOT YET UNDERSTOOD
@@ -776,7 +829,8 @@ Full list with status and suggested next steps: MK4_TODO_UNKNOWNS.txt (next to t
   those slots are not resolved statically. Ids 16/17 names (Kitana / Noob Saibot) LIKELY only.
 - Which fighter owns which clip: Sonya PROVEN; every other fighter's moves are now readable statically (section 8B) but
   only LIKELY until checked live. Clips not reached by any script or table are still unlabeled.
-- Unit conversion to metres (LIKELY only); P1 vs P2 position field naming (section 9 note).
+- Unit scale is PROVEN (65536 = 1 game unit = 256 mesh units); all values are raw units (section 10). Position field
+  naming is now PROVEN.
 - Unmatched odd clips 386 (6 bones), 422/423, 426/427, 446/447 (3 bones): no skeleton found (GUESS: severed limbs).
 - Arena music is CD audio (section 4, PROVEN); which arena uses which track is LIKELY only (table VA 0x4DDD18).
 
@@ -829,12 +883,14 @@ RUNTIME
   0x521A60 / 0x521A64 / 0x521AA4  global decoder frame / clip ptr / frame count                PROVEN
   0x522514 / 0x522518 / 0x52251C  P1 clip record>>2 / frame / frame ptr>>2                     PROVEN
   0x522598 / 0x52259C / 0x5225A0  P2 same (P1 + 0x84)                                          PROVEN
-  0x522540 / 0x522544 / 0x522538,0x522548   P1 vertical / X / depth (naming LIKELY)            PROVEN values
-  0x5225C8 P2 X | 0x5225CC P2 height (ground -77660) | 0x5225E4 P2 vertical velocity            PROVEN
+  fighter object P1 0x5224F0 ([0x5360D8]), P2 0x522574 ([0x5360DC]): +0x48 standing height | +0x4C gravity |
+    +0x50 camera depth | +0x54 X | +0x58 height (negative = up) | +0x5C Z | +0x6C/+0x70/+0x74 vx/vy/vz       PROVEN
+  P1 X 0x522544, height 0x522548, Z 0x52254C | P2 X 0x5225C8, height 0x5225CC, Z 0x5225D0, vy 0x5225E4      PROVEN
 CONSTANTS
   612 clips; 18 words/frame (72 bytes) for human clips; 15 animated bones; angle 2048 = 360 deg
-  60 ticks/s; launch -12583 (script value -13107); gravity +524/tick^2; 48 ticks airborne; peak 157,375 (~2.46 m);
-  ~64,000 units/m (LIKELY); script velocities 16.16 fixed point
+  60 ticks/s; launch -12583 (script value -13107); gravity +524/tick^2; 48 ticks airborne; peak 157,375 units;
+  65536 = 1 game unit = 256 mesh units (PROVEN); all values raw units; script velocities 16.16 fixed point
+  PC floor speeds /tick: walk 3932, back 2754, run 8519, slide 9830, flying kick 9175 (PROVEN)
 SCRIPT OPCODES (PROVEN): 34 sleep | 04/4A animate | 0E opponent clip | 0F/11 own clip | 12 frame | 32 native | 33 goto
   58 vx,vy,gravity | 5A push | 5C gravity | 5D nudge | 65 velocity to opponent | 63 damage | 3C fighter switch
   50/51/52/53/5E strike | 41/1E/70 reaction | 20/25/26/27/2B/2C/73/74/75 sound (05 = wait while animating, LIKELY)

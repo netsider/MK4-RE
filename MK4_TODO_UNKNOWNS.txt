@@ -246,18 +246,30 @@ H2. Juggle follow-ups and air throw
 ==========================================================================================
 I. PHYSICS
 ==========================================================================================
-I1. Units per metre
-    Status: partial-LIKELY (~64,000 units = 1 m; 238,800 withdrawn)
-    Get it: measure a known distance in game (stage width vs mesh) or find a scale constant in code.
+I1. Unit scale
+    Done: code scale found - positions are 16.16, 65536 = 1 game unit = 256 mesh units (renderer VA 0x4B9CD8 shifts
+    the view-space translation right by 8 before adding the s16 mesh). The game has no metre constant, so metre
+    conversion is intentionally not used: every distance, speed and gravity value is given in raw units (units,
+    units/tick, units/tick^2). Earlier 238,800/m and 64,000/m figures are withdrawn. Guide section 10 (it keeps one
+    GUESS side note only).
+    Status: PROVEN (unit scale). Metre conversion: intentionally not used.
 I2. Push-back on hit, open floor
-    Status: partial-LIKELY (~2.5 m measured at the stage edge only)
-    Get it: measure in mid-stage with the logger.
+    Done: logged mid-stage on PC. Victim moves: HK 27,510 (Sonya, 2/2); HP 0 (3/3); uppercut 96,334; flying kick
+    196,590 (2/2); slide 97,014; roundhouse 150,696 X + 150,742 Z; sweep 28,855 X + 145,609 Z. The attacker does not
+    move on open floor; at the wall the attacker is pushed instead (uppercut: 157,498 units). Guide 10.
+    Open: why some knockdowns travel in Z (GUESS: per-move knockdown table velocity).
+    Status: PROVEN (values listed, one fighter pair each).
 I3. P1 vs P2 position field naming (vertical/depth)
-    Status: partial-LIKELY
-    Get it: one log with both fighters jumping.
+    Done: fighter object P1 0x5224F0 / P2 0x522574 (P1 + 0x84), same offsets: +0x54 X, +0x58 height (negative = up),
+    +0x5C Z, +0x6C/70/74 velocities, +0x48 standing height, +0x50 camera depth (not a world field). Checked with P1
+    jumping and P2 launched (uppercut, flying kick, slide); P2 cannot jump by itself in practice, so the
+    "both jumping" log was replaced by the code (op 58 / integrator) plus those logs. Guide section 9.
+    Status: PROVEN.
 I4. Floor travel speeds on PC (walk/slide/flying kick)
-    Status: partial-LIKELY (taken from arcade captures)
-    Get it: re-measure on PC with the logger.
+    Done: per tick on PC - walk 3932 (0.060), back 2754 (0.042), run 8519 (0.130), Sub-Zero slide 9830 (0.150) for
+    26 ticks, Liu Kang flying kick 9175 (0.140) until contact then 1310. Walk speeds match the arcade captures, so
+    arcade units = PC units. Guide section 10.
+    Status: PROVEN (walk for Sonya/Liu Kang/Sub-Zero; run/slide Sub-Zero; flying kick Liu Kang).
 
 ==========================================================================================
 J. STAGE OBJECTS / PICKUPS
@@ -291,3 +303,14 @@ K5. Sprite cutter
     Missing: a tool that cuts single sprites out of the texture atlases.
     Status: not started (deferred on purpose); the rectangles and the transparency key are PROVEN (A3, A5, A6).
     Get it: read the 2D sprite records of each GEO, crop page[u..u+tw, v..v+th], make texel 0 transparent.
+K6. Public assembler for fighter parts (GEO parts placed on the skeleton)
+    Exists: assembled, animated fighters are already exported by the private code-derived export pipeline
+    (codefix.py / fightkit.py) that made the viewer and sim GLBs. It puts part i on bone i: world = parent +
+    parentRot * joint offset; root = frame words 0..2 / 256; GEO vertices added in mesh units.
+    Missing: only a public, self-contained version in tools\. The private scripts are not generic: they need the
+    MAME RAM skeleton dumps, capture traces and per-fighter JSON files. Also, they scale the arcade joint offsets
+    by 270, while MK4.EXE code gives 256 (guide section 7). Their bones are about 5.5% too long.
+    tools\export_pc_geo.py itself only writes the parts in their bone-local frames (by design).
+    Status: assembly method PROVEN (code); public tool not written. Same work as K1.
+    Get it: read the joint offsets from the MK4.EXE skeleton tables (section 7) at x256, place part i on bone i
+    (rest pose, or a frame from anim_emu.py), write one node per bone with the parent links.

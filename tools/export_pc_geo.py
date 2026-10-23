@@ -15,8 +15,15 @@ records, not meshes; they are skipped. UV row byte 0 is the GEO-local texture pa
 (MK4.EXE VA 0x4BB943); when a mesh uses more than one page the pages are stacked into
 one atlas PNG and the UVs are remapped.
 
-Positions are the game's int16, divided by 100, Y up. One PNG from the
-GEO is embedded. metallicFactor is 0 so Lumen does not darken it.
+Positions are the GEO's int16 vertices divided by 100, Y up. Scale (PROVEN):
+65536 raw = 1 game unit = 256 mesh units, so 1 export unit = 100 mesh units
+= 0.390625 game units, and 1 game unit = 2.56 export units.
+Fighter parts are written in their bone-local frames, NOT assembled: each
+part's origin is its bone's joint (PROVEN, renderer code), so the parts overlap
+around the origin. This is by design. Assembly (part i on bone i, joint offsets
+x 256 / 65536 = mesh units) is done by the separate code-derived export pipeline
+(TODO K6). ALL mode spreads the parts on a grid instead. One PNG from the GEO is embedded. metallicFactor is 0 so Lumen
+does not darken it.
 """
 import json
 import os
@@ -200,7 +207,12 @@ def write_glb(path, tris, png_bytes, label):
         length = (nx * nx + ny * ny + nz * nz) ** 0.5 or 1.0
         nx, ny, nz = nx / length, ny / length, nz / length
         for (x, y, z), (u, v), _slot in tri:
-            # /100 puts a fighter a bit over 2 units tall. Y is already up.
+            # /100: 1 export unit = 100 mesh units; 1 game unit (65536 raw) = 256 mesh
+            # units = 2.56 export units. Y is already up. Fighter parts are written
+            # unassembled in their bone-local frames (assembly: TODO K6), so a
+            # fighter export is a heap of overlapping parts about 2.6 units tall (about
+            # 1 game unit); that is not the fighter's height. Assembled, a fighter
+            # stands about 5.2-5.5 export units (2.0-2.15 game units, LIKELY).
             px, py, pz = x / 100.0, y / 100.0, z / 100.0
             pos += struct.pack("<3f", px, py, pz)
             nor += struct.pack("<3f", nx, ny, nz)
@@ -420,7 +432,11 @@ def export_one(fs, disc_name):
 
 
 def write_parts_glb(path, part_tris, png_bytes, label):
-    """One node per part, set on a grid so the pieces do not overlap."""
+    """One node per part, set on a grid so the pieces do not overlap.
+
+    Each part is moved so its vertex centroid sits on its grid cell. This is a
+    layout for viewing, not the fighter's pose: no skeleton is applied (TODO K6).
+    """
     bin_blob = b""
     views = []
     accessors = []

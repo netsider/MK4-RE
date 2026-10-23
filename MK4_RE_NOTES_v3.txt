@@ -182,7 +182,7 @@ MK4 RE NOTES v3 - live capture under Wine (2026-10-21, times ET). Tags: PROVEN /
 == UPPERCUT MEASURED LIVE (2026-10-22, Wine copy) ==
 - Sonya's real uppercut is 293 (down+HP). Victim 128 -> 328 -> stance, 6/6 PROVEN. 128 lasts 1.24 s (frames 0-52 at 1/tick, then ~2/tick).
 - P2 height at 0x5225cc (ground -77660, negative=up), vertical velocity at 0x5225e4 (PROVEN). Velocity -12583, +524/tick, 48 ticks airborne (0.80 s at 60/s; 0.73 s wall-clock under emulation), peak 157,375 units at ~0.37 s (PROVEN).
-- ~64,000 units = 1 m (LIKELY; 256 x 250, same divisor as the model export; hit gap 45k = 0.70 m vs 0.92 m fist reach; stage edge ~640k = ~10 m vs 9.6 m Shaolin room). Earlier ~238,800 units/m withdrawn (off by ~x3.73). Peak ~2.46 m, launch ~11.8 m/s, gravity ~29.5 m/s^2 tick math (~35 from wall-clock). Push-back ~2.5 m at stage edge (LIKELY; open-floor distance unconfirmed).
+- [Revised 2026-10-22: raw units only; see PHYSICS: TODO I1-I4] The earlier real-world scale estimates (238,800 and 64,000) are withdrawn. In raw units: hit gap ~45,000; practice start gap ~170,000; stage edge ~640,000; peak 157,375; launch -12583/tick; gravity +524/tick^2; push-back at the stage edge measured later as 157,498 (attacker pushed, victim pinned at the wall).
 - Clips 27 and 28: no Sonya input produces them; in those slots they are Jarek (27) and Cage's Green Orb (28) (LIKELY not Sonya's moves). netsider's labels kept, flagged.
 - Crouch: 259 down (5 ticks), 258 hold, stand = 259 reversed (PROVEN). Stance 439, walk fwd 267, back 272 (PROVEN).
 - sonya_sim_v4.html (27/28 removed, crouch fixed) and sonya_sim_v4b.html (+ measured launch).
@@ -211,7 +211,7 @@ Full write-up: MK4_PC_FILE_FORMATS.txt sections 6, 8, 8A, 10.
 - 46 = Sonya round-start intro; 114 = Sonya round-win pose (loser 137); 50 = opponent intro, not hers (PROVEN).
 - Death Kiss 388, victim alternates 13 <-> 206 (PROVEN). Weapon throw (F,F+LK armed) 208, victim 131 (PROVEN).
 - Thrown reactions: 154-172-328 (by opponent clip 80), 153-173-328 (by 76); 192-194 after opponent clip 62; 127 hit by opponent clip 17 (PROVEN clips, context LIKELY).
-- Not yet produced: 25, 26, Leg Twist. Bicycle victim height: ~2.1 m by 0.4 s, holds ~2.2 m (LIKELY scale).
+- Not yet produced: 25, 26, Leg Twist. Bicycle victim height: ~134,000 units by 0.4 s, holds ~141,000 (approximate, converted back from earlier figures).
 
 ==== MK4.EXE STATIC FINDINGS 2: COMMAND LISTS, STRIKES, REACTIONS (2026-10-22 ET) ====
 Full write-up: MK4_PC_FILE_FORMATS.txt section 8B "From button press to clip". Tool: tools\script_decoder_v2.py.
@@ -246,7 +246,7 @@ Re-checked against the retail MK4.EXE / FILESYS.DAT and the decoder; corrections
 - GEO magic bytes on disk are "0.1v" (u32 'v1.0'). ESF length for ADPCM = decoded bytes (~4 x data). Clip-table end marker is record 612.
 - Creature loader 0x41EAAF sits in routine 0x41EA50; 0x4D5E80 is a data block pointing to it (not a script).
 - FILESYS.DAT: entries #0 and #1 are ANIMDAT4.AP0 / ANIMDAT4.AP1 (hash match), so all 799 entries are named; the old "2 unidentified entries" item is withdrawn.
-- Stale lines marked [Superseded]: 388 not-Sonya, 114/50/131/153/154/172/192/194/15/72-73 labels upgraded to PROVEN, old unidentified lists, sim 128->328 feedback. Old 238,800 units/m stays withdrawn (64,000/m LIKELY).
+- Stale lines marked [Superseded]: 388 not-Sonya, 114/50/131/153/154/172/192/194/15/72-73 labels upgraded to PROVEN, old unidentified lists, sim 128->328 feedback. Earlier real-world conversions are withdrawn; raw units only (see PHYSICS: TODO I1-I4).
 - Registry Config blob: XOR (i*0x7B)&0xFF, checksum seed 0x43464729 over bytes 4..0x247 (PROVEN, matched); s32 +0x240/+0x244 = P1/P2 joystick (LIKELY).
 - TODO D1-D8 corrections (later the same day): 05 is not a plain sleep (34 is); conditions 02/03 test the fighter itself, not the opponent; [0x53849C] is the arena number, not "finish him"; 0x5405F8 is the LK RELEASE table, not held LK; op 6C has one operand word (v2 read two); table sizes misc 0x44 / bit-5 0x50; the sweep's sound "20 0xAF" is silent (index > 0x32).
 
@@ -265,3 +265,11 @@ Full write-up: MK4_PC_FILE_FORMATS.txt sections 3 (GEO), 4 (ESF), 5 (ECM), 11, 1
 - A8 (PROVEN): ESF flag 0x80 = LOOP: loader VA 0x4B0600 bit 31 -> slot flag bit 0 (VA 0x4C225A) -> IDirectSoundBuffer::Play flags = DSBPLAY_LOOPING (VA 0x4C2783). Files: pcmk0101, 0102, 2003, 2007, 2011, 2015, 2023, 2031, 2035, 2039, 2070, 2071, 2081; 2003-2039 = arena music code + 2 (LIKELY arena ambience).
 - A9 (PROVEN load / LIKELY use): MENU.TGA is loaded once at start-up (VA 0x4B1A70 -> VA 0x4B5580) into texture slot 15 (GEO pages use 0-14). Content: ASCII font, colour swatches, dragon medallion: LIKELY the PC set-up / key-config menus.
 - Tools: new tools\ecm_tool.py (ECM -> PNG frames + WAV); tools\export_pc_geo.py updated as above (UV byte 0 = page).
+
+==== PHYSICS: TODO I1-I4 (2026-10-22 ET) ====
+Live per-tick logs on PC (practice mode, WELL stage, opponent inactive; Sonya vs Sonya, Liu Kang vs Sonya, Sub-Zero vs Sonya) plus static code reading. Full write-up: MK4_PC_FILE_FORMATS.txt sections 9, 10, 12; status in MK4_TODO_UNKNOWNS.txt section I.
+- I3 (PROVEN): fighter object P1 = [0x5360D8] = 0x5224F0, P2 = [0x5360DC] = 0x522574 (P1 + 0x84); the animation struct 0x522514 = object + 0x24. Same offsets for both: +0x48 standing height (Sonya -73629, Liu Kang -70320, Sub-Zero -77660), +0x4C gravity (integrator VA 0x490CB0), +0x50 camera-space depth (VA 0x4B988D; not a world field), +0x54 X, +0x58 height (negative = up), +0x5C Z, +0x6C/+0x70/+0x74 vx/vy/vz (op 58 VA 0x45AF40). Old names corrected: 0x522540 is camera depth, not vertical; 0x522548 is height, not Z (same field as P2 0x5225CC); the old "ground -77660" is Sub-Zero's standing height (LIKELY). Checked with P1 jumping and P2 launched (P2 cannot jump by itself in practice).
+- I1 (PROVEN unit scale; metre conversion intentionally not used): positions are 16.16; 65536 = 1 game unit = 256 mesh units (renderer VA 0x4B9751 / 0x4B9CD8: view-space translation sar 8 + s16 mesh). The game has no metre constant, so all values here are raw units (units, units/tick, units/tick^2). Reference: Sonya ~133,000-141,000 units tall on screen, standing root 73,629 (1.12 game units; skeleton root offset -1.122); start gap 170,392; left wall X ~-615,000 to -637,000.
+- I2 (PROVEN, open floor, victim displacement in units): HK (Sonya) 27,510 X (clip 134, vx 1310 x 21 ticks, 2/2); HP 0 (clip 311); uppercut (Sub-Zero) 96,334 X (128, vx 1966, vy -12583, g 524, 49 ticks - same arc as before); flying kick (Liu Kang) 196,590 X (131, vx 6553, vy -8586, g 589, 2/2); slide (Sub-Zero) 97,014 back the way the slider came (179, vx -2622, vy -11796, g 655; slider passes through); roundhouse 150,696 X + 150,742 Z (142-141-143); sweep 28,855 X + 145,609 Z (195-197, fighters already offset in Z). The attacker does not move on open floor; at the wall the victim is pinned and the attacker is pushed (uppercut: vx 17693 decaying x0.9/tick, 157,498 = the push-back first seen at the stage edge).
+- I4 (PROVEN, units/tick): walk 3932 (0.060; Sonya, Liu Kang, Sub-Zero), back 2754 Sonya / 2753 Sub-Zero (0.042), run 8519 (0.130, Sub-Zero, clips 317/307), Sub-Zero slide 9830 (0.150) x 26 ticks = 255,580 hit or miss (clip 95), Liu Kang flying kick 9175 (0.140) until contact then 1310 (clips 92/93), Sonya neutral jump vy -11141 first tick, gravity 655, ~32 ticks, peak ~111,500. Walk speeds equal the arcade 0.059/0.042 -> arcade units = PC units.
+- Files outside this repo (SONYA_PROVEN_TABLE, the Sonya sim) are converted to raw units separately; this file uses raw units only.

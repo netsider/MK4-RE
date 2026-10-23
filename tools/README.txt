@@ -16,7 +16,15 @@ export_pc_geo.py      .GEO mesh exporter: GEO parts + texture -> GLB, plus textu
                       (guide section 3). Fighters: the type-1 parts. Files with no type-1 parts (logos midway_g /
                       MKlogo_g / attract_ = type 0x4, buyin_ge, arenas): every 3D part. 2D sprite records are
                       skipped. UV byte 0 = texture page; if a mesh uses several pages they are stacked into one
-                      atlas PNG.  Deps: Pillow.
+                      atlas PNG. Scale: vertices are the GEO's int16 divided by 100, so 1 export unit = 100
+                      mesh units, and 1 game unit (65536 raw = 256 mesh units) = 2.56 export units (PROVEN).
+                      FIGHTER PARTS EXPORT UNASSEMBLED, in their bone-local frames: each part's origin is its
+                      bone's joint (PROVEN, renderer code, guide section 7). In the default mode the parts overlap
+                      around the origin (a heap about 2.6 export units tall, not the fighter's height; an
+                      assembled fighter is about 5.2-5.5). With ALL each part is its own node, centred on a grid
+                      cell for viewing. Assembled, animated fighters come from a separate code-derived export
+                      pipeline (codefix.py / fightkit.py). It is not in tools\ because it needs MAME RAM skeleton
+                      dumps (TODO K6). To assemble: joint offsets x 256 / 65536 = mesh units.  Deps: Pillow.
                         python export_pc_geo.py FILESYS.DAT OUTDIR SB_GEO.GEO      (or ALL = every fighter, per-part GLB)
                         python export_pc_geo.py FILESYS.DAT OUTDIR MIDWAY_G.GEO MKLOGO_G.GEO ATTRACT_.GEO
 extract_textures.py   Every RLE-555 texture page of every GEO -> PNG, one contact sheet per GEO, and MENU.TGA
