@@ -493,3 +493,85 @@ Raw units only (65536 = 1 game unit = 256 mesh units). Reiko idle 284, standing 
 6) Open: 29, 308, 74/150, 295, 297, 261/532/533, 209, 547/548/596; fatalities not attempted (static inputs: fatality A F,D,F+BL,
    fatality B B,B,D,D+HK, stage arena 8 D,D,B+LP, stage arena 0 F,F,D+LK -> 293); the weapon's identity (GUESS); a clean
    single-input test for 208. See REIKO_CLIPS.txt "STILL OPEN".
+[2026-10-23] Clip 467 = swim (NETSIDER-ID, seen on Sonya). The 612-clip table is shared, so every fighter can play it; nothing in MK4.EXE points at clip 467 (no clip-record pointer, fixup or script), LIKELY unused/cut. A planned swimming feature is GUESS. 515-517 ("floating set") are also unreferenced; a related swim set is GUESS.
+
+==== QUAN CHI (fighter id 8): LIVE PASS, SPECIALS, WEAPON, CLIP LIST (2026-10-23, ~3:15 AM - 5:20 AM ET) ====
+Full clip list with status per clip: QUANCHI_CLIPS.txt (this repo; 136 clips: 90 PROVEN, 11 LIKELY, 13 GUESS, 22 NOT HIS).
+Method as for Reiko: P1 Quan Chi with scripted inputs, live memory log of both clip slots (practice vs an inactive Quan Chi, and VS vs CPU),
+plus the static decoder (script_decoder_v3.py, fighter 8) and entry f8 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
+Why Quan Chi: next fighter after Reiko (id 7) in the game's fighter-id order. Name from the select screen and "QUAN CHI WINS".
+Raw units only (65536 = 1 game unit = 256 mesh units). Quan Chi idle 283, armed stance 286, standing height -78643, practice start gap 170392.
+
+1) PROVEN live (P1 Quan Chi):
+   51 round intro (switch 0x4E8EE0 f8; every VS round start + every practice start) | 125 victory pose "QUAN CHI WINS" (switch 0x4E9A28 f8)
+   78 throw, close LP / F+LP (throw switch 0x4E1784 f8 -> 78 / victim 156) -> victim 156-176-191, dx -292666..-301598, rise 38296 (thrown behind)
+   38-39 close LK special (table 0x4E0FA0 idx 8 -> 0x42BC40 -> script 0x4E1198: clip 38, opp 160, damage 13762 = 21.0%) -> victim 160-168, dx +359699
+   264 close HP at gap 25000-32000 (table 0x4E9BF8, id mod 3 = 2) -> victim 311; at gap 40000 HP plays 296 -> victim 324
+   314 close HK knee -> victim 134, dx +27510
+   294 LP | 296 HP | 71 HK | 70 LK | 293 uppercut -> 128-328, dx +96285 / +96334, rise 157375
+   63 sweep (even-id switch) -> 195-197, dx +119045 / +114028 | 313 roundhouse -> 142-141-143-328, dx +150696, rise 59294 (gap 45000)
+   260 crouch LP -> 134 | 52 crouch HK -> 128-328 (launch, rise 157375) | 315 crouch LK -> 134, dx +50763 | 257/256 crouch block | 323 block
+   97 jump HP -> 311 | 96 jump LP -> 186-188, dx +172996 | 327 jump-up kick -> 311 | 57 jump forward/back HK -> 131-185, dx +203148
+   60 jump forward/back LK (switch 0x4E93C4 f8 -> 60) -> 186-188
+   Shared locomotion: 267 walk F, 272 walk B, 259/258 crouch, 304 jump, 301 flip, 305 turn, 317-307 run (pushes the opponent +105504).
+2) Specials (PROVEN live):
+   23  F,F+LP skull projectile (proj[07] 0x4F0388) -> victim 182, dx +151371 (gap 200000) / +82566 (gap 350000)
+   87-88-89-90 F,D+LK air stomp (special[0b]) -> victim 178-328; min height -252970 (5 runs)
+   105 F,F+HK flying ram (special[1a] 0x4EB0E0) -> victim 189-191, dx +223765 / +305767, rise 59675
+   74  air throw: BL in the air while the opponent jumps (misc[20] 0x4E8E60) -> victim 150-175, dx about -200000 (thrown behind), rise 171740
+   7   F,B+HP (misc[12]) played 4 times, never hit the opponent; effect GUESS.
+   Static only, not seen: 77 / victim 161 (second air-throw entry), 94 (first clip of the F,D+LK handler). GUESS.
+3) Weapon (PROVEN live; roles from the input that played them, no visual ID by netsider yet; looks like a spiked mace, GUESS):
+   244 draw D,B+HK -> 286 armed stance | 277 / 278 armed walk F / B | 246 armed block | 218-219 armed crouch
+   234 armed LP -> victim 205, dx -28905 | 238 armed HP -> victim 132-328, dx +41282
+   208 weapon throw: the draw input again while armed -> victim 131, dx +196590, rise 66945; then unarmed idle 283 (input LIKELY).
+   Armed LK / HK / B+LK / B+HK keep their normal clips (70, 71, 63, 313); armed D+HP -> 218-219-293.
+4) As victim (VS vs CPU): 13 (via 199 after opponent clip 14), 128, 131, 134, 154-172, 157-586, 158-171, 179, 182, 185, 186-188, 189-191,
+   192-194, 195-197, 311, 328. PROVEN played.
+5) Fatalities: fatality A (static F,D,F+LK release) and fatality B (static U,U,D,D+LP) tried at FINISH HIM with press / hold-release /
+   block-held variants at several distances: no fatality came out, every attempt ended in victory pose 125. Clips unresolved (GUESS;
+   the static input decode may be wrong). Stage fatalities not attempted.
+6) Game crashes during capture (PROVEN, cause GUESS): "Exception C0000005 at Address 004B9545" 4 times, always in a practice-mode reset
+   (or right after F,B+HP); "at 00409B55" once, on armed jump-forward HP. Armed jump / run / D+LK were therefore not logged.
+7) Open: 77/161, 94, 295, 297, 261/532/533, 209, 547/548/596; fatality clips; F,B+HP effect; armed jump / run. See QUANCHI_CLIPS.txt "STILL OPEN".
+
+==== TANYA (fighter id 9): LIVE PASS, SPECIALS, WEAPON, FATALITY, CLIP LIST (2026-10-23, ~3:20 AM - 5:30 AM ET) ====
+Full clip list with status per clip: TANYA_CLIPS.txt (this repo; 134 clips: 93 PROVEN, 9 LIKELY, 12 GUESS, 20 NOT HERS).
+Method as for Reiko / Quan Chi: P1 Tanya with scripted inputs, live memory log of both clip slots (practice vs an inactive Tanya, and VS vs CPU),
+plus the static decoder (script_decoder_v3.py, fighter 9) and entry f9 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
+Why Tanya: next fighter after Quan Chi (id 8) in the game's fighter-id order. Name from the select screen and "TANYA WINS".
+Raw units only (65536 = 1 game unit = 256 mesh units). Tanya idle 439, armed stance 285, standing height -71100, practice start gap 170392.
+Frame sheets (8 frames per clip) of the captured video were checked by eye for 53 clips (victim clips included).
+
+1) PROVEN live (P1 Tanya):
+   46 round intro (switch 0x4E8EE0 f9; every VS round start + every practice start) | 124 victory pose "TANYA WINS" (switch 0x4E9A28 f9)
+   79 throw, close LP / F+LP (throw switch 0x4E1784 f9 -> 79 / victim 151) -> victim 151-174-191, dx -315573..-324505, rise 71505 (thrown behind her)
+   42 close LK special (table 0x4E0FA0 idx 9 -> 0x42B7E0 -> script 0x4E1020: clip 42, opp 162) -> victim 162, dx -50491 (3x)
+   262 close HP at gap 40000 (table 0x4E9BF8, id mod 3 = 0) -> victim 311 | 314 close HK knee -> victim 134, dx +27510
+   294 LP (gap 60000 -> 311) | 296 HP (gap 60000 -> 324) | 66 HK | 308 LK | 293 uppercut -> 128-328, dx +95844, rise 157375
+   62 sweep -> 192-194, dx +71712 | 64 roundhouse -> 142-141-143-328, dx +99130, rise 59294 (gap 45000)
+   260 crouch LP -> 134, dx +50763 | 54 crouch HK -> 311, dx +68187 | 315 crouch LK -> 134, dx +50504 | 257/256 crouch block | 323 block
+   97 jump HP -> 311 | 96 jump LP -> 186-188, dx +172996 | 61 jump-up kick (LK and HK) | 55 jump forward/back HK -> 131-185, dx +203148, rise 89182
+   58 jump forward/back LK (switch 0x4E93C0 f9 -> 58) -> 186-188
+   Shared locomotion: 267 walk F, 272 walk B, 259/258 crouch, 304 jump, 301 flip, 305 turn, 317-307 run (pushes the opponent +105504).
+2) Specials (PROVEN live):
+   26  D,F+HP fireball (proj[0a] 0x4F0250) -> victim 130, dx +127475 (gap 60000/200000), +42989 (gap 350000)
+   24  air fireball: D,B+LP in the air (proj[0b]) -> 304-24-310, victim 130, dx +127475; P1 min height -183219
+   109 F,F+LK corkscrew / flying kick (special[1e]) -> victim 179-328, rise 112119, dx +23546 (gap 40000) .. -96977 (gap 250000)
+   103 F,D,B+LK long travelling kick (special[12] 0x4EB1D8) -> victim 311-131-185, dx +436441 (gap 90000) / +326341 (gap 200000), rise 89182
+   Static only, not seen: 22 (second clip of the D,B+LP handler; on the ground D,B+LP always gave LP 294). GUESS.
+3) Weapon (PROVEN live; the frames show a curved blade thrown like a boomerang, name GUESS):
+   244 draw F,F+HK -> 285 armed stance | 275 / 276 armed walk F / B | 246 armed block | 217-219 armed crouch | 252 armed jump-up HP
+   229 armed LP / HP: blade thrown, comes back -> victim 130, dx about +125000..+127475
+   208 armed F,F+HK: weapon thrown / put away -> victim 131, dx +191130, rise 66945; then unarmed idle 439 (seen once; input LIKELY).
+   Armed LK / HK / B+LK / B+HK keep their normal clips (308, 66, 62, 64); armed D+HP -> 217-219-293.
+4) As victim (VS vs CPU): 13 (via 199 after opponent clip 14), 128, 131, 132, 137, 148, 152-173, 153, 157-586, 158-171, 159-177, 180, 182,
+   183-185, 186-188, 189-191, 192-194, 311, 328. PROVEN played.
+5) Fatalities (VS, opponent dazed at FINISH HIM; the P1-P2 X distance at the input was 52775 every time):
+   Fatality B D,F,D,F+HK (misc43): REACHED. Tanya 564-565-566, victim 567-568-569, then victory 124. PROVEN.
+   Fatality A D,D,U,D+BL (misc40, static): NOT REACHED in 5 tries (plain, +HP, fast 25-30 ms taps); the Up always started a jump (304,
+   once 97) and the round ended with victim 137. Input LIKELY (static). Stage fatalities (arena 8 B,F,D+HP; arena 0 F,F,F+LP -> 293) not attempted.
+6) Capture note: some practice sessions recorded blank video while the memory log was fine (capture-side rendering bug, cause GUESS);
+   315 has no frame sheet for that reason.
+7) Open: fatality A; 22; 295, 297 (LP/HP follow-ons; LP,LP and HP,HP gave only 294/296); 261/532/533; 209; 547/548/596; 208 clean repeat;
+   static-only victim clips 145, 154, 156, 195-197, 316-320, 549-550, 607, 610. See TANYA_CLIPS.txt "STILL OPEN".

@@ -151,6 +151,7 @@ clip | status      | name / description                                    | evi
  328 | PROVEN      | flip get-up recovery; netsider: shared get-up | live 128-328, 201-328, 153-173-328, 154-172-328
  388 | PROVEN      | Death Kiss fatality (blows kiss) | live VS per-player log: P1 388, victim 13 <-> 206. Old viewer listed it under Liu Kang (catalogue conflict)
  439 | PROVEN      | idle / fighting stance | all live logs
+ 467 | NETSIDER-ID | netsider: swim (swimming motion) | netsider ID on Sonya. One clip in the shared 612-clip table, so every fighter can play it; nothing in MK4.EXE points at clip 467 (no clip-record pointer, fixup or script), LIKELY unused/cut
  547 | GUESS       | run-related clip | static Run handler lists 547 548 596 307 317; seen in an old mixed VS log (opponent side)
  548 | GUESS       | run-related clip | as 547
  549 | GUESS       | run-collision victim, start | static run reaction rb5 -> 549-550-196; old mixed VS log
@@ -163,9 +164,9 @@ clip | status      | name / description                                    | evi
  586 | UNKNOWN     | (131 frames) seen in an old mixed VS log | no input or code link yet
  596 | GUESS       | run-related clip | static Run handler only
 
-SUMMARY (131 clips listed)
+SUMMARY (132 clips listed)
  PROVEN       88
- NETSIDER-ID   4
+ NETSIDER-ID   5
  LIKELY       10
  GUESS        15
  NOT HERS     10

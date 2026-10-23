@@ -1,0 +1,202 @@
+TANYA (fighter id 9) - CLIP LIST AND STATUS
+Mortal Kombat 4 PC (retail MK4.EXE). netsider's MK4-RE project. Built 2026-10-23 ET from the live memory logs
+and the MK4.EXE static reading. Full detail: MK4_RE_NOTES_v3.txt (this repo), TANYA section.
+
+WHAT IS LISTED
+Every clip number Tanya's fighter object plays (as attacker OR as victim), every clip her own move scripts and
+per-fighter tables point at, and clips that turned up in her clip sets but belong to someone else.
+Clip number = index into the game's 612-entry clip table (record address 0x4FDD6C + 12*clip).
+Some shared move scripts pick the clip per fighter with a 16-entry FIGHTER_SWITCH (script opcode 0x3C, entries
+f0..f15 = fighter id). Tanya takes entry f9 (PROVEN: intro 46, victory 124, throw 79/151, angled jump LK 58 all matched live).
+Only the f9 entry is hers; the other 15 entries are other fighters' clips. Victim / reaction clips are shared by all fighters.
+Live sources: practice mode P1 Tanya vs P2 Tanya (inactive dummy) and VS mode P1 Tanya vs CPU opponents (memory logs).
+Frame sheets (8 frames per clip) of the captured video were checked by eye for 53 clips.
+
+STATUS LABELS
+ PROVEN       = seen live in the running game (memory log of the clip slot while pressing the input), or read
+                directly in the game code and matched live.
+ LIKELY       = strong static (code) or indirect evidence, not seen live on Tanya.
+ GUESS        = weak evidence (static listing only).
+ NOT HERS     = belongs to another fighter (or is another fighter's version of a shared move). The evidence
+                column says how sure (PROVEN or LIKELY).
+ UNKNOWN      = in her set, purpose not known.
+
+UNITS (raw game units only)
+ Positions are 16.16 fixed point: 65536 = 1 game unit = 256 mesh units (PROVEN). No metres are used.
+ dx   = victim X net displacement over the reaction (last - first). + = pushed away from the attacker,
+        - = thrown behind the attacker.
+ rise = victim standing height minus its lowest height (how high it went).
+ Tanya standing height -71100 (negative = up). Practice start X -85196 / +85196 (gap 170392).
+ Sequences like 151-174-191 are the clips in the order they play.
+
+clip | status      | name / description                                    | evidence / notes
+-----+-------------+-------------------------------------------------------+------------------
+  13 | PROVEN      | dazed / stagger (shared) | live VS: P2 13 at FINISH HIM before her fatality; Tanya plays 199-13 after opponent clip 14
+  22 | GUESS       | D,B+LP projectile handler second clip | static only: proj[0b] 0x4F02D0 -> 22; ground D,B+LP gave plain LP 294 (4 input timings), air D,B+LP gave 24-310
+  24 | PROVEN      | air fireball (U, then D,B+LP in the air; proj[0b]) | live 304-24-310 and 304-301-24-310 (5x); victim 130, dx +127475; P1 min height -183219
+  26 | PROVEN      | fireball (D,F+HP; proj[0a]) | live 259-258-259-439-26; victim 130, dx +127475 (gap 60000/200000), +42989 (gap 350000); static proj[0a] 0x4F0250 -> 26
+  42 | PROVEN      | close LK special | live gap 40000 3x: P1 42, P2 162, dx -50491; close-LK table 0x4E0FA0 idx 9 -> 0x42B7E0 -> script 0x4E1020 (clip 42, opp 162)
+  46 | PROVEN      | round-start intro pose | live VS every round start + every practice start; intro switch 0x4E8EE0 f9 -> 46
+  52 | NOT HERS    | crouch kick variant (Sub-Zero D+HK) | LIKELY not hers: in the crouch-kick lists with 54/315; Tanya's D+HK is 54
+  54 | PROVEN      | crouch high kick (D+HK) | live 259-258-54; gap 55000: victim 311, dx +68187 (no hit at 70000); crouch-kick lists 0x4E9008 / 0x4E8FB8
+  55 | PROVEN      | jump forward/back high kick (U+F/B then HK) | live 301-55; victim 131-185, dx +203148, rise 89182; angled-jump-HK list 0x4E9540 -> 55
+  56 | NOT HERS    | angled jump HK variant (Reiko) | LIKELY not hers: Reiko plays 56 live; Tanya plays 55
+  57 | NOT HERS    | angled jump HK variant (Fujin) | LIKELY not hers: Fujin plays 57 live; Tanya plays 55
+  58 | PROVEN      | jump forward/back low kick (U+F/B then LK) | live 301-58; victim 186-188, dx +172996; switch 0x4E93C0 f9 -> 58
+  59 | NOT HERS    | angled jump LK (Reiko id 7 and others) | PROVEN not hers from switch 0x4E93C0 (f9 -> 58); seen as a VS opponent clip
+  60 | NOT HERS    | angled jump LK (Fujin) | PROVEN not hers from switch 0x4E93C0; seen as a VS opponent clip
+  61 | PROVEN      | jump-up kick (U then LK or HK) | live 304-61 (LK and HK); VS; switch 0x4E91E0 -> 61
+  62 | PROVEN      | leg sweep (B+LK) | live 272-62; victim 192-194, dx +71712 (gap 60000); armed 276-62 -> 192-194 dx +94368; sweep switch 0x4E9780
+  64 | PROVEN      | roundhouse (B+HK) | live 272-64; gap 45000: victim 142-141-143-328, dx +99130, rise 59294 (no hit at 55000); armed 276-64
+  66 | PROVEN      | high kick (HK) | live 66 (far); armed 66 -> P2 311 dx +68187; HK switch 0x4E8C88 -> 66; also in the close-strike list
+  70 | NOT HERS    | low kick of other fighters | PROVEN not hers: LK switch 0x4E8D78 (Tanya -> 308)
+  71 | NOT HERS    | high kick of other fighters | PROVEN not hers: HK switch 0x4E8C88; seen as a VS opponent clip
+  75 | NOT HERS    | throw (ids 0,6,14) - attacker | PROVEN not hers (throw switch 0x4E1784). Tanya played victim 152-173 when thrown by a 75 in VS
+  76 | NOT HERS    | throw (ids 4,10) - attacker | PROVEN not hers (throw switch). Victim 153
+  78 | NOT HERS    | throw (id 2, Sonya) - attacker | PROVEN not hers (throw switch 0x4E1784). Victim 156
+  79 | PROVEN      | throw (close LP or F+LP) | live gap 40000-45000: P1 79, P2 151-174-191, dx -319505 / -324505 / -315573 (F+LP), rise 71505 (thrown BEHIND her); VS 3x; switch f9 -> 79/151
+  80 | NOT HERS    | throw (ids 1,7,12) - attacker | PROVEN not hers (throw switch). Victim 154
+  81 | NOT HERS    | throw (ids 5,11) - attacker | PROVEN not hers (throw switch). Tanya played 158-171 when thrown by an 81 in VS
+  83 | NOT HERS    | throw (id 13) - attacker | PROVEN not hers (throw switch). Victim 145
+  96 | PROVEN      | jump punch LP (U then LP; also air D,F+LP) | live 304-96; victim 186-188, dx +172996; static U-then-LP list -> 96
+  97 | PROVEN      | jump punch HP (U then HP, straight or forward; also air D,F+HP) | live 304-97 / 301-97; victim 311; P1 min height -183219
+ 103 | PROVEN      | F,D,B+LK long travelling kick (special[12]) | live P1 103; victim 311-131-185, dx +436441 (gap 90000) / +326341 (gap 200000), rise 89182; static special[12] 0x4EB1D8 -> 103
+ 109 | PROVEN      | F,F+LK corkscrew / flying kick (special[1e]) | live 4 gaps: P1 109, victim 179-328, rise 112119, dx +23546 (40000) / +2891 (60000) / -29900 (100000) / -96977 (250000). Notes list special 31 Tanya corkscrew -> 109
+ 124 | PROVEN      | round-win victory pose (TANYA WINS) | live VS after every won round and after the fatality; victory switch 0x4E9A28 f9 -> 124
+ 128 | PROVEN      | uppercut launch (shared) | live P2 128-328 after 293 (dx +95844, rise 157375); VS as victim
+ 130 | PROVEN      | projectile hit reaction (shared) | live P2 130 after 26, 24, armed 229
+ 131 | PROVEN      | knockdown (jump HK, 103, weapon 208) | live 131-185 after 55 / 103; 131 after 208 (dx +191130, rise 66945); VS as victim
+ 132 | PROVEN      | hit reaction (shared) | live VS as victim (opponent clips 21 / 229 / 134); then 328
+ 134 | PROVEN      | low/body hit reaction (shared) | live after 314 (dx +27510), 315 / 260 (dx +50763), armed 308 (dx +68187)
+ 137 | PROVEN      | collapse at round end (shared) | live VS: P2 137 when a round ended after a failed fatality attempt (time out of FINISH HIM)
+ 141 | PROVEN      | roundhouse victim, part 2 | live P2 142-141-143-328 after 64 (gap 45000)
+ 142 | PROVEN      | roundhouse victim, part 1 | as 141
+ 143 | PROVEN      | roundhouse victim, part 3 | as 141
+ 145 | LIKELY      | thrown by the id 13 fighter (opponent clip 83) | static throw switch; not seen on Tanya
+ 148 | PROVEN      | close-LK special victim of Reiko's 40 | live VS: Tanya 148 when the CPU did clip 40
+ 151 | PROVEN      | thrown by Tanya clip 79 (victim start) | live P2 151-174-191 after 79 (practice + VS)
+ 152 | PROVEN      | thrown by an id 0/6/14 fighter (opponent clip 75) | live VS: Tanya 152-173
+ 153 | PROVEN      | thrown by an id 4/10 fighter (opponent clip 76) | live VS: Tanya 153 after opponent 76
+ 154 | LIKELY      | thrown by an id 1/7/12 fighter (opponent clip 80) | static throw switch; PROVEN on Reiko's opponents; not seen on Tanya
+ 156 | LIKELY      | thrown by Sonya (opponent clip 78) | static throw switch; not seen on Tanya
+ 157 | PROVEN      | hit reaction to opponent clip 37, then 586 | live VS: 157-586
+ 158 | PROVEN      | thrown by an id 5/11 fighter (opponent clip 81) | live VS: 158-171
+ 159 | PROVEN      | VS victim (opponent clip 34) | live VS: 159-177
+ 162 | PROVEN      | close-LK special victim (of 42) | live P2 162 after 42, dx -50491; script 0x4E1020 opp 162
+ 171 | PROVEN      | landing after throw 81 | live VS 158-171
+ 173 | PROVEN      | landing after throw 75 | live VS 152-173
+ 174 | PROVEN      | landing after throw 79 (after 151) | live P2 151-174-191 (practice and VS)
+ 177 | PROVEN      | VS victim end after 159 | live VS 159-177
+ 179 | PROVEN      | F,F+LK (109) victim | live P2 179-328 after 109 (4 gaps); static special[1e] victim 179
+ 180 | PROVEN      | VS victim (opponent clip 1) | live VS: 180 then 131
+ 182 | PROVEN      | projectile hit reaction (shared) | live VS: Tanya 182 after opponent clip 448
+ 183 | PROVEN      | knocked down (special victim, shared) | live VS: Tanya 183-185 after opponent clips 312 / 264; static special[1e] lists 183 too (not seen from her 109)
+ 185 | PROVEN      | get-up after 131 / 183 | live 131-185
+ 186 | PROVEN      | jump-attack hit | live 186-188 after 96 and 58 (dx +172996); VS victim
+ 188 | PROVEN      | recover after 186 | live 186-188
+ 189 | PROVEN      | VS victim (opponent clip 66) | live VS 189-191
+ 191 | PROVEN      | end of throw-79 victim chain / end after 189 | live P2 151-174-191; VS 189-191
+ 192 | PROVEN      | knocked down by the sweep (start) | live 192-194 after 62; VS victim
+ 194 | PROVEN      | get-up after 192 | live 192-194
+ 195 | LIKELY      | sweep fall (other sweep reaction) | static sweep reaction r12 -> 195-197; PROVEN on Shinnok; not seen on Tanya
+ 197 | LIKELY      | sweep get-up | as 195
+ 199 | PROVEN      | hit reaction to opponent clip 14, then 13 | live VS: 199-13 (role from context only)
+ 208 | PROVEN      | armed F,F+HK: weapon thrown / put away | live P1 208 while armed, victim 131 dx +191130, rise 66945; she is then unarmed (439) and LP is 294 again (input PROVEN once)
+ 209 | GUESS       | RUN-button action clip | static misc[03] -> 209; RUN tap did nothing live
+ 217 | PROVEN      | armed crouch, going down (D while armed) | live 285-217-219-259-285
+ 219 | PROVEN      | armed crouch, held | as 217; armed D+HP 217-219-293
+ 229 | PROVEN      | armed LP / HP: boomerang blade throw | live 285-229-285 (or 229-439-285); victim 130, dx about +125000..+127475; curved blade seen in the frames
+ 244 | PROVEN      | weapon draw (F,F+HK) | live 244-285; static weapon draw 0x4E92A8 -> 244
+ 246 | PROVEN      | armed block | live 285-246-285
+ 252 | PROVEN      | armed jump-up HP | live while armed (U then HP)
+ 256 | PROVEN      | crouch block held | live 259-258-257-256-257-258-259
+ 257 | PROVEN      | crouch block (in/out) | as 256
+ 258 | PROVEN      | crouch held (shared) | live
+ 259 | PROVEN      | crouch going down / up (shared) | live
+ 260 | PROVEN      | crouch punch (D+LP) | live; gap 50000: victim 134, dx +50763 (no hit at 70000)
+ 261 | GUESS       | close-strike clip | static close-strike list 0x4E9998 -> 261; never seen live
+ 262 | PROVEN      | close HP | live gap 40000: P1 262, P2 311; close-HP switch 0x4E9BF8 (id mod 3 = 0 -> 262)
+ 263 | NOT HERS    | close HP (id mod 3 = 1, Reiko etc.) | PROVEN not hers from switch 0x4E9BF8 (Tanya 262)
+ 264 | NOT HERS    | close HP (id mod 3 = 2) | PROVEN not hers from switch 0x4E9BF8; seen as a VS opponent clip
+ 267 | PROVEN      | walk forward (shared) | live
+ 272 | PROVEN      | walk back (shared) | live
+ 275 | PROVEN      | armed walk forward | live; armed run 275-317-307
+ 276 | PROVEN      | armed walk back | live; armed B+LK/B+HK start with 276
+ 285 | PROVEN      | armed stance | live after 244 / 229
+ 293 | PROVEN      | uppercut (D+HP) | live 259-258-293; victim 128-328, dx +95844, rise 157375; armed 217-219-293. Static stage fatality arena 0 (F,F,F+LP) -> 293
+ 294 | PROVEN      | low punch (LP) | live 294; gap 60000 -> P2 311; also LP during a run
+ 295 | LIKELY      | low-punch follow-on clip | static LP 0x4E92D8 294-295, 0x4E9348 295; LP,LP close gave only 294
+ 296 | PROVEN      | high punch (HP) | live 296; gap 60000 -> P2 324
+ 297 | LIKELY      | high-punch follow-on clip | static HP code[297,296]; HP,HP close gave only 296
+ 301 | PROVEN      | jump forward/back flip | live
+ 304 | PROVEN      | jump straight up / landing | live
+ 305 | PROVEN      | turn-around | live
+ 307 | PROVEN      | run loop | live F,F+RUN hold 267-317-307, pushes P2 +105504
+ 308 | PROVEN      | low kick (LK) | live 308 far; armed 308 -> P2 134, dx +68187; LK switch 0x4E8D78 f9 -> 308. Static special[1e] also lists 308 first, but live F,F+LK is 109
+ 310 | PROVEN      | landing after the air fireball 24 | live 24-310 (5x)
+ 311 | PROVEN      | high hit reaction (shared) | live after 262, 97, 54, armed 66, 103, LP; VS victim
+ 312 | NOT HERS    | special of another fighter (Scorpion teleport punch, LIKELY) | seen as a VS opponent clip (Tanya 183 after it)
+ 313 | NOT HERS    | roundhouse (Sonya) | PROVEN not hers: roundhouse switch 0x4E97E8; Tanya plays 64
+ 314 | PROVEN      | close high kick (knee) | live gap 40000: P1 314, P2 134, dx +27510
+ 315 | PROVEN      | crouch low kick (D+LK) | live 258-315; victim 134, dx +50763 / +50504 (both captured videos blank)
+ 316 | GUESS       | sweep-fall variant, start | static sweep reaction 316-320-192-194; live 62 gave 192-194 only
+ 317 | PROVEN      | run start | live 317-307
+ 320 | GUESS       | sweep-fall variant, middle | as 316
+ 323 | PROVEN      | standing block held | live
+ 324 | PROVEN      | face (high) hit reaction | live P2 324 after HP at gap 60000
+ 327 | NOT HERS    | jump-up kick of Sonya | PROVEN not hers: switch 0x4E91E0
+ 328 | PROVEN      | flip get-up recovery (shared) | live 128-328, 179-328, 142-141-143-328; VS
+ 439 | PROVEN      | idle stance (Tanya) | live, every session
+ 532 | GUESS       | close-strike clip | static only (0x4E99B0)
+ 533 | GUESS       | close-strike clip | static only (0x4E9A10)
+ 547 | GUESS       | run-related clip | static Run handler 0x4E2DB8 547-548; run + LP gave 317-307-294, run + HP/LK/HK gave nothing new
+ 548 | GUESS       | run-related clip | as 547
+ 549 | GUESS       | run-collision victim, start | static run reaction 549-550-196; never seen live
+ 550 | GUESS       | run-collision victim, middle | as 549
+ 564 | PROVEN      | fatality B (D,F,D,F+HK), part 1 | live VS at X distance 52775 with P2 dazed: P1 564-565-566, P2 567-568-569, then 124
+ 565 | PROVEN      | fatality B, part 2 | as 564 (close-up of Tanya in the frames)
+ 566 | PROVEN      | fatality B, part 3 (TANYA WINS on screen) | as 564
+ 567 | PROVEN      | fatality B victim, part 1 | live P2 with 564
+ 568 | PROVEN      | fatality B victim, part 2 | live P2 with 565
+ 569 | PROVEN      | fatality B victim, part 3 | live P2 with 566
+ 586 | PROVEN      | VS victim follow-on after 157 | live VS 157-586
+ 596 | GUESS       | run-related clip | static Run handler 0x4E2850.. only
+ 605 | NOT HERS    | throw (id 13) second attacker clip | PROVEN not hers (throw switch)
+ 607 | LIKELY      | thrown by the id 13 fighter (part 2) | static throw switch; not seen on Tanya
+ 609 | NOT HERS    | throw (id 15) - attacker | PROVEN not hers (throw switch). Victim 610
+ 610 | LIKELY      | thrown by the id 15 fighter | static throw switch; not seen on Tanya
+
+SUMMARY (134 clips listed)
+ PROVEN        93
+ LIKELY         9
+ GUESS         12
+ NOT HERS      20
+ UNKNOWN        0
+
+MOVES WITH NO CLIP OF THEIR OWN
+ Fatality A (misc40, static input D,D,U,D+BL): tried live in VS 5 times with P2 dazed (FINISH HIM), all at the same distance
+   (P1-P2 X difference 52775 at the input; the script's gap setting did not take effect): D,D,U,D+BL twice, D,D,U,D+BL+HP, and fast
+   versions (25-30 ms taps) of both. Each time the Up started a jump (304; once a jump punch 97) and no fatality clip played; the
+   round then ended with P2 137. NOT REACHED; input stays LIKELY (static); the clips are filled at run time.
+ Fatality B (misc43, D,F,D,F+HK): REACHED live, clips 564-566 / victim 567-569 (PROVEN, see the table).
+ Stage fatalities: arena 8 (misc41, B,F,D+HP) and arena 0 (misc42, F,F,F+LP -> uppercut 293, static): not attempted (need those
+   arenas in VS). LIKELY (static input).
+ Juggles: none produced on purpose. 293 launches (rise 157375); no juggle clip of her own found.
+
+STILL OPEN
+ - Fatality A (see above): find the missing condition (distance, or the Up must not start a jump) and reach it live.
+ - 22 (second clip of the D,B+LP handler): ground D,B+LP always gave LP 294 (4 timings); in the air it is 24-310. Static only.
+ - 295, 297, 261, 532, 533, 209, 547, 548, 596: static-only clips in her handlers; LP,LP / HP,HP / run+attack / RUN tap gave nothing new.
+ - 208: seen once (armed F,F+HK). A clean single-input repeat would firm up the input.
+ - Static-only victim clips on Tanya: 145, 154, 156, 195-197, 316-320, 549-550, 607, 610.
+ - 315 crouch LK: PROVEN in the logs, but both captured videos were blank (capture-side rendering bug), so it has no frame sheet.
+ - Weapon: the frames show a curved blade thrown like a boomerang (229); exact name GUESS.
+ - Clips outside the logs and her handlers were not surveyed (no full scan of all 612 clips for Tanya).
+
+OTHER FIGHTERS' ENTRIES IN THE SAME PER-FIGHTER TABLES (NOT HERS, PROVEN from the switch tables)
+ (Throw pairs are attacker/victim; Tanya plays the victim clip when one of those fighters throws her.)
+ throw 0x4E1784:          75/152 (ids 0,6,14), 80/154 (1,7,12), 79/151 (3,9 = hers), 76/153 (4,10), 78/156 (2, Sonya), 81/158 (5,11), 83/145 then 605/607 (13), 609/610 + 604/606 (15)
+ round-start intro 0x4E8EE0: 44, 45, 47, 48, 49, 50, 51 (f2 Sonya also 46; 45/50 seen live on her VS opponents)
+ high kick 0x4E8C88: 65, 71 (66 = hers)    low kick 0x4E8D78: 67, 70 (308 = hers; also ids 2,5,12)    jump-up kick 0x4E91E0: 327 (Sonya)
+ angled jump LK 0x4E93C0: 59 (ids 1,4,7,10,13), 60 (ids 2,5,8,11,14,15)    sweep 0x4E9780: 63 (even ids; 62 = hers)
+ roundhouse 0x4E97E8: 313 (Sonya)    close HP 0x4E9BF8 (id mod 3): 263, 264    victory 0x4E9A28: 111, 113, 114, 115, 119, 120, 121, 122, 123, 125, 594 (124 = hers)

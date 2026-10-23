@@ -1,0 +1,204 @@
+QUAN CHI (fighter id 8) - CLIP LIST AND STATUS
+Mortal Kombat 4 PC (retail MK4.EXE). netsider's MK4-RE project. Built 2026-10-23 ET from the live memory logs
+and the MK4.EXE static reading. Full detail: MK4_RE_NOTES_v3.txt (this repo), QUANCHI section.
+
+WHAT IS LISTED
+Every clip number Quan Chi's fighter object plays (as attacker OR as victim), every clip his own move scripts and
+per-fighter tables point at, and clips that turned up in his clip sets but belong to someone else.
+Clip number = index into the game's 612-entry clip table (record address 0x4FDD6C + 12*clip).
+Some shared move scripts pick the clip per fighter with a 16-entry FIGHTER_SWITCH (script opcode 0x3C, entries
+f0..f15 = fighter id). Quan Chi takes entry f8 (PROVEN). Only the f8 entry is his; the other 15 entries are other
+fighters' clips (see "OTHER FIGHTERS' ENTRIES" at the end). Victim / reaction clips are shared by all fighters.
+Live sources: practice mode P1 Quan Chi vs P2 Quan Chi (inactive dummy) and VS mode P1 Quan Chi vs CPU opponents (memory logs).
+No clip in this list has a visual ID by eye from the owner yet; roles come from the input that played them (frame sheets checked by eye).
+
+STATUS LABELS
+ PROVEN       = seen live in the running game (memory log of the clip slot while pressing the input), or read
+                directly in the game code and matched live.
+ LIKELY       = strong static (code) or indirect evidence, not seen live on Quan Chi.
+ GUESS        = weak evidence (static listing only).
+ NOT HIS      = belongs to another fighter (or is another fighter's version of a shared move). The evidence
+                column says how sure (PROVEN or LIKELY).
+ UNKNOWN      = in his set, purpose not known.
+
+UNITS (raw game units only)
+ Positions are 16.16 fixed point: 65536 = 1 game unit = 256 mesh units (PROVEN). No metres are used.
+ dx   = victim X net displacement over the reaction (last - first). + = pushed away from the attacker,
+        - = thrown behind the attacker.
+ rise = victim standing height minus its lowest height (how high it went).
+ Speeds are units/tick (1 tick ~ 1/60 s, PROVEN). Quan Chi standing height -78643 (negative = up).
+ Practice start X -85196 / +85196 (gap 170392). Sequences like 154-172-328 are the clips in the order they play.
+
+clip | status      | name / description                                    | evidence / notes
+-----+-------------+-------------------------------------------------------+------------------
+   7 | PROVEN      | F,B+HP special (misc[12]) | live 283-..-7-283 at gap 60000 and 150000 (no hit, 3 runs); static misc[12] -> 7, victim 182-183
+  13 | PROVEN      | dazed / FINISH HIM stance (shared) | live VS: Quan Chi plays 199-13 after opponent clip 14; every CPU victim plays 13 at FINISH HIM
+  23 | PROVEN      | F,F+LP skull projectile (proj[07]) | live 23; P2 182, dx +151371 (gap 200000), +82566 (gap 350000); green skull visible; static proj[07] 0x4F0388 -> 23
+  38 | PROVEN      | close LK special (leg grab), part 1 | live gap 40000: P1 38-39, P2 160-168, dx +359699; close-LK table 0x4E0FA0 idx 8 -> 0x42BC40 -> script 0x4E1198 (clip 38, opp 160, damage 13762 = 21.0%)
+  39 | PROVEN      | close LK special, part 2 | live 38-39 (3 runs)
+  51 | PROVEN      | round-start intro pose | live VS every round start + every practice start; intro switch 0x4E8EE0 f8 -> 51
+  52 | PROVEN      | crouch high kick (D+HK) | live 259-258-52; close: P2 128-328, dx +96334, rise 157375 (launch); far: no hit; crouch-kick lists 0x4E9008 / 0x4E8FB8
+  54 | NOT HIS     | crouch HK of other fighters | LIKELY not his: Reiko plays 54 (PROVEN); Quan Chi plays 52
+  55 | NOT HIS     | angled jump HK variant | LIKELY not his: angled-jump-HK list; Quan Chi plays 57
+  56 | NOT HIS     | angled jump HK variant (other fighters) | LIKELY not his: angled-jump-HK list; Quan Chi plays 57
+  57 | PROVEN      | jump forward/back high kick | live 304-301-57 forward and back; victim 131-185, dx +203148, rise 89182; VS
+  58 | NOT HIS     | angled jump LK (ids 0/3/6/9/12) | PROVEN not his from the switch 0x4E93C4
+  59 | NOT HIS     | angled jump LK (ids 1/4/7/10/13) | PROVEN not his from the switch 0x4E93C4 (Quan Chi plays 60)
+  60 | PROVEN      | jump forward/back low kick | live 301-60 / 304-301-60; victim 186-188, dx +172996; switch 0x4E93C4 ids 2/5/8/11/14 -> 60; VS
+  61 | NOT HIS     | jump-up kick of other fighters | PROVEN not his: switch 0x4E91E0; Quan Chi plays 327
+  62 | NOT HIS     | sweep (odd ids) | PROVEN not his: sweep switch 0x4E9780; Quan Chi plays 63
+  63 | PROVEN      | leg sweep (B+LK) | live 272-63; victim 195-197, dx +119045 / +114028; armed 278-63 the same; sweep switch even ids -> 63
+  64 | NOT HIS     | roundhouse (other fighters) | PROVEN not his: roundhouse switch 0x4E97E8; Quan Chi plays 313
+  66 | NOT HIS     | high kick of other fighters | PROVEN not his: HK switch 0x4E8C88 (Quan Chi plays 71)
+  67 | NOT HIS     | low kick of other fighters | PROVEN not his: LK switch 0x4E8D78 (Quan Chi plays 70)
+  70 | PROVEN      | low kick (LK) | live 70 (far, armed); LK switch 0x4E8D78 f8 -> 70; VS
+  71 | PROVEN      | high kick (HK) | live 71 (far, armed, no hit far); HK switch 0x4E8C88 f8 -> 71; VS
+  74 | PROVEN      | air throw (BL in the air vs a jumping opponent, misc[20]) | live P1 304-74-301 with P2 jumping: P2 304-150-175, dx -201936 / -196541 (thrown behind), rise 171740 (2 of 2); static 0x4E8E60 -> 74 / opp 150
+  75 | NOT HIS     | throw (ids 0,6,14) - attacker | PROVEN not his (throw switch 0x4E1784). Victim 152
+  76 | NOT HIS     | throw (ids 4,10) - attacker | PROVEN not his (throw switch). Victim 153
+  77 | GUESS       | air throw, second static entry (victim 161) | static only: misc[20] 0x4E8EA8 -> 77 / opp 161; live air throws played 74 (2 of 2)
+  78 | PROVEN      | throw (close LP or F+LP) | live gap 40000: P1 78, P2 156-176-191, dx -292666..-301598 (thrown behind), rise 38296; VS throws end rounds; throw switch f8 -> 78 / victim 156
+  79 | NOT HIS     | throw (ids 3,9) - attacker | PROVEN not his (throw switch). Victim 151
+  80 | NOT HIS     | throw (ids 1,7,12) - attacker | PROVEN not his (throw switch; Reiko). Victim 154 (Quan Chi played 154 in VS)
+  81 | NOT HIS     | throw (ids 5,11) - attacker | PROVEN not his (throw switch). Victim 158 (Quan Chi played 158-171 in VS)
+  83 | NOT HIS     | throw (id 13) - attacker | PROVEN not his (throw switch). Victim 145
+  87 | PROVEN      | F,D+LK air stomp, part 1 (special[0b]) | live 259-258-259-87-88-89-90-301 (4 runs, gaps 200000 / 90000); P2 178-328; P1 min height -252970
+  88 | PROVEN      | F,D+LK air stomp, part 2 | as 87
+  89 | PROVEN      | F,D+LK air stomp, part 3 | as 87; static handler lists 87 / 89
+  90 | PROVEN      | F,D+LK air stomp, part 4 (landing) | as 87
+  94 | GUESS       | F,D+LK handler first clip | static special[0b] 0x4EB3F8 -> 94; live F,D+LK always played 87-90
+  96 | PROVEN      | jump punch LP (straight, forward) | live 304-96 / 304-301-96; victim 186-188, dx +172996
+  97 | PROVEN      | jump punch HP (straight, forward) | live 304-97 / 304-301-97; victim 311; P1 min height -190762 / -215776; VS
+ 105 | PROVEN      | F,F+HK flying ram (special[1a]) | live 105; P2 189-191, dx +223765 (gap 150000) / +305767 (gap 60000), rise 59675; static 0x4EB0E0 -> 105 / victim 189
+ 125 | PROVEN      | round-win victory pose (QUAN CHI WINS) | live VS after every won round (incl. FLAWLESS VICTORY, text visible) and after every failed fatality; victory switch 0x4E9A28 f8 -> 125
+ 128 | PROVEN      | uppercut / launch knockdown (shared) | live P2 128-328 after 293 and 52 (rise 157375); P1 in VS after opponent 293 / 110
+ 131 | PROVEN      | knockdown (jump HK, weapon throw 208) | live P2 131-185 after 57; 131 after 208 (dx +196590, rise 66945); P1 in VS after opponent 57
+ 132 | PROVEN      | armed HP victim | live P2 132-328 after armed 238 (dx +41282)
+ 134 | PROVEN      | low/body hit reaction (shared) | live P2 after 314, 315, 260, armed 70; P1 in VS after opponent 67 / 70
+ 137 | LIKELY      | collapse at round end (shared) | seen on his CPU victims in VS (13 -> 137); not on Quan Chi himself
+ 141 | PROVEN      | roundhouse victim, part 2 | live P2 142-141-143-328 after 313 at gap 45000, dx +150696, rise 59294
+ 142 | PROVEN      | roundhouse victim, part 1 | as 141
+ 143 | PROVEN      | roundhouse victim, part 3 | as 141
+ 145 | LIKELY      | thrown by the id 13 fighter | static throw switch; not seen on Quan Chi
+ 150 | PROVEN      | air-throw victim (thrown by 74) | live P2 304-150-175 after 74 (2 of 2)
+ 151 | LIKELY      | thrown by an id 3/9 fighter | static throw switch; not seen on Quan Chi
+ 152 | LIKELY      | thrown by an id 0/6/14 fighter | static throw switch; not seen on Quan Chi
+ 153 | LIKELY      | thrown by an id 4/10 fighter | static throw switch; PROVEN on Reiko; not seen on Quan Chi
+ 154 | PROVEN      | thrown by an id 1/7/12 fighter (clip 80) | live VS: Quan Chi plays 154-172 when thrown
+ 156 | PROVEN      | thrown by Quan Chi clip 78 (victim start) | live P2 156-176-191 after 78 (practice and VS)
+ 157 | PROVEN      | VS hit reaction, then 586 | live VS: 157-586 (opponent clips 290 / 282 around it; role LIKELY)
+ 158 | PROVEN      | thrown by an id 5/11 fighter (clip 81) | live VS: 158-171
+ 160 | PROVEN      | close-LK grab victim, part 1 | live P2 160-168 after 38-39; script 0x4E1198 opp 160
+ 161 | GUESS       | victim of air-throw entry 77 | static only (misc[20] opp 161)
+ 168 | PROVEN      | close-LK grab victim, part 2 | live P2 160-168
+ 171 | PROVEN      | landing after throw 81 | live VS 158-171
+ 172 | PROVEN      | landing after throw 80 | live VS 154-172
+ 175 | PROVEN      | air-throw victim landing | live P2 150-175 after 74
+ 176 | PROVEN      | thrown by 78, middle | live P2 156-176-191
+ 178 | PROVEN      | F,D+LK stomp victim | live P2 178-328 after 87-90
+ 179 | PROVEN      | VS hit reaction to opponent clip 22 (projectile) | live VS 2x after opponent 22 (role LIKELY)
+ 182 | PROVEN      | projectile hit reaction (skull 23) | live P2 182 after 23; also P1 in VS after opponent 437 / 448. Static F,B+HP victim 182-183
+ 183 | LIKELY      | F,B+HP victim second clip | static misc[12] victim 182-183; seen on Quan Chi's CPU opponent in VS, not on him; 7 never hit
+ 185 | PROVEN      | get-up after 131 | live P2 131-185 after 57; P1 in VS
+ 186 | PROVEN      | jump-attack hit | live P2 186-188 after 96, 60; P1 in VS 10x
+ 188 | PROVEN      | recover after 186 | live 186-188
+ 189 | PROVEN      | flying-ram victim (105) / VS high kick victim | live P2 189-191 after 105; P1 in VS after opponent 66 / 71
+ 191 | PROVEN      | landing / end after 189 and after throw 78 | live P2 189-191, 156-176-191
+ 192 | PROVEN      | knocked down by the sweep 62 (start) | live P1 in VS after opponent 62
+ 194 | PROVEN      | get-up after 192 | live VS 192-194
+ 195 | PROVEN      | sweep fall (his sweep 63) | live P2 195-197 after 63 (also armed); P1 in VS after opponent 63
+ 197 | PROVEN      | sweep get-up | live 195-197
+ 199 | PROVEN      | hit reaction to opponent clip 14, then 13 | live VS 2x (role LIKELY)
+ 205 | PROVEN      | armed LP victim | live P2 205 after armed 234 (dx -28905)
+ 206 | LIKELY      | fatality / round-end death fall (shared) | seen on his CPU victims in VS (13 -> 206); PROVEN on Sonya runs
+ 208 | PROVEN      | weapon throw (D,B+HK while armed) | live 286-218-219-259-286-208-283; P2 131, dx +196590, rise 66945; then unarmed 283 and no new draw that session (2 runs). Input LIKELY (draw input repeated)
+ 209 | GUESS       | RUN-button action clip | static generic RUN action misc[03] -> 209; RUN tap did nothing
+ 218 | PROVEN      | armed crouch, going down | live 286-218-219 (armed D+HP -> 218-219-293; before 208)
+ 219 | PROVEN      | armed crouch, held | as 218
+ 234 | PROVEN      | armed LP (mace swing) | live 286-234-286; P2 205, dx -28905
+ 238 | PROVEN      | armed HP (mace swing) | live 286-238-286; P2 132-328, dx +41282
+ 244 | PROVEN      | weapon draw (D,B+HK) | live 259-258-259-283-244-286 (4 sessions, mace visible); static misc[29] 0x4E92A8 -> 244
+ 246 | PROVEN      | armed block | live armed BL 286-246-286
+ 254 | GUESS       | low-hit reaction follow-on after 134 | static LK / crouch LP reaction 134-254; live showed 134 only
+ 256 | PROVEN      | crouch block release | live D+BL 258-257-256
+ 257 | PROVEN      | crouch block | live D+BL; also during BL-held fatality inputs
+ 258 | PROVEN      | crouch held | live D
+ 259 | PROVEN      | crouch going down | live D
+ 260 | PROVEN      | crouch low punch (D+LP) | live 259-258-260; gap 70000: P2 134, dx +50763
+ 261 | GUESS       | close-strike clip | static only: close-strike list 66 261 532 533
+ 262 | NOT HIS     | close HP (id mod 3 = 0) | PROVEN not his: close-HP table 0x4E9BF8 (seen on VS opponents)
+ 263 | NOT HIS     | close HP (id mod 3 = 1) | PROVEN not his: close-HP table (Reiko plays 263)
+ 264 | PROVEN      | close HP (very close; close-HP table id mod 3 = 2: ids 2,5,8,11,14) | live HP at gap 25000 / 32000: P1 283-264-283, P2 311 (2 runs); at gap 40000 HP plays 296 instead (P2 324); static close-HP table 0x4E9BF8 -> 264
+ 267 | PROVEN      | walk forward | live F
+ 272 | PROVEN      | walk back | live B
+ 277 | PROVEN      | armed walk forward | live F while armed
+ 278 | PROVEN      | armed walk back | live B while armed (before armed 63 / 313)
+ 283 | PROVEN      | idle / fighting stance | all live logs (Quan Chi idle)
+ 284 | NOT HIS     | idle of other fighters | PROVEN not his (Quan Chi idle is 283; Reiko idle 284)
+ 285 | NOT HIS     | armed stance of other fighters | PROVEN not his (Quan Chi armed stance is 286; Reiko 285)
+ 286 | PROVEN      | armed stance (holding the mace) | live after every 244 and between armed moves
+ 293 | PROVEN      | uppercut (D+HP) | live 259-258-293; P2 128-328, dx +96285 / +96334, rise 157375; armed 218-219-293. Also stage fatality arena 0 misc[42] (static, LIKELY)
+ 294 | PROVEN      | low punch (LP) | live 294; VS
+ 295 | LIKELY      | low-punch follow-on clip | static LP 294-295; not seen live: LP and LP,LP at gaps 45000-90000 played 294 only
+ 296 | PROVEN      | high punch (HP) | live 296 far and close (close: P2 324); VS
+ 297 | LIKELY      | high-punch follow-on clip | static HP code[297,296]; not seen live: HP played 296 (far, gap 40000) or 264 (very close)
+ 301 | PROVEN      | jump forward/back flip | live U+F / U+B
+ 304 | PROVEN      | jump straight up / landing | live U
+ 305 | PROVEN      | turn-around / re-face | live P1 / P2 305 after cross-ups
+ 307 | PROVEN      | run loop | live F,F+RUN hold 267-317-307; pushes P2 +105504
+ 311 | PROVEN      | high hit reaction (shared) | live P2 after 97, 327; P1 in VS after opponent close HP 262/263/264 and 71
+ 313 | PROVEN      | roundhouse (B+HK) | live 272-313; gap 45000: P2 142-141-143-328, dx +150696, rise 59294 (whiffs at 55000); armed 278-313
+ 314 | PROVEN      | close high kick (knee) | live gap 40000: P1 314, P2 134, dx +27510; VS
+ 315 | PROVEN      | crouch low kick (D+LK) | live 258-315; P2 134, dx +50763
+ 316 | GUESS       | sweep-fall variant, start | static sweep reaction r13 -> 316-320-192-194; never seen on Quan Chi
+ 317 | PROVEN      | run start | live 317-307
+ 320 | GUESS       | sweep-fall variant, middle | as 316
+ 323 | PROVEN      | standing block | live BL 283-323-283; also BL held during fatality inputs
+ 324 | PROVEN      | face (high) hit reaction | live P2 324 after close HP 296
+ 327 | PROVEN      | jump-up kick (U then LK or HK) | live 304-327; P2 311; switch 0x4E91E0 f8 -> 327; VS
+ 328 | PROVEN      | flip get-up recovery (shared) | live 128-328, 178-328, 132-328, 142-141-143-328
+ 547 | GUESS       | run-related clip | static Run handler 0x4E2DB8 lists 547 548; run gave 317-307
+ 548 | GUESS       | run-related clip | as 547
+ 549 | GUESS       | run-collision victim, start | static run reaction -> 549-550-196; never seen live
+ 550 | GUESS       | run-collision victim, middle | as 549
+ 586 | PROVEN      | VS follow-on after 157 | live VS: 157-586
+ 596 | GUESS       | run-related clip | static Run handler 0x4E2850.. only
+ 605 | NOT HIS     | throw (id 13) second attacker clip | PROVEN not his (throw switch)
+ 607 | LIKELY      | thrown by the id 13 fighter (part 2) | static throw switch; not seen on Quan Chi
+ 609 | NOT HIS     | throw (id 15) - attacker | PROVEN not his (throw switch). Victim 610
+ 610 | LIKELY      | thrown by the id 15 fighter | static throw switch; not seen on Quan Chi
+
+SUMMARY (136 clips listed)
+ PROVEN        90
+ LIKELY        11
+ GUESS         13
+ NOT HIS       22
+ UNKNOWN        0
+
+MOVES WITH NO CLIP OF THEIR OWN
+ Fatalities: fatality A (misc40, static input F,D,F+LK release) and fatality B (misc43, static U,U,D,D+LP) were tried
+   live in VS at FINISH HIM (victim in 13) with press / hold-release / BL-held variants at gaps 40000-200000: no fatality
+   came out; every attempt ended in the victory pose 125. Clips unresolved (the static input decode may be wrong, GUESS).
+   Stage fatalities (misc41 arena 8 F,F,D+HP; misc42 arena 0 F,F,B+LK -> uppercut 293): not attempted (VS stage is not chosen).
+ Juggles: none produced on purpose. 52 and 293 launch (rise 157375).
+
+STILL OPEN
+ - Fatality A / B clips (see above). Stage fatalities.
+ - 77 / 161 (second air-throw entry), 94 (first clip of the F,D+LK handler): static only.
+ - 295 / 297 (LP / HP follow-on clips): static only; LP,LP and HP tries played 294 / 296 / 264.
+ - 209, 261, 532, 533, 547, 548, 596: static-only clips in his handlers; never seen live.
+ - Static-only victim clips on Quan Chi: 254, 183, 316-320, 549-550, 137, 206 and the other fighters' throw victims
+   145 / 151 / 152 / 153 / 607 / 610.
+ - 157-586, 179, 199: only seen in VS after opponent clips; confirm which moves those are.
+ - Weapon: looks like a spiked mace in the frames (GUESS). Armed jump / run / armed D+LK not logged: armed jump-forward HP
+   crashed the game (exception at 0x00409B55) and an earlier armed chain stopped taking input.
+ - Game crashes at 0x004B9545 (process-list loop 0x4B9510) 4 times, in the practice reset after a move; cause GUESS.
+ - Clips outside the logs and his handlers were not surveyed (no full scan of all 612 clips for Quan Chi).
+
+OTHER FIGHTERS' ENTRIES IN THE SAME PER-FIGHTER TABLES (NOT HIS, PROVEN from the switch tables)
+ (Throw pairs are attacker/victim; Quan Chi plays the victim clip when one of those fighters throws him.)
+ throw 0x4E1784:          75/152 (ids 0,6,14), 80/154 (1,7,12), 79/151 (3,9), 76/153 (4,10), 78/156 (2 and 8 = his), 81/158 (5,11), 83/145 then 605/607 (13), 609/610 + 604/606 (15)
+ round-start intro 0x4E8EE0: 44, 45, 46, 47, 48, 49, 50 (45/50 seen live on his VS opponents)
+ high kick 0x4E8C88: 66 (71 = his)    low kick 0x4E8D78: 67 (70 = his)    jump-up kick 0x4E91E0: 61 (327 = his)
+ angled jump LK 0x4E93C4: 58 (ids 0/3/6/9/12), 59 (1/4/7/10/13)    sweep 0x4E9780: 62 (odd ids)
+ roundhouse 0x4E97E8: 64    close HP 0x4E9BF8 (id mod 3): 262, 263    victory 0x4E9A28: 111, 113, 114, 115-124, 594
