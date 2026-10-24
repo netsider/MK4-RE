@@ -1,0 +1,1189 @@
+==================== PROJECT STATUS (as of 2026-10-22) ====================
+PER-FIGHTER CLIP IDENTIFICATION: ONLY SONYA IS DONE SO FAR.
+- Sonya: all clips she plays in normal fights have been identified by netsider. 77 distinct clip IDs are PROVEN live in her fights after the 2026-10-22 VS update (her attacks, her victim reactions, and opponent clips such as 50/13/206; SONYA_PROVEN_TABLE.txt); the rest are LIKELY/unconfirmed - see the Sonya sections.
+- Sub-Zero: next. 19 clips still unidentified (26 42 47 58 62 79 103 115 116 117 118 151 153 162 174 185 186 188 262); 128 done (shared knockdown).
+- All other fighters: clip identification not started.
+- How Sonya was verified: PROVEN clips = pressed the move in the real game and logged which clip played (live memory). Separately, a Sonya-vs-Sonya fight sim (our own rebuild from those clips) was watched by netsider to check moves, transitions and hit reactions by eye; that visual check is LIKELY-level, not proof.
+Note: section 3 'Practice ... done for all 15 fighters' only means basic practice-mode captures were run, not full clip identification.
+===========================================================================
+MK4 RE NOTES v3 - live capture under Wine (2026-10-21, times ET). Tags: PROVEN / LIKELY / GUESS.
+
+1. SETUP (PROVEN)
+- MK4_nocd.EXE runs under Wine 10 (32-bit prefix) on a virtual 640x480x16 screen (Xvfb). No physical display or input is used.
+- Registry: HKLM\Software\GT Interactive\Mortal Kombat 4\1.00 (Wow6432Node on 64-bit Windows). Path = <MK4 install folder>\DATA, e.g. C:\Games\Mortal Kombat 4\DATA [LIKELY - the installer writes whatever folder is chosen; no fixed default verified]. Config = the game's saved keyboard config.
+- F: is a Wine CD-ROM drive holding DATA\M_*.ECM (the 277 MB ISO was too big to copy; the 4 menu videos are enough to boot).
+- Keys (PROVEN via the Practice input display): U=HK J=LK T=HP G=LP SPACE=BL H=RN, W/Z/A/S = up/down/back/forward. Arrow keys drive Player 2's cursor; key "2" = Player 2 start.
+- ESC switches the game to windowed mode (colours break on a 16-bit screen); avoid it.
+
+2. CLIP ID FROM LIVE MEMORY (PROVEN)
+- 0x521A64 = pointer the frame decoder (VA 0x4013A0) reads; 0x521A60 = frame; 0x521AA4 = frame count.
+- ANIMDAT4.AP1 is loaded unchanged, so pointer -> AP1 offset -> AP0 entry -> clip id. Live frame counts equal the EXE table at file 0xFC76C.
+- The pointer holds whichever object was decoded last, so opponent reactions are mixed in (LIKELY).
+- Validation: Sonya walk = 267 (30f). Crouch = 259 (5f, going down) then 258 (39f, held). The old labels had 258/259 swapped.
+
+3. RESULTS
+- Practice (opponent INACTIVE, screenshot each run) done for all 15 fighters: walks, jumps, run, block, attacks, jump attacks, close throw, every listed special x2.
+- Crouch attacks re-done holding down then pressing: 293 crouch HP/uppercut, 260 crouch LP, 53 crouch HK, 315 crouch LK (PROVEN, Sonya/Jax/Reptile runs).
+- Continue screen (loser falls down the well): clip 8 then 9 (PROVEN; every VS continue screen + netsider's ID).
+- 190 of 612 clips seen live; 422 never seen (list in NEVER_SEEN_CLIPS_v3.txt).
+- Fatalities: VS mode matches are 2 rounds. Only partial captures: Quan Chi Leg Beatup window shows 38/160/168/206 (LIKELY), Reiko 437 (GUESS). Most VS runs froze or paused after the first KO (cause GUESS: a fatality input opened the PAUSED menu). Not solved.
+- Clip 44 (shared bow) was never decoded in arcade/VS intros in this build (netsider ID kept).
+- Stage objects: the Lair rock and Goro's Lair heads are on screen, but pickup attempts (D+LP, D+HP, LP, run over) gave no pickup clip. Not solved.
+
+4. DISPLAY MODES (PROVEN from code)
+- Renderers: Glide (glide2x.dll, F5), Fullscreen software (F7), Window software (F8).
+- DirectDraw SetDisplayMode calls: 640x480x16 (VA 0x4AE8F0) and 320x240x16 (VA 0x4AFB20). Glide path also clips to 640x480 (VA 0x4B3F81). Max = 640x480, 16-bit colour.
+
+5. MESHES (PROVEN)
+- Live strace of FILESYS.DAT reads lists 57 named .geo files loaded. 48 named .geo have no export in MK4-PC-Assembly.
+- Midway logo = midway_g.geo, MK dragon medallion = attract_.geo, title logo = MKlogo_g.geo (LIKELY). They use block type 0x4, which the old exporter skipped. Now exported (missed_meshes\).
+
+6. NETSIDER'S VISUAL IDs (in clip_names_v3.json)
+ SHARED (all fighters): 44 bow; 328 flip get-up recovery; 327 jump kick starting mid-air (in-air transition into kick, not a takeoff) [netsider 2026-10-22]; 324 face (high) hit reaction (netsider verified; shared LIKELY).
+ OTHER IDs: 373 fold-up; 515-517 floating set; 518 touch then look at hand; 526 180 turn; 530 shielding face from slap; 531 walk with arm raised to crowd; 532 right-arm strike; 533 left-arm strike.
+
+7. FILES (capture_v3): MK4_MOVES_TO_CLIPS_v3.txt, FRAME_PLAYBACK_TABLE_v3.txt, NEVER_SEEN_CLIPS_v3.txt, clips_seen_never_v3.json, MISSED_MESHES_v3.txt, missed_meshes\, clip_names_v3.json (viewer can use it in place of clip_names.json), CLIP_POINTER_MAP_VALIDATION_v3.txt, screenshots\.
+
+8. FORCED PLAYBACK (2026-10-22 ~00:00 EDT) [PROVEN]
+ P1 fighter anim struct (static): 0x522514 = anim record >>2, record = 0x4FDD6C + 12*clip; 0x522518 = frame index (ticks ~60/s);
+ 0x52251c = frame-data pointer >>2 (= clipdata + 72*frame). P2 struct = +0x84 (0x522598/0x52259c/0x5225a0). Writing the record
+ every ~3 ms makes P1 play any clip; pinning frame+ptr freezes an exact frame. Clip 44 forced on Sonya = bow (PROVEN).
+ 0x521A64 is only the LAST decoded clip (global) - it does not identify which fighter. All 575 18-word clips play on any fighter skeleton.
+ Tool: capture/fcap.py (5 pinned frames/clip, screenshots), compare.py (in-game | code-derived export at same frames), cindex.py.
+9. PER-CHARACTER BATCHES (capture_v3\compare\<Fighter>\: *_compare.png, <F>_COMPARE_INDEX.txt, <F>_CLIPS_v3.txt)
+ SONYA: 61 live-seen clips compared. Death Kiss triggers live (old mixed log 322 13 388 206 8). [Superseded: 388 IS Sonya's Death Kiss clip, PROVEN in sections 12 and LIVE VS below.]
+ Leg Twist = hold BL U,D,D,U+HK outside sweep (FAQ); attempts at 2 distances did not trigger yet.
+ Stage fatalities: Goro's Lair F,D,F+HP close; Prison D,D,B,B+HK close (not yet run).
+ VS logs cannot separate P1/P2 clips via 0x521A64; use 0x522514/0x522598 records instead (TODO in logger).
+ Rematch path in VS picks wrong fighters (P2 cursor) - those log segments discarded.
+10. NETSIDER VERIFICATIONS (from compare sheets)
+ 328 = SHARED flip get-up recovery used by every fighter [PROVEN, verified by netsider 2026-10-22] (first reported as Sonya-only; corrected).
+ netsider flagged sonya_clip388_compare.png broken (Sonya off-screen in game frames) -> all Sonya game frames being re-checked/regenerated as _v2.
+ 327 = SHARED mid-air jump-kick transition (starts after the jump is underway) [PROVEN, verified by netsider 2026-10-22].
+ 324 = face (high) hit reaction [PROVEN, verified by netsider 2026-10-22]; shared by all fighters = LIKELY (his note 'tonya/char').
+ PATTERN [LIKELY]: clips reviewed by netsider so far (324, 327, 328, 44 ...) are SHARED by every fighter. The high id range ~250-330
+ appears to be the shared generic block (movement, basic attacks, reactions, get-ups); fighter-unique moves sit mostly below ~250
+ (specials, fatalities, intros). Per-fighter compare indexes are split into SHARED vs FIGHTER-ONLY sections.
+ 323 = SHARED standing block held loop [PROVEN, netsider 2026-10-22].
+ 322 = UNKNOWN (NOT block): fists far apart then back to fighting stance; candidates recovery-to-stance / stance transition [netsider 2026-10-22]. Earlier '322/323 block' pairing and '322 block going up' REMOVED.
+ 317 = SHARED run start [PROVEN, netsider 2026-10-22]; 307 = run loop [LIKELY, from 317+307 pairing].
+ 314 = SHARED knee strike from stance [PROVEN, netsider 2026-10-22]; = close-range knee (LK up close) [LIKELY].
+ 311 = head snaps back, punch reaction or lean-back dodge [LIKELY, netsider 2026-10-22]; old 'HP 2nd hit/close' attack label REMOVED.
+ 310 = SHARED regular jump [PROVEN, netsider 2026-10-22]. CONFLICT FLAG: 304 was PROVEN live as the clip decoded on 'jump straight up' (hold U) for every captured fighter. Data check: both 28f, same root-height curve (low/tucked f0-17, rises f18-24, settles f27); 304 root X constant (-12) = no horizontal drift (straight up), 310 root X drifts 13->8->20->-7 (slight travel). 310 was decoded live only inside Sonya's Square Wave (F,B+HP) sequence. Working hypothesis [GUESS]: 304 = straight-up jump, 310 = jump with slight drift / alternate jump used by a move; neither is takeoff-only or landing-only (both contain full air arc). UNRESOLVED - needs netsider to compare 304 vs 310 sheets.
+ 308 = SHARED standing low kick (LK) [PROVEN, netsider 2026-10-22; matches live Sonya LK capture].
+ 307 = SHARED run loop [PROVEN, netsider 2026-10-22] (was LIKELY).
+ 305 = UNKNOWN: upright 'bunny/motorcycle-grip' pose, hands at chest, wrists bent down; candidates held-in-throw reaction / dizzy / throw setup [netsider 2026-10-22].
+ 305 update: netsider says it looks like RIDING something -> GUESS carried/held pose in throw or fatality, or stage-object/vehicle pose; still UNKNOWN.
+ 304 vs 310 KEYFRAME DIFF (netsider: near-identical jumps): both 28f, same root-height curve (crouch f0-17, extend ~f20, settle f27); legs/spine within ~15-35 deg. Differences: (1) root X/Z: 304 constant (-12,-2) all frames = straight up; 310 drifts X 13->19->10->-22, Z 8->17->-18 = travels and comes back. (2) one arm chain (bones 4-6) differs by 80-129 deg (310 swings that arm; 304 holds it bent). NOT a mirror (left/right chains are not swapped). Result: 304 = straight-up jump [PROVEN live, hold U]; 310 = jump variant with root travel + arm swing [LIKELY, seen live only inside Sonya's Square Wave sequence]; direction/purpose of 310 UNRESOLVED.
+ 301 = SHARED jump flip tuck (angled jump) [LIKELY]; netsider: starts in jump pose then tucks into a ball; matches live jump_f/jump_b decode.
+ 296 = SHARED high punch [PROVEN, verified by netsider 2026-10-22].
+11. WHY SONYA FLOATED / LEFT THE SCREEN IN v1 COMPARE IMAGES
+ Cause [PROVEN]: the P1 fighter struct holds world position right after the anim fields: 0x522540 = height (Y, ground ~460000-469000),
+ 0x522544 = X (-85196 at practice start; P2 mirror +85196 at 0x5225c8), 0x522538/0x522548 = Z/depth (-73629). Forcing clips without
+ resetting these let each clip's root motion and the game's per-clip movement build up from one clip to the next (no ground snap, because
+ the state machine never left the forced clip). After the v1 run they read Y=572200 (about 111k above ground = floating) and
+ X=-169357 (moved toward / past the screen edge); later she was below the floor with only her hat showing. Pinned jump frames also inherit the clip's own root height.
+ Fix (v2): fcap2.py saves the four position words at practice start and rewrites them every ~3 ms during the idle reset and every pinned
+ frame; compare2.py also takes a same-moment idle reference and zooms on Sonya. v2 sheets checked: Sonya on the ground and in frame (e.g. 102, 57, 388).
+ Note: 0x522540 still varies a little per clip (467264 / 455296 / 469376 in a test) = per-clip root offset, not drift.
+ 388 = LIKELY Liu Kang fatality clip [netsider 2026-10-22]. [Superseded: the per-player re-run (section 12, '388 RE-CHECK') and the LIVE VS run PROVE Sonya plays 388 in Death Kiss; the Liu Kang listing is a viewer catalogue conflict.]
+12. REVIEW RULE (netsider 2026-10-22): a clip netsider has described counts as DONE (his description is the label, even if its purpose is unclear).
+ Done: 296 301 304 305 307 308 310 311 314 317 322 323 324 327 328, 388 (Death Kiss, PROVEN Sonya; also listed under Liu Kang in the viewer). Their duplicate copies in compare\Sonya_TODO go to
+ the Recycle Bin (only those copies; done with a local helper script). Sonya_TODO: 227, 219, 217, 201, 197, 195, 191, 176, 156, 134, 137, 130, 114, 102, 78, 73, 72, 63, 50, 57, 15, 206 also removed - Sonya_TODO EMPTY.
+ 285 = DONE: idle with fists far apart (= 322's start pose); LIKELY held/idle loop, 322 = transition out of it back to stance [netsider 2026-10-22]. Link 285 -> 322.
+ 276 = DONE: walk backwards with fists apart (285 pose) [netsider 2026-10-22]. STANCE SET [LIKELY]: 285 idle, 276 walk back, 275 walk forward (same root offset -38 and identical arm pose at f0 as 276), 322 return to normal stance. Keyframe check shows the same pattern for other stance styles: (277 278 286) root -27, (281 282 274) root 23, (270 288), (272 271 287), (273 289) = per-style walk-fwd/walk-back/idle groups.
+ 275 = DONE: walk forward fists apart [netsider]. WHEN USED [LIKELY, strong]: the fists-apart set (285 idle, 275 walk fwd, 276 walk back, 322 back to normal stance) is the WEAPON-HELD stance. Evidence: in practice runs these clips first appear exactly at the weapon draw and stay in every later move: Sonya Bladed Wheel (F,F+LK: 63/195/197/244 then 285 276), Tanya Boomerang (64/142/141/143 then 285 276 - same set, shared), Shinnok Bladed Staff (then 278 286 277 = his style's set). 322 = LIKELY the drop/put-away of the weapon, back to the normal stance. Trigger = draw the weapon; forced playback shows the poses (the weapon prop is not attached when forced).
+ 229 = DONE: left-fist punch from arms-spread stance [netsider]; LIKELY weapon-held attack / weapon throw (decoded live during Sonya weapon_throw_try). Supports arms-spread set 285/275/276/322/229 = WEAPON-HELD stance [LIKELY]; in-game draw test pending.
+ 264 = DONE: stance into elbow strike [netsider]; LIKELY close-range punch. CONFLICT FLAG: live practice decoded 264 on Sonya's HP tap (HP: 264 311) and the shared table says 294 = LP; an elbow on HP-at-range-0 fits 'close HP', so either the dummy was in close range during the HP test or 264 is Sonya's own close punch. 294 = LP label UNCHANGED but unverified.
+ 388 RE-CHECK [PROVEN]: Death Kiss re-run with the per-player log (P1=Sonya struct 0x522514, P2=0x522598): P1 goes block/crouch-block (323 259 258 257 256) during the input, then P1=388 for the whole fatality while P2 (victim) alternates 13 (dazed) and 206. So 388 IS played by Sonya's fighter in Death Kiss. netsider's viewer listing it only under Liu Kang is a VIEWER/catalogue mapping conflict (388 may be shared, or the viewer's per-fighter assignment is wrong). 206 = victim reaction in Death Kiss (torso split) [LIKELY].
+ SHARED UPDATE (netsider 2026-10-22): every clip reviewed so far is SHARED by all fighters: 44 229 264 275 276 285 296 301 304 305 307 308 310 311 314 317 322 323 324 327 328.
+ Each review now counts for the whole roster (list: shared_done_v3.json); other fighters' TODO folders skip these.
+ DOWNGRADE: arms-spread stance set (285/275/276/322/229) = generic stance; 'Sonya weapon (Bladed Wheel) stance' is now GUESS only
+ (candidate: the weapon-held stance every fighter uses - it does first appear right after each fighter's weapon draw in the practice logs).
+ 227 = DONE, SHARED: arms-apart stance into low spinning fist strike [netsider]; old 'weapon throw' label REMOVED.
+ 219 = DONE, SHARED: ~1 s held shoot-or-pull pose [netsider]; LIKELY projectile fire or pull/grab (harpoon-style).
+ 217 = DONE, SHARED: arms-apart pose into 219 shoot/pull pose; chain 217 -> 219 [netsider].
+ 201 = DONE, SHARED (fightkit/<fighter>/..._c201_fall_knockdown_lying_torso_horizontal.glb exists for every fighter): riding pose -> flip -> lands on ground [netsider]; LIKELY thrown/flipped victim reaction. Old 'Sonya-only Leg Grab' label REMOVED. Note: 305 (held 'riding' pose) may be the held-in-a-throw victim pose too.
+13. VIEWER: WHY CLIP 206 WAS MISSING [PROVEN]
+ The viewer lists every .glb under MK4-PC-Assembly. 206's only export was anim\clips\206_subzero.glb, which is in VIEWER\old_pipeline.json
+ (1144 old early-pipeline exports flagged as known-wrong) and so hidden unless "show old early-pipeline exports" is ticked. There is no
+ fightkit\<fighter>\*_c206_* export for any fighter. 388 likewise: old anim\clips\388_subzero.glb (hidden) + anim\liukang\fatalities\liukang_fatality_388_code.glb
+ (visible, which is why 388 looked Liu Kang-only). Fix: new code-derived exports on Sonya's rig in capture_v3\viewer_extra\
+ (sonya_c206_deathkiss_victim_reaction_v3.glb, sonya_c388_deathkiss_blowkiss_v3.glb); restart the viewer, search "c206" or "c388".
+14. WEAPON STANCE TEST (Practice, Sonya, per-player log) [PROVEN]
+ F,F+LK (draw Bladed Wheel) -> P1 244 (draw) -> 285 (idle, arms spread). Walk forward = 275, walk back = 276 (netsider's arms-spread set).
+ F,F+LK again (throw) -> P1 208 (weapon throw), opponent 131 (hit by the weapon), then P1 439 (normal idle, weapon gone; 322 was not decoded here).
+ => the arms-spread set 285/275/276 IS the WEAPON-HELD stance (generic clips, shared). Earlier GUESS upgraded to PROVEN. 244 = weapon draw [PROVEN], 208 = weapon throw [PROVEN], 131 = hit by thrown weapon [PROVEN, LIVE VS section].
+ 197 = DONE: get-up from lying on back to stance [LIKELY, netsider]; distinct from 328 flip get-up. Old 'weapon draw' label REMOVED (weapon draw is 244, PROVEN).
+ 197 CORRECTION: NOT a normal get-up (netsider: physically implausible). UNKNOWN but DONE. Keyframe check: 29 frames, no single-frame snap; max bone change 35-36 deg/frame sustained over f9-12 and 25 deg/frame over f25-28, rest 5-14 deg/frame; root moves smoothly (max 23 units/frame f13-16). = fast but continuous interpolation, not a snap/reset. Reversed-playback hypothesis (stance -> fall on back) remains plausible.
+ 195 = DONE, SHARED: stance -> knockdown fall onto back [netsider]; old 'weapon draw' label REMOVED. 195 vs 197-REVERSED keyframe test: both 29f; 195 f0 matches reversed-197 f0 within 1 deg and the last frame within 18 deg (same start/end poses), but the in-between differs a lot (bone diffs 37-158 deg over f4-24, no frame identical). => 197 is NOT an exact reversed copy of 195 [PROVEN]; it is a separately keyed clip with the same two end poses, i.e. LIKELY the paired recovery for 195 (back-on-ground -> stance), hand-keyed with an odd path (fits netsider's 'physically odd').
+ 191 = DONE, SHARED: lying arms-out -> stance, physically odd [netsider]. Reverse search over all 574 other 18-word clips (191 start vs clip end, 191 end vs clip start): 191's end (stance) matches many clips' first frame within 1 deg, but NO clip ends in 191's lying arms-out start pose - best is 189 (30f) at 34/35 deg endpoint error, then 181 (52/43). => 191 is NOT a reversed copy of any existing fall [LIKELY]; like 197 it is a separately keyed recovery from a lying pose whose matching fall may be 189 (loosely) or not exported/merged. Old LP label for 191 dropped.
+ 176 = DONE, SHARED: upside-down head-on-ground -> lying arms out [netsider]. Sequence 176 -> 191 [LIKELY]: 176 last frame vs 191 first frame worst-bone diff 58 deg (same pose family, not an exact join). Predecessor search (clip whose last frame = 176's first): none close; best 195 (75 deg), 73 (77, Sonya bicycle-kick part), 178 (81), 156 (86) => the launch/uppercut fall before 176 is not identified [the game may blend into it]. Old 'Sonya LP' label for 176 dropped.
+ 156 = DONE, SHARED: stance -> slide -> fall backwards [netsider]; chain 156 -> 176 -> 191 [LIKELY]. Keyframe join check: 156 last vs 176 first worst-bone diff 86 deg (similar family, not a clean join - game likely blends or an in-between airborne clip sits between them); 176 last vs 191 first 58 deg. Old 'Sonya LP' label for 156 dropped.
+ 134 = DONE, SHARED: stomach/body (mid) hit reaction [netsider]; pairs with 324 face (high) hit reaction.
+ 137 = DONE, SHARED: stiff 'timber' fall onto back [netsider]; consistent with per-player log (victim played 137 right after Sonya's 114 in the Leg Twist attempts; 114 is her win pose, not a kick - see 114 below). 137 = loser's fall at round win [PROVEN, LIVE VS].
+ 130 = DONE, SHARED: unnatural hard-hit reaction [netsider]. Live data: appears right after projectile/special hits on the dummy for many fighters (Energy Ring, Ice Blast, Freeze Wand, Triple Blade, weapon throw, Dashing Punch) => generic projectile/special hit reaction [LIKELY]; Raiden-lightning-specific = GUESS (VS test not yet run).
+ 114 = DONE, Sonya-specific: military salute then hands behind back [netsider]. LOG RE-CHECK resolves the conflict: P1=114 occurs (a) in VS filler right after a round KO and (b) in every failed Leg Twist attempt right after the input, when the game shows 'SONYA WINS' (fatality missed -> victory pose); also in practice boot (practice start). It was NEVER a landing kick - the opponent's 13->137 (dazed -> timber fall) was the round-ending fall. => 114 = Sonya's victory/win pose [PROVEN in LIVE VS, 3 rounds]; also used at practice start. 134 stays the stomach-hit reaction.
+ 102 = DONE, Sonya-specific: handstand Leg Grab special [PROVEN, verified by netsider].
+ 78 = DONE: bear hug -> backward body slam = LIKELY Sonya's throw, attacker side [netsider]; old 'object pickup try' label REMOVED. Victim pairing check: 78 is 45f; 305 is only 3f (a held/static pose - fits 'victim held during the hug'); 201 is 58f (flip and land - fits 'victim slammed'). No 45f victim clip pairs exactly (45f clips: 18 64 74 82 100 202 230 231 233 234 237 240 ...). => victim side LIKELY 305 held + 201 slam/land sequence [GUESS]. [Superseded: the throw script (EXE) starts victim 156 with attacker 78, and the live per-player log shows 156-176-191 (PROVEN).]
+ 73 = DONE, Sonya-specific: on-back bicycle-kick motion [netsider]; Bicycle Kick (B,B,D+HK) = 72 takeoff -> 73 kicking part [PROVEN live 72-73-72 and in the EXE script].
+ 72 = DONE, Sonya-specific: Bicycle Kick start (stance -> on-ground kick), chain 72 -> 73 [netsider; matches live B,B,D+HK capture].
+ 63 = DONE, SHARED: leg sweep (B+LK) [netsider]; old 'weapon draw' label REMOVED (weapon draw = 244 PROVEN).
+ 50 = DONE: fist flourish [netsider]. ROUND START vs WIN check (per-player log): at VS round start Sonya (P1) plays 46 then idle 439, while the OPPONENT (P2, Reptile in those runs) plays 50 then 289; Sonya plays 50 only at practice start. 114 (salute) never appears at round start - only after a round/match win. => 46 = Sonya round-start intro [PROVEN]; 114 = Sonya win pose [PROVEN, LIVE VS]; 50 = the opponent's intro, not Sonya's [PROVEN, LIVE VS].
+ 57 = DONE, SHARED: squat -> sit back onto elbows, knees up (reclined) [netsider]; LIKELY sit-down fall; GUESS easter egg. Old 'jump-forward kick' label REMOVED (it was only decoded during jump_f_HK in practice).
+ 57 addendum: netsider - maybe an easter egg OR just a normal in-game pose; kept as recorded.
+ 57 RESOLVED [netsider 2026-10-23]: 57 = centerfold pose (reclining on the ground) = DONE / PROVEN-by-netsider. The on-hold "find the centerfold pose clip" item is resolved = clip 57. 57 also plays live on jump forward/back HK.
+ 15 = DONE, Sonya-specific: two-arm forward lunge = Energy Ring fire [PROVEN by live input D,F+LP; SONYA_PROVEN_TABLE].
+ 206 = DONE: fatality victim death fall (dazed -> falls dead) [netsider]; Death Kiss victim, P2 alternates 13 <-> 206 [PROVEN, LIVE VS]; probably shared. Sonya_TODO is now EMPTY (all live-seen Sonya clips reviewed).
+15. UNIDENTIFIED LISTS (netsider 2026-10-22: no more compare images/TODO image folders; plain clip lists only) -> forced\UNIDENTIFIED_v3.txt
+ Sonya live-seen, not yet named: 26 48 49 79 103 128 157 549 586 (101 Square Wave and 104 Cartwheel are PROVEN from practice; 439 = idle). [Superseded by the clip 25-194 entries below and SONYA_PROVEN_TABLE.]
+ Sub-Zero live-seen, not yet named (practice + VS so far; superseded by the final list in SUB-ZERO OWN CLIPS): 26 42 56 58 62 79 103 128 141 142 143 151 153 162 174 185 186 188 194 262 263 313 (several are LIKELY his specials per SUBZERO_CLIPS_v3.txt).
+ 458 of 575 18-word clips are still unlabeled overall. Sonya forced capture + Sub-Zero VS/forced runs continue (chain_sz.sh).
+
+== PLAYBACK RATE (2026-10-22) ==
+- PROVEN: animations advance 1 frame per game tick, ~60 frames/s (P1 counter 0x522518 measured 61.3/s, median 15.2 ms step; P2 0x52259c ~63/s).
+- LIKELY: game logic and rendering run at ~60 Hz (120 Hz screen grab gave 132 unique frames in 2 s).
+- Game-clip MP4s (capture_v3\game_clips\<Fighter>\) play at real speed, recorded at 30 fps (every 2nd game frame).
+- Dev paths left in MK4.EXE (PROVEN): c:\source\mk4\win\geogfx\, c:\source\mk4\win\anim\, menu.tga. No 3D-program name found in MK4.EXE or FILESYS.DAT.
+
+== CLIP TABLE + SONYA OWN CLIPS (2026-10-22) ==
+- PROVEN: clip table has exactly 612 clips (IDs 0-611). Forcing can play any clip on any fighter, so forced playback does NOT prove ownership. Clip 607 fails when forced.
+- Sonya group A (played naturally in her own fights): 69 clips. Movies: capture_v3\game_clips\Sonya\A_hers\ (66; 153/154/156 capture failed).
+- Sonya unidentified (group A): 25, 26, 27, 28, 101, 104, 128, 153, 154, 172, 192, 194. (439 = shared idle.) [Superseded: all now labelled below; 27/28 are not hers.]
+- Sub-Zero provisional unidentified: 26, 42, 47, 58, 62, 79, 103, 115, 116, 117, 118, 128, 151, 153, 162, 174, 185, 186, 188, 262 (fatality runs pending).
+
+== SUB-ZERO OWN CLIPS (2026-10-22) ==
+- Sub-Zero group A: 61 clips (fatality runs added none). Movies: capture_v3\game_clips\SubZero\A_his\ (58).
+- Sub-Zero unidentified (final): 26, 42, 47, 58, 62, 79, 103, 115, 116, 117, 118, 128, 151, 153, 162, 174, 185, 186, 188, 262.
+- Clips 150-162 block (Sonya 153/154/156, Sub-Zero 151/153/162) cannot be forced in practice: frame pointer never set. LIKELY that block only loads when the move really happens; must be caught live in a match.
+
+[2026-10-22] Sonya clip 25 = DONE: her spitting something from her mouth (netsider's description).
+[2026-10-22] Sonya clip 26 = DONE: fighting stance to wide arms-open stance, not the knife stance (netsider's description).
+[2026-10-22] Sonya clip 27 = DONE: a punch, exact type unclear (netsider's description).
+[2026-10-22] Sonya clip 27 label updated: a straight punch (netsider).
+[2026-10-22] Sonya clip 28 = DONE: most likely an uppercut (netsider's description).
+[2026-10-22] Sonya clip 101 = DONE: a transition from a crouch/ball to a horizontal, almost flying-punch pose (netsider's description). GUESS: possibly a leap or roll toward her Leg Grab / flying attack.
+[2026-10-22] Sonya clip 104 = DONE: forward flip, like a handstand flip (netsider's description).
+[2026-10-22] Sonya clip 128 = DONE: in fighting stance, then knocked onto her back (netsider's description). Clip 128 also played for Sub-Zero, so it is LIKELY a shared knockdown.
+[2026-10-22] Sonya clip 153 = DONE: sliding/moving forward in fighting stance, then flipped onto her head (netsider, from viewer). Throw-victim reaction: 153-173-328 when thrown by opponent clip 76 [PROVEN clips, LIVE VS].
+[2026-10-22] Sonya clip 154 = DONE: almost the same as 153 but ends in a different upside-down pose, legs up (netsider, from viewer). Second throw-victim variant: 154-172-328 when thrown by opponent clip 80 [PROVEN clips, LIVE VS].
+[2026-10-22] Sonya clip 172 = DONE: on her back on the ground, lifted up into the air, then lands flat on her back (netsider's description). Landing after a throw (154-172-328) [PROVEN clips, LIVE VS].
+[2026-10-22] Sonya clip 192 = DONE: from fighting stance she falls forward, kind of onto her face (netsider's description). Live: 192-194 after an opponent clip-62 hit [PROVEN clips, LIVE VS].
+[2026-10-22] Sonya clip 194 = DONE: starts upside-down (head down, legs over) then recovers into a proper fighting stance, one of the reverse/get-up clips (netsider's description). Sonya's own (group A) clips are now ALL identified.
+
+== SONYA FIGHT DEMOS (2026-10-22) ==
+- sonya_vs_sonya.html (v1, scripted fight, ~73 of her clips). netsider: ~90% correct; attacks good, some reactions wrong.
+- sonya_vs_sonya_v2.html: 9 targeted fixes from natural logs (296->324 PROVEN x26, 65->311 PROVEN x8, 305 is only 3 frames - v1 looped it causing the flutter, now plays once and holds; Death Kiss victim 13 then 206 PROVEN; others LIKELY/GUESS).
+- Death Kiss attacker clip is 388 (PROVEN in Sonya's per-player log) - conflicts with viewer listing 388 under Liu Kang.
+- sonya_sim.html: AI vs AI endless fight in Shaolin arena (arenas\shaolin_.glb, from SHAOLIN_.GEO PROVEN; in-game Shaolin stage LIKELY). HP locked 100%, no rounds. 8 basic moves: 296, 27, 65, 308, 314, 28, 293, 63, plus block 323 and crouch block 257->256.
+- netsider feedback on sim: the backward fall after UPPERCUT (128->328) is the wrong clip [superseded: 128->328 was then PROVEN live, 6/6 - see UPPERCUT MEASURED LIVE]; sweep fall 63->195->197 is right but her GET-UP after the sweep fall is wrong. Fixes + left-click camera orbit in progress as sonya_sim_v2.html.
+- Bicycle Kick (netsider): it juggles the victim in the air while she keeps kicking, and they fall when the kicks stop. Now added in sonya_sim_v5.html (72 -> 73 -> 72, victim 136 -> 183 -> 185, replayed from the live log).
+- Reactions still needing a live catch (only logged against the dummy) [superseded: most are now PROVEN in SONYA LIVE CLIP CONFIRMATION]: 294, 27, 264, 28, 15, 101, 104, 102, 72/73, 78, 310/301/327, 229, 227, 315, 260, and all block pairings.
+
+== UPPERCUT MEASURED LIVE (2026-10-22, Wine copy) ==
+- Sonya's real uppercut is 293 (down+HP). Victim 128 -> 328 -> stance, 6/6 PROVEN. 128 lasts 1.24 s (frames 0-52 at 1/tick, then ~2/tick).
+- P2 height at 0x5225cc (ground -77660, negative=up), vertical velocity at 0x5225e4 (PROVEN). Velocity -12583, +524/tick, 48 ticks airborne (0.80 s at 60/s; 0.73 s wall-clock under emulation), peak 157,375 units at ~0.37 s (PROVEN).
+- [Revised 2026-10-22: raw units only; see PHYSICS: TODO I1-I4] The earlier real-world scale estimates (238,800 and 64,000) are withdrawn. In raw units: hit gap ~45,000; practice start gap ~170,000; stage edge ~640,000; peak 157,375; launch -12583/tick; gravity +524/tick^2; push-back at the stage edge measured later as 157,498 (attacker pushed, victim pinned at the wall).
+- Clips 27 and 28: no Sonya input produces them; in those slots they are Jarek (27) and Cage's Green Orb (28) (LIKELY not Sonya's moves). netsider's labels kept, flagged.
+- Crouch: 259 down (5 ticks), 258 hold, stand = 259 reversed (PROVEN). Stance 439, walk fwd 267, back 272 (PROVEN).
+- sonya_sim_v4.html (27/28 removed, crouch fixed) and sonya_sim_v4b.html (+ measured launch).
+
+==== SONYA LIVE CLIP CONFIRMATION (20261022_1925 ET) ====
+Full table: capture_v3\final\SONYA_PROVEN_TABLE.txt
+PROVEN by live input (P1 Sonya): 439 267 272 259 258 257 256 304 301 317 307 323 296 264 294 78 65 308 293 260 53 315 63 313 97 96 327 57 60
+ specials: 15 Ring (D,F+LP); 102 Leg Grab (D+LP+BL); 310-101-310 Square Wave (F,B+HP); 72-73-72 Bicycle (B,B,D+HK, in sim v5); 104 Cartwheel (B,D,F+LK)
+ weapon: 244 draw (F,F+LK) -> 285 stance, 275 walk, 230 HP, 229 LP, 246 block, 217/219 crouch
+PROVEN defender (P2 Sonya): 311 324 134 130 305; 156-176-191 thrown; 186-188; 131-185; 183-185; 136-183-185; 201-328; 195-197; 128-328
+NOT HERS (LIKELY): 27, 28. Not triggered (GUESS): 25 26, air throw, taunt. [Updated by LIVE VS below: 153 154 172 192 194 PROVEN as victim clips; 114 win pose PROVEN; 50 = opponent intro; 388 Death Kiss PROVEN.]
+
+==== MK4.EXE STATIC FINDINGS: CLIP RECORD + MOVE SCRIPTS (2026-10-22 ET) ====
+Full write-up: MK4_PC_FILE_FORMATS.txt sections 6, 8, 8A, 10.
+- Clip record (VA 0x4FDD6C, 12 bytes): +0 = clip data pointer filled at load by 0x401205-0x40130F (PROVEN); +4 = frame count, 612/612 (PROVEN); +8 = node count << 16 (18 for human clips, PROVEN) | 0x8000 compressed (PROVEN); bit 0 set on 27 clips (43, 144-165, 535, 539, 606, 607), meaning GUESS.
+- Earlier guide text said "+8 low 16 bits = frame count"; that was wrong and is corrected (frames are in +4).
+- Move script VM (PROVEN): push script; call 0x4594E0 (449 sites); interpreter 0x459500; opcode = word >> 24; handler table 0x4E6970 (128). Clip operands are 0 in the file and patched at start-up by routine 0x41FCC0 from two (dest, value) lists (0x4D6E80, 0x4DC3F8): *dest |= value >> 2. Velocities/gravity 16.16.
+- Opcodes PROVEN: 05 sleep, 0E opponent clip, 0F/11 own clip, 12 frame, 32 native, 33 goto, 58 vx/vy/gravity. LIKELY: 46-49/68 animate, 4B/4C throw step, 59, 5F. [Corrected (TODO D1): 05 = wait n ticks while the clip keeps animating (LIKELY); the plain sleep is 34 (PROVEN). See STATIC FINDINGS 3.]
+- Uppercut victim script: vy -13107, gravity 524, clip 128 -> first live tick -12583 (PROVEN match).
+- Sonya from the EXE alone: Bicycle 72 -> 73 (PROVEN), throw 78 + victim 156 (PROVEN), Leg Grab 102 + victim 201 (PROVEN), Square Wave 101 (PROVEN). [Corrected: clip 310 has no fixup, but the Square Wave handler (VA 0x47E6A0) loads it directly at VA 0x47E791 / 0x47EADD.]
+- Special-move code VA 0x478E40-0x481350, handler table 0x4EB8F8 (35 entries) [corrected from 0x4EB8F4 (36): the dispatcher loads 0x4EB8F8 at VA 0x45F7D6; old index k = new k-1]. Specials are now tied to fighters by the command lists (next section).
+- No move-name text in the EXE or FILESYS.DAT. [Corrected: the "<Name> Wins" order is NOT the fighter id order; the ids are in the next section.]
+- [Done, see next section: 16 command tables at 0x540448 + 0x48*i, indexed by fighter id.]
+
+== LIVE VS CONFIRMATION (2026-10-22) ==
+- 46 = Sonya round-start intro; 114 = Sonya round-win pose (loser 137); 50 = opponent intro, not hers (PROVEN).
+- Death Kiss 388, victim alternates 13 <-> 206 (PROVEN). Weapon throw (F,F+LK armed) 208, victim 131 (PROVEN).
+- Thrown reactions: 154-172-328 (by opponent clip 80), 153-173-328 (by 76); 192-194 after opponent clip 62; 127 hit by opponent clip 17 (PROVEN clips, context LIKELY).
+- Not yet produced: 25, 26, Leg Twist. Bicycle victim height: ~134,000 units by 0.4 s, holds ~141,000 (approximate, converted back from earlier figures).
+
+==== MK4.EXE STATIC FINDINGS 2: COMMAND LISTS, STRIKES, REACTIONS (2026-10-22 ET) ====
+Full write-up: MK4_PC_FILE_FORMATS.txt section 8B "From button press to clip". Tool: tools\script_decoder_v2.py.
+- Fixups (PROVEN): routine 0x41FCC0 walks list A 0x4D6E80 and list B 0x4DC3F8 of (dest, value) pairs, ended by (0,0), doing *dest |= value >> 2. 3,035 pairs; 801 name clips (451 distinct clips).
+- Fighter id at obj+0x34 (Sonya = 2 PROVEN; others LIKELY): 0 Scorpion, 1 Raiden, 2 Sonya, 3 Liu Kang, 4 Sub-Zero, 5 Fujin, 6 Shinnok, 7 Reiko, 8 Quan Chi, 9 Tanya, 10 Reptile, 11 Kai, 12 Jarek, 13 Jax, 14 Johnny Cage, 15 Goro, 16 Kitana, 17 Noob Saibot. The lower-case name pointer table at VA 0x4F11D8 has exactly this order (PROVEN as data). Op 3C FIGHTER_SWITCH (handler 0x45B4F0) maps 16 -> 2 and 17 -> 7.
+- Command tables (PROVEN): 16 BSS tables of 18 entries at 0x540448 + 0x48*i, entry [fighter id] -> list in the pool 0x4E7340-0x4E7E90 (empty list 0x5408D0). P1: HP 0x540490, LP 0x5404D8, BL 0x540520, HK 0x540568, LK 0x5405B0. Record {sequence, extra, move word}; low byte = earliest step; DD=F, AA=B, 02=D (PROVEN), 01=U (LIKELY).
+- Move word b3 condition (table 0x4E7EA8) | b2 action table (dispatcher 0x45F640: bit0 misc 0x4E9EE0, bit1 projectile 0x4F0810, bit2 special 0x4EB8F8, bit3 aux 0x4E9FF0, bit5 0x4E2C78) | b1 input window | b0 index (PROVEN).
+- Sonya: F,B+HP special 05 Square Wave; D,F+LP projectile 05 Ring; LP/BL special 07 Leg Grab; B,B,D+HK special 06 Bicycle (move word 0x00042806); B,D,F+LK special 13 Cartwheel 104; F,F+LK misc 29 weapon draw 244 (PROVEN). misc 40/43 = fatalities (LIKELY).
+- Strikes (PROVEN): script ops 51/50 -> table 0x540E78, 52 -> 0x540E28, 53 -> 0x540D38, 5E -> 0x540C80; native 0x48D4x0 calls also use 0x540DC8. 24-byte record; +0x10 byte 0 = reaction id (PROVEN), byte 3 bit 1 = air; box/damage LIKELY, the rest GUESS. [Updated (TODO D7): +0x10 bytes 0/1/2 = standing / airborne / blocked reaction, byte 3 flags, +0x14 = damage - PROVEN; hit box +0x00..+0x0C still LIKELY. See STATIC FINDINGS 3.]
+- Reactions (PROVEN): table 0x4ED4D0, ids 0x00-0xC0. Ops 41 / 1E / 70 = call / jump / range-gated reaction. E.g. 0x10 -> 311, 0x1A -> 128 with 58 -1966,-13107,524 (uppercut), 0x57 -> 136 (Bicycle), 0x67 -> 176 (throw).
+- Sonya static vs live: attacker clip 24/24 match; victim 13 match, 8 n/a, 3 unresolved (305, 130, reaction 0x79). Other fighters LIKELY.
+- Clip 310 and the Bicycle return to 72 are named directly in native code (Square Wave handler 0x47E6A0 at 0x47E791/0x47EADD; Bicycle handler 0x47E1D0 at 0x47E37F/0x47E466).
+- Arcade note: the PC code is LIKELY ported from the arcade (Midway Zeus) code; MAME lists the arcade main CPU as a TMS32032 (TMS320C3x family, 60 MHz; older listings say TMS32031). Its 32-bit word addressing would explain the >> 2 address storage (GUESS).
+
+==== MK4.EXE STATIC FINDINGS 3: OPCODES, SOUNDS, CONDITIONS, DAMAGE (TODO D1-D8, 2026-10-22 ET) ====
+Full write-up: MK4_PC_FILE_FORMATS.txt sections 4 (sounds), 8A (opcodes), 8B (buttons, conditions, tables, strikes, Shinnok, finishers), 11, 12; status per item in MK4_TODO_UNKNOWNS.txt. Static analysis of the retail MK4.EXE only (no live run). Tool: tools\script_decoder_v3.py.
+- D1 opcodes: all 128 handlers of the table at 0x4E6970 were read; "script_decoder_v3.py MK4.EXE ops" lists them with operands, effect and tag. PROVEN: 04 n = animate n ticks, stop early at the clip's end; 4A n = animate until frame <= n; 34 n = plain sleep ([0x53FFCC] = n); 5A push back; 5C gravity; 5D position nudge; 65 velocity relative to the opponent; 63 damage (16.16 fraction of the bar). LIKELY: 03 = animate the current clip to its end; 05 n = wait n ticks while the clip keeps animating ([0x540000] = n, routine 0x428D70). 6C has ONE operand word. The remaining LIKELY/GUESS opcodes are marked in guide section 8A.
+- D2 sounds (PROVEN): every sound goes through 0x4BD7C0 with a 16-bit code. 0 / -1 = stop all, -2 = stop current; a code in the music list 0x4F5CC8 (1, 5, 9, 13, 21, 29, 33, 37, 62, 73, 78, 79, 80) = CD audio track (list position + 2), played by 0x4AC5E0 via mciSendCommandA with a time from 0x4F5D00[track] (92 s for most); other codes <= 100 -> pcmk(2000 + code); codes > 100 -> pcmk(code / 5), e.g. 0xC21 -> pcmk0621. Script sound ops: 20 -> table 0x4ED998 (index > 0x32 is silent, so the sweep's "20 0xAF" plays nothing), 25 -> 0x4EDD18, 26 -> 0x4EDAE0, 27 -> 0x4EDA00, 2B n -> voice set 0x540BC0[n] x fighter column 0x4EDD00[id] (fixed code or random list), 2C n -> 0x540C60[n][id] (n = 0 weapon draw). Check: the announcer name codes give pcmk0621 "Scorpion", 0678 "Raiden", 0630 "Sonya" ... in fighter id order (speech recognition agrees). Scorpion's spear plays pcmk0219 ("Get over here!"). Referenced but missing: pcmk0888, 1037, 1204, 1207. Voice set 3 = attack yells and 7 = throw lines are GUESS. "sounds" / "movesounds" list them per move ("can play": all branches counted).
+- D3 native specials (control flow PROVEN, helper names LIKELY): Square Wave 0x47E6A0 = state 0x205, clip 310, rise at -0.15/tick until height -2.5, then forward 0.2/tick with clip 101 and strike 0x540D38[1], 12 more ticks of hit checks after 101 ends; on a hit stop and sleep 10; landing 0x47E9E0 = gravity 0x147, clip 310 from frame 7, sleep 8, then until on the ground (310 -> 101 -> 310 PROVEN). Bicycle 0x47E1D0 / 0x47E220 = hit check with strike 0x540D38[2] each tick; miss at distance >= 2.4 -> fall -> clip 72; hit -> blocked: state 0x1017 + script 0x4EB5E0, else velocity x 0.6 and both fighters pushed together, at distance 0x21999 a 32-tick counter, then state 0, clip 72 and the same landing. No kick counter in the code; the repeated kicks are the victim's reaction 0x57 / clip 136 (LIKELY).
+- D4 conditions (table 0x4E7EA8, move word b3; PROVEN as code, field names LIKELY): timers T(n) = ticks since event n (01 05 08 13 15 16 18 19 1D 1E 1F 21 22 23 31; cool-downs, LIKELY); 02 / 03 / 0E test the fighter ITSELF (0E = in the air, height <= -1.8); 07 / 0B opponent hit count; 09 / 0A / 0F / 11 / 14 opponent state; held buttons at the press (2D BL+HK, 2C HP+HK+LP+LK, 2B HP+BL, 29 BL+HK+LP+LK, 27 BL+RUN, 26 BL+HK+LK, 1C HP+BL+RUN, 10 BL+LP, 0D BL+LK, 17 BL+HK; 0C unclear, GUESS); distance [0x533D5C]: 1B <= 1.0, 2F >= 1.0, 24 >= 1.3, 25 >= 1.8; 1A arena == 8, 33 arena == 0 ([0x53849C] = arena number, LIKELY); 32 = round not yet won. 28 / 30 / 34 empty; table length >= 0x39. "conds" prints the list.
+- D5 buttons: input 0x45C5B0 -> press / release lists at 0x45C6B0. Input words (active low): 0x4D30A4 bits 0x10 HP, 0x20 BL, 0x40 HK, 0x01 up (P2 << 8); 0x4D30A8 bits 1 LP, 2 LK, 4 RUN (P2 << 4). 0x5405F8 = LK RELEASED (PROVEN, from the release list), 0x540688 = RUN, 0x540448 = up (LIKELY). The P2 tables 0x5406D0-0x540880 (+ 0x540640) are filled by the same fixups and equal P1, 144 / 144 entries (PROVEN, static). "buttons" prints the map.
+- D6 table sizes (LIKELY, from where the next table or data starts): misc 0x44, aux 0x14, special 0x23, projectile 0x1B, bit-5 table 0x50. The dispatcher 0x45F640 has no bounds check and skips empty entries (PROVEN).
+- D7 strike record (PROVEN, 0x48D630-0x48D720): +0x10 byte 0 = reaction on a standing victim, byte 1 = reaction on an airborne victim, byte 2 = reaction when BLOCKED, byte 3 = flags; +0x14 = DAMAGE, 16.16 fraction of the health bar, applied by 0x48DED0; a blocked hit does x 0.2; each landed hit adds 1 to the victim's +0x7C. E.g. Sonya low punch 5%, sweep 14%, roundhouse 18%; the basic throw does damage with op 63 (15% / 20% / 18% branches). Hit box +0x00..+0x0C still LIKELY.
+- D8 Shinnok + finishers (code PROVEN, names LIKELY): misc 13-1E, 24, 25 set a target id and jump to 0x469B30 (target -> object +0x34 and [0x540A34], load, announcer name, sound banks, timer 5); needs condition 32; reverts after 600 ticks or when the round is won (0x48E230). LP F,B Scorpion | HP D,F,F Raiden | HP F,D,F Sonya | HK B,B,F Liu Kang | LP D,B Sub-Zero | HK F,F,B Fujin | LK B,B,B Jarek | LK F,B,F Quan Chi | BL B,F,D Tanya | BL B,B,F Reptile | LK F,F,F Kai | HK F,D,F Jax | BL B,B,B Reiko | HP D,D Johnny Cage. Finishers: misc 0x40 = clip slot fighter id + 1 (LIKELY fatality 1), misc 0x43 = slot id + 0x10 (LIKELY fatality 2), misc 0x41 = arena-8 stage fatality, misc 0x42 = arena-0 stage fatality (script 0x4E9938, uppercut 293) - LIKELY; the clips in those slots are filled at run time and not resolved statically.
+- Bonus (TODO B4): arena music is CD audio (rule above, PROVEN). The per-arena codes at 0x4DDD18 (13, 21, 9, 1, 37, 5, 9, 33, 29, 33, 34) are LIKELY arena music; 34 is not in the music list and pcmk2034 does not exist, so that part stays open.
+
+==== ACCURACY AUDIT (2026-10-22 ET) ====
+Re-checked against the retail MK4.EXE / FILESYS.DAT and the decoder; corrections made in this file and the guide:
+- 0x4EB8F4 (36) -> 0x4EB8F8 (35); "Wins" order is not the fighter id order; ids 16/17 = Kitana / Noob Saibot (LIKELY, from the 0x4F11D8 name table), not Meat.
+- Clip 310 IS named in code (Square Wave handler); "only 9 hard-coded clips" was wrong (55 clips at 64 mov/shr sites; 84 counting all record immediates).
+- Reaction table = ids 0x00-0xC0 (193 slots, 4 empty), not 194. Opcode table: opcodes 0x00-0x7F, unused -> default handler.
+- GEO magic bytes on disk are "0.1v" (u32 'v1.0'). ESF length for ADPCM = decoded bytes (~4 x data). Clip-table end marker is record 612.
+- Creature loader 0x41EAAF sits in routine 0x41EA50; 0x4D5E80 is a data block pointing to it (not a script).
+- FILESYS.DAT: entries #0 and #1 are ANIMDAT4.AP0 / ANIMDAT4.AP1 (hash match), so all 799 entries are named; the old "2 unidentified entries" item is withdrawn.
+- Stale lines marked [Superseded]: 388 not-Sonya, 114/50/131/153/154/172/192/194/15/72-73 labels upgraded to PROVEN, old unidentified lists, sim 128->328 feedback. Earlier real-world conversions are withdrawn; raw units only (see PHYSICS: TODO I1-I4).
+- Registry Config blob: XOR (i*0x7B)&0xFF, checksum seed 0x43464729 over bytes 4..0x247 (PROVEN, matched); s32 +0x240/+0x244 = P1/P2 joystick (LIKELY).
+- TODO D1-D8 corrections (later the same day): 05 is not a plain sleep (34 is); conditions 02/03 test the fighter itself, not the opponent; [0x53849C] is the arena number, not "finish him"; 0x5405F8 is the LK RELEASE table, not held LK; op 6C has one operand word (v2 read two); table sizes misc 0x44 / bit-5 0x50; the sweep's sound "20 0xAF" is silent (index > 0x32).
+
+==== TOOLS (2026-10-22 ET) ====
+netsider's RE scripts are in tools\ (see tools\README.txt; no game data, paths are arguments): fsys_tool.py (FILESYS.DAT list/extract with name recovery), export_pc_geo.py (GEO -> GLB), extract_textures.py (texture pages -> PNG), esf2wav.py (ESF -> WAV), anim_emu.py (emulated frame decoder), script_decoder_v2.py (scripts / command lists / strikes / reactions), script_decoder_v3.py (v2 + opcodes, conditions, sounds, buttons, damage, per-move sounds), mk4_live_log.py (read-only live logger), mk4_force_clip.py (forced playback, writes game memory), mk4_input.py (SendInput key driver), mk4_config.py (registry Config decoder).
+
+==== FILE FORMATS: TODO A1-A9 (2026-10-22 ET) ====
+Full write-up: MK4_PC_FILE_FORMATS.txt sections 3 (GEO), 4 (ESF), 5 (ECM), 11, 12; status per item in MK4_TODO_UNKNOWNS.txt section A. Static analysis of the retail MK4.EXE and the extracted files, with MK4.EXE's own routines run in an emulator for the ECM check. No sprites were cut (deferred on purpose).
+- A1 ECM (PROVEN): header 0xE18 = "ECM" 0x02, u32 frames, 900 x u32 chunk sizes; 0xE18 + sum = file size for all four files (M_INTRO too; the old "different header" was a misreading). Chunk = 1 s = 15 frames: "SEC" 0, 0x2B14 bytes IMA ADPCM (22050 Hz mono, state carried over, VA 0x4AC190), then an EDL block (Eurocom LZ + Huffman, VA 0x4B07E0) holding "MPC" 0x02: 5-5-5 palette, 15 x 80 x 60 block codes (4x4 blocks, 320x240), codebook at +0x23484, code >= 65000 = solid colour. New tool tools\ecm_tool.py; its EDL output and frames are byte-identical to the EXE's (VA 0x4B07E0, VA 0x4BDD50; frames 1-14 of M_MIDWAY and M_INTRO chunks 0-1). Not reproduced: the game's random softening of solid blocks. M_MIDWAY 152 frames (Midway logo), M_EURO 203 (Eurocom logo), M_KOMERC 331 (trailer), M_INTRO 1000 (Raiden intro). Sound: smooth waveforms, not checked by ear (LIKELY).
+- GEO draw dispatch VA 0x4BA01D (PROVEN): byte 0 of the record type = flags, byte 1 is never read. 0x80 = 2D sprite (VA 0x4BB180), 0x81 = also draw the next record; 0x40 -> VA 0x4BAD10 (no lighting call, LIKELY unlit; one part per arena); 0x02 -> VA 0x4BAF60 (shade from depth, LIKELY; buyin_ge only); bit 0 + object flag 0x80000 -> VA 0x4BA630 (optional path, GUESS: effect); else the lit renderer VA 0x4BAA60.
+- A2 (code PROVEN, purpose LIKELY/GUESS): 0x100 draws exactly like 0 (byte 1 unread; LIKELY an editor/group flag); 0x2 = depth-shaded parts of buyin_ge.
+- A3/A5 (PROVEN): the "2D set, types 128..640, count 0" are 16-byte sprite records: +0 flags, +1 blend & 3 (0 opaque, 1/2 additive, 3 = 50/50; table VA 0x4F41C0), +2 local page, +3 id (unread), +4/+6 screen w/h, +8/+0xA screen x/y, +0xC/+0xD u/v, +0xE/+0xF texel w/h. These are the sprite rectangles. No cutter yet (TODO K5).
+- A4 (PROVEN): 0x4 = plain 3D parts (lit renderer). tools\export_pc_geo.py now exports every 3D part when there is no type 1 (logos, buyin_ge, arenas), skips sprite records and stacks several pages into one atlas: midway_g 2336 triangles, MKlogo_g 2033 (UVs on colour swatches), attract_ 1692 on 2 pages. Fighter output unchanged (byte-identical GLB).
+- A6 (PROVEN): transparency key = texel 0x0000. The game draws in software (DDRAW, no Direct3D); its span loops skip texel 0 (e.g. VA 0x4BF2B1).
+- A7 (PROVEN): UV row byte 0 = GEO-local texture page (VA 0x4BB943; < page count in all 107,176 rows). The old "byte 1 = page" was wrong; byte 1 is never read (LIKELY editor-only). The loader VA 0x4BC810 writes {slot, slot} per page at tex_off + 8 + 4*i as the page -> slot table.
+- A8 (PROVEN): ESF flag 0x80 = LOOP: loader VA 0x4B0600 bit 31 -> slot flag bit 0 (VA 0x4C225A) -> IDirectSoundBuffer::Play flags = DSBPLAY_LOOPING (VA 0x4C2783). Files: pcmk0101, 0102, 2003, 2007, 2011, 2015, 2023, 2031, 2035, 2039, 2070, 2071, 2081; 2003-2039 = arena music code + 2 (LIKELY arena ambience).
+- A9 (PROVEN load / LIKELY use): MENU.TGA is loaded once at start-up (VA 0x4B1A70 -> VA 0x4B5580) into texture slot 15 (GEO pages use 0-14). Content: ASCII font, colour swatches, dragon medallion: LIKELY the PC set-up / key-config menus.
+- Tools: new tools\ecm_tool.py (ECM -> PNG frames + WAV); tools\export_pc_geo.py updated as above (UV byte 0 = page).
+
+==== PHYSICS: TODO I1-I4 (2026-10-22 ET) ====
+Live per-tick logs on PC (practice mode, WELL stage, opponent inactive; Sonya vs Sonya, Liu Kang vs Sonya, Sub-Zero vs Sonya) plus static code reading. Full write-up: MK4_PC_FILE_FORMATS.txt sections 9, 10, 12; status in MK4_TODO_UNKNOWNS.txt section I.
+- I3 (PROVEN): fighter object P1 = [0x5360D8] = 0x5224F0, P2 = [0x5360DC] = 0x522574 (P1 + 0x84); the animation struct 0x522514 = object + 0x24. Same offsets for both: +0x48 standing height (Sonya -73629, Liu Kang -70320, Sub-Zero -77660), +0x4C gravity (integrator VA 0x490CB0), +0x50 camera-space depth (VA 0x4B988D; not a world field), +0x54 X, +0x58 height (negative = up), +0x5C Z, +0x6C/+0x70/+0x74 vx/vy/vz (op 58 VA 0x45AF40). Old names corrected: 0x522540 is camera depth, not vertical; 0x522548 is height, not Z (same field as P2 0x5225CC); the old "ground -77660" is Sub-Zero's standing height (LIKELY). Checked with P1 jumping and P2 launched (P2 cannot jump by itself in practice).
+- I1 (PROVEN unit scale; metre conversion intentionally not used): positions are 16.16; 65536 = 1 game unit = 256 mesh units (renderer VA 0x4B9751 / 0x4B9CD8: view-space translation sar 8 + s16 mesh). The game has no metre constant, so all values here are raw units (units, units/tick, units/tick^2). Reference: Sonya ~133,000-141,000 units tall on screen, standing root 73,629 (1.12 game units; skeleton root offset -1.122); start gap 170,392; left wall X ~-615,000 to -637,000.
+- I2 (PROVEN, open floor, victim displacement in units): HK (Sonya) 27,510 X (clip 134, vx 1310 x 21 ticks, 2/2); HP 0 (clip 311); uppercut (Sub-Zero) 96,334 X (128, vx 1966, vy -12583, g 524, 49 ticks - same arc as before); flying kick (Liu Kang) 196,590 X (131, vx 6553, vy -8586, g 589, 2/2); slide (Sub-Zero) 97,014 back the way the slider came (179, vx -2622, vy -11796, g 655; slider passes through); roundhouse 150,696 X + 150,742 Z (142-141-143); sweep 28,855 X + 145,609 Z (195-197, fighters already offset in Z). The attacker does not move on open floor; at the wall the victim is pinned and the attacker is pushed (uppercut: vx 17693 decaying x0.9/tick, 157,498 = the push-back first seen at the stage edge).
+- I4 (PROVEN, units/tick): walk 3932 (0.060; Sonya, Liu Kang, Sub-Zero), back 2754 Sonya / 2753 Sub-Zero (0.042), run 8519 (0.130, Sub-Zero, clips 317/307), Sub-Zero slide 9830 (0.150) x 26 ticks = 255,580 hit or miss (clip 95), Liu Kang flying kick 9175 (0.140) until contact then 1310 (clips 92/93), Sonya neutral jump vy -11141 first tick, gravity 655, ~32 ticks, peak ~111,500. Walk speeds equal the arcade 0.059/0.042 -> arcade units = PC units.
+- Files outside this repo (SONYA_PROVEN_TABLE, the Sonya sim) are converted to raw units separately; this file uses raw units only.
+
+==== SONYA OPEN ITEMS + SUB-ZERO 19-CLIP PASS + UNITS (2026-10-22/23, ~10:00 PM - 12:10 AM ET) ====
+Method: live practice / VS runs of MK4 PC with a memory logger (P1 clip at 0x522514, P2 clip at 0x522598; clip = ((rec<<2)-0x4FDD6C)/12) and scripted key input, plus MK4.EXE static reading. Distances are raw game units only (16.16; 65536 = 1 game unit = 256 mesh units, PROVEN). dx = victim X net displacement (P2 object +0x54); rise = standing height minus lowest height (object +0x58, negative = up). Metres are not used; any older metre figure is a superseded GUESS.
+- VS health (PROVEN live): 0x535EAC = P2 health, 0x53865C = P1 health (16.16, 65536 = full bar). Setting P2 health low and throwing gives a KO / FINISH HIM on demand.
+- Sonya Leg Twist (PROVEN live, Sonya vs Reptile): at FINISH HIM (victim dizzy, clip 13), gap 160,000 units: hold BL, U,D,D,U, release BL, then HK. Attacker 558-559-560; victim alternates 561/562 and is pulled to the attacker's X; then win pose 114. Fails if BL is not held (U = jump 304/327) or if BL is still held at HK (block 323/259). Clips 558-562 are run-time fatality slots (reuse by other fatalities LIKELY).
+- Sonya air throw (PROVEN live): both fighters jump straight up, Sonya presses BL near the opponent -> attacker 77 then 310; victim 161-198-197, dx -197,123 to -230,540 (thrown behind), victim rise 131,760-145,479.
+- Air-hit victim clips (PROVEN live, victim airborne): HP and LK -> 183-185 (dx +178,224 / +188,052 HP, +211,002 LK); HK -> 189-191 (dx +212,308 / +244,417); uppercut 293 -> 128-328 (dx +98,300, rise 180,510); Bicycle -> 136-183-185 (dx ~+165,000, rise 138,692-142,449); Cartwheel -> 131-185 (dx +355,171, rise 142,273); Ring -> 130 then the victim just lands.
+- Ground victim clips (PROVEN live): Ring 130 (dx +98,950 to +127,475), Cartwheel (reaction 0x79) 131-185 (dx +289,641, rise 89,182), Bicycle 136-183-185 (dx +207,019, rise 141,000), Leg Grab 201-328 (dx -218,734), throw 78 -> 156-176-191 (dx -301,598), weapon HP 230 -> 183-185 (dx +283,967).
+- Square Wave: the hit reaction is 186-188 against a jumping opponent (PROVEN live, dx +133,678). CORRECTION: 305 is NOT a Square Wave hit reaction (earlier "PROVEN defender 305" was a wrong attribution); 305 is LIKELY a turn-around/re-face when the attacker crosses over.
+- Juggles: none found (LIKELY). After Ring, Bicycle, air throw and uppercut the victim lands before Sonya leaves her recovery clip (15 / 72-73-72-310-304 / 310 / 293), so no follow-up connected.
+- Clip 25 = Reptile's acid spit (projectile entry 0x0C in Reptile's command list), not Sonya's (LIKELY; netsider: "spit"). Clip 26 = the D,F+P projectile-throw pose of fighters 9 (Tanya), 16 (Kitana) and 17 (Noob Saibot) (LIKELY; netsider: "wide arms-open stance"). Per-fighter dispatchers 0x48E4E0 / 0x46BEB4 / 0x46B49A map id 0x10 -> 2 (Sonya) and 0x11 -> 4 (Sub-Zero) (PROVEN code), which explains why 26 appears in both sets. Neither was produced live.
+- Sweep caveat: Sonya's sweep 63 -> 195-197 push (~114,600 units) is back-computed from an older metre-based figure (source log lost), so it is LIKELY only; Sub-Zero's same clip measured live gives +114,028 / +111,650 (PROVEN).
+- Static per-fighter tables (PROVEN code, spot-checked live): round-start intro script 0x4E8EE0 picks the clip by fighter id (0/11 -> 45, 2/9 -> 46, 4/1 -> 47, 3/5 -> 48, 7/12 -> 49, 10 -> 50, 8 -> 51, 6/13/14 -> 44; live: Sonya 46, Reptile 50, Scorpion 45, Sub-Zero 47). Sweep script 0x4E9780: clip 62 for odd ids, 63 for even ids. Close HP table 0x4E9BF8 by id mod 3: 262 (ids 0,3,6,9,12), 263 (1,4,7,10,13,15), 264 (2,5,8,11,14). Close F+LK special table 0x4E0FA0 (per id): Sonya 43 / victim 163, Sub-Zero 41 / victim 165-200, id 9 = 42 / 162.
+- Sub-Zero 19 clips (see the next section if present for the final status):
+  PROVEN his: 47 round-start intro; 153 victim of his close LP / F+LP throw 76 (153-173-328, dx about -266,000 to -311,000); 185 get-up after 131 / 183; 186-188 jump-attack hit + recover (jump-forward LK 59).
+  PROVEN not his: 62 (odd-id sweep; his sweep = 63); 262 (his close HP = 263).
+  LIKELY other fighters: 42 / 162 (fighter 9, LIKELY Tanya; his own close F+LK = 41 / 165-200, PROVEN); 103 (fighter 9 F,D,B+LK, LIKELY Tanya's split kick); 26 (Noob / Tanya / Kitana projectile throw).
+  LIKELY: 174 = landing of the throw script 0x4E1660 (reaction 0x68 = 174-176-142-141-143).
+  GUESS (not produced yet): 58 (jump-kick variant; his jump LK plays 59), 79 / 151 (throw script 0x4E1660, no code reference found), 115-118 (native block 0x443C60, LIKELY boss-related).
+  Other Sub-Zero clips PROVEN live: 292 stance, 70 LK -> 134, 314 close HK -> 134, 313 B+HK -> 142-141-143-328 (dx +150,696), 293 uppercut -> 128-328 (dx +96,334, rise 157,375), 63 sweep, 263 close HP -> 311, 296 HP, 294 LP, 260/52/315 crouch LP/HK/LK, 97/96 jump HP/LP, 327 jump-up kick, 56 jump-forward HK -> 131-185, 59 jump LK -> 186-188, 16 Ice Blast, 95 slide, 244 -> 286 weapon draw, 317-307 run.
+- Known issue: in practice mode, after about eight close-range moves both fighters stop accepting input (stuck in stance); a restart fixes it.
+
+==== SUB-ZERO PART 2: LIVE PASS ON THE LEFTOVER CLIPS (2026-10-23, ~12:05 AM - 12:25 AM ET) ====
+Units: raw 16.16 (65536 = 1 game unit = 256 mesh units, PROVEN). No metres here.
+Clip record address = 0x4FDD6C + 12*clip. The live clip slot (fighter object +0x24) holds that record address >> 2.
+
+KEY STATIC FINDING: several shared scripts pick the clip with a per-fighter FIGHTER_SWITCH (opcode 0x3c, 16 entries f0..f15).
+Sub-Zero takes entry f4, Sonya takes entry f2. Both are PROVEN by the live clips below.
+So a clip in Sub-Zero's clip table is only "his" if the switch sends f4 to it.
+
+1) THROW (generic throw handler misc[02] = 0x42c560; switch at script 0x4e1784)
+   f0/f6/f14 -> 75 (victim 152)          f1/f7/f12 -> native 0x42cc00 -> 80 (victim 154), 18% damage
+   f2/f8     -> 78 (victim 156) [Sonya]  f3/f9     -> 79 (victim 151), 15%
+   f4/f10    -> 76 (victim 153) [Sub-Zero]   f5/f11 -> native 0x42cb80 -> 81 (victim 158), 18%
+   f13       -> multi-hit chain 83/145, then 605/607   f15 -> 609/610 and 604/606
+   The bit0-of-0x54000c path (positions swapped) jumps straight to 76/153 at 0x4e16a0.
+   - Sub-Zero throw = 76, victim 153-173-328. PROVEN. Live in practice and VS, every throw:
+     close LP, F+LP, B+LP (pressed together, held, or LP then B) all give 76.
+     P2 dx about -265000 to -310000, P2 rise 75382.
+   - Clip 80 / 154: NOT a Sub-Zero attack. It is the f1/f7/f12 fighters' throw.
+     DISPROVEN as Sub-Zero's second throw (PROVEN by the switch plus the live data above).
+     Sub-Zero DOES play 154 -> 172 -> 328 as the VICTIM of an opponent's 80 throw.
+     PROVEN live in VS (arcade CPU threw him 3 times).
+   - Clip 81 / 158: f5/f11 fighters' throw. Sub-Zero plays 158 -> 171 -> 328 as the victim. PROVEN live in VS (2 times).
+   - Clip 79 / 151: f3/f9 fighters' throw. NOT Sub-Zero's (LIKELY; static only, never produced by Sub-Zero live).
+     If he is thrown by an f3/f9 fighter, 151 would be his victim clip (GUESS, not seen live).
+     The older "Sub-Zero LP/object pickup -> 79/151" labels came from mixed P1/P2 logs and are wrong.
+   - Sub-Zero has no air throw. Air LP vs a jumping opponent gives P1 304 -> 96, P2 304 -> 186 -> 188.
+     PROVEN (2 of 3 timings hit: 250/350 ms; at 450 ms 96 played but missed; this is a hit, not a throw).
+     CORRECTION (2026-10-23): this line said 3 of 3; a re-read of the log shows the 450 ms try missed (P2 stayed in 304). No air throw still stands (air BL did nothing).
+
+2) CLIP 58 (angled jump kick switch; misc[11] native 0x46dfa0 -> script 0x4e93c0)
+   f0/f3/f6/f9/f12 -> 58      f1/f4/f7/f10/f13 -> 59      f2/f5/f8/f11/f14/f15 -> 60
+   - Sub-Zero's jump kick = 59. PROVEN live: 9 of 9 airborne jump LK tries (forward and back, delays 60-450 ms, and from far away) played 304/301 -> 59 -> 304.
+   - Clip 58 is NOT played by Sub-Zero (LIKELY: switch plus 9 live tries without it).
+     It is played by an opponent (P2 showed 58 in VS). The old label "58 = Sub-Zero crouch LK [PROVEN]" is WRONG.
+   - Clip 58 also appears in a special script at 0x4eb240 (0x47bxxx code; velocity 7864/3932, gravity 65). That is another fighter's move (GUESS which one).
+
+3) CLIPS 115-118 = Sub-Zero ROUND-WIN VICTORY POSE. PROVEN live.
+   Run: VS/arcade as Sub-Zero, opponent HP forced low, close throw for the KO.
+   After every won round (8 of 8 rounds won) P1 plays 76 -> 115 -> 116 -> 117 -> 118, then 47 at the next round start.
+   Static: victory script 0x4e9a28 switch f0/f4 -> 0x4e9abc (ANIM_TO_END 115, SET_CLIP 116, 117, START 118).
+   Sonya f2 -> 114 (her proven win pose).
+   Compare images: SubZero_clip115..118_PROVEN_compare.png (shows the ice raised-arm pose).
+
+4) CLIP 174: NOT produced live (as attacker or victim) in about 10 minutes of practice and VS. Still GUESS.
+   Static: it sits in the shared knockdown/fall reaction chain (script 0x4ecb28, natives 0x485ac0/0x485b20: 171 -> 172 -> 174 path).
+   So it is a shared VICTIM clip, LIKELY reached from a specific knock-down reaction, not a Sub-Zero attack.
+
+5) Other Sub-Zero victim clips seen live in VS this run (PROVEN as clips he plays):
+   154 -> 172 -> 328 (vs 80 throw); 158 -> 171 -> 328 (vs 81 throw); 186 -> 188 (standing, hit by the opponent's jump kick 58); 192 -> 194; 128.
+   CORRECTION (2026-10-23): this line said 186 -> 188 was a hit in the air; a re-read of the VS log shows Sub-Zero was on the ground (292/272/294) when the opponent's jump kick 58 hit him (2 times).
+   Compare images: SubZero_clip171/172_PROVEN_compare.png.
+
+6) Sonya clips 25/26 live: not attempted (not cheap; both need another fighter's special as P2). Still LIKELY from the earlier static work.
+
+Practice lockup workaround: reboot practice every 7 moves. 27 moves in 4 chunks, no lockups.
+   ADDENDUM (12:30 AM ET) to items 1 and 4:
+   - The 79/151 throw uses reaction 0x68 = victim chain 151 -> 174 -> 176 -> 142 -> 141 -> 143 (from the earlier static pass).
+     Fighter f9 = Tanya (earlier per-fighter tables). Old mixed captures of a Tanya session show 79, 151 and 174 together.
+     So 79 = the f3/f9 (Tanya) throw. LIKELY.
+     174 = the victim landing after 151. Sub-Zero would play 151/174 only when Tanya (or f3) throws him. LIKELY, not seen live.
+   - Script 0x4ecb28 (171 -> 172 -> 174 natives) is a second shared fall chain that also references 174. Static only, GUESS.
+
+==== FUJIN (fighter id 5): LIVE PASS, WEAPON CLIPS, CLIP LIST (2026-10-23, ~12:28 AM - 2:10 AM ET) ====
+Full clip list with status per clip: FUJIN_CLIPS.txt (this repo; 117 clips: 59 PROVEN, 9 NETSIDER-ID, 21 LIKELY, 16 GUESS, 12 NOT HIS).
+Method as for Sonya: P1 Fujin with scripted inputs, live memory log of both clip slots (practice vs an inactive Fujin, and VS vs CPU),
+plus the static decoder (tools\script_decoder_v3.py, fighter 5) and entry f5 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
+Raw units only (65536 = 1 game unit = 256 mesh units). Fujin idle 291, standing height -73531, practice start gap 170392.
+
+1) PROVEN live (P1 Fujin):
+   48 round intro (switch 0x4E8EE0 f5; 7 of 7 round starts) | 120 victory pose (switch 0x4E9A28 f5 -> 0x4E9BC8; 8 of 8 won rounds)
+   81 throw, close LP / F+LP (throw switch 0x4E1784 f5 -> 81 / victim 158) -> victim 158-171-328, dx +306363..+330637, rise 98654
+   36 close LK special (table 0x4E0FA0 idx 5 -> script 0x4E1288, opp 155, damage 11796 = 18.0%) -> victim 155-170-138-139-185, dx +355674
+   264 close HP (table 0x4E9BF8, id mod 3 = 2) -> victim 311 | 314 close HK knee -> victim 134, dx +24465..+27510
+   294 LP | 296 HP | 65 HK | 308 LK | 293 uppercut -> 128-328, dx +96334, rise 157375 | 62 sweep (odd-id switch) | 64 roundhouse
+   260 crouch LP | 53 crouch HK | 315 crouch LK -> 134, dx +50763 | 257/256 crouch block
+   97 jump HP | 96 jump LP -> 186-188, dx +172996 | 61 jump-up kick (LK and HK) | 57 jump-forward HK -> 131-185, dx +203148, rise 89182
+   60 angled jump LK (switch 0x4E93C4 f5 -> 60) -> 186-188
+   58 dive kick (U,D+LK or jump then D+LK; special[10] script 0x4EB240) -> 183-185, dx +197241
+   98 F,D,F+HP lifts the opponent (victim 8-196, rise 95664) | 100 D,F+HK flying knee | 10-11 F,D+LP
+   Armed (after the weapon draw) specials still work: 100 close -> 127-311-131-185, dx +408068; 10-11 close -> 8-183-185, dx +270910.
+   Shared locomotion: 267 walk F, 272 walk B, 259/258 crouch, 304 jump, 301 flip, 323 block, 317-307 run.
+   As victim (VS vs CPU): 158-171-328, 13, 128, 134, 199 (after opponent clip 14, then 13), 311, 305 (turn-around when the opponent jumps over).
+2) Resolves an old open item: clip 58 in special script 0x4EB240 ("another fighter's move, GUESS") is Fujin's dive kick. PROVEN.
+   The angled-jump-LK switch (f5 -> 60) and the sweep switch (odd ids -> 62) are confirmed live for a third fighter.
+3) Static only, not seen live: 295, 297, 312 (LIKELY follow-on clips), 99 (B,F,D+LK, LIKELY; 9 timing variants failed), 54 (GUESS).
+   NOT HIS: 52, 55, 56 (other fighters' crouch / angled jump kicks), 327 (Sonya's jump-up kick), 59, 66, other throws.
+4) Weapon clips - named by netsider by eye in the clip viewer (his words = DONE, 2026-10-23 ~1:20-1:59 AM ET):
+   244 | weapon draw (B,B+LP)                            | netsider: "def a draw"
+   279 | walking forward with weapon in hands            | netsider: "walking forward with weapon in hands"            (live: F while armed)
+   280 | walking backwards with weapon in hand           | netsider: "walking backwards with weapon in hand"           (live: B while armed)
+   210 | idle stance holding the weapon (after 244)      | netsider: "just him idle, holding w/e it is"
+   217 | weapon stance to him shooting something         | netsider: "weapon stance to him shooting something (like when subzero does ice)"
+   219 | held shooting pose at the end of 217            | netsider: "idle pose of him shooting the thing in the last one at the end" (last one = 217)
+   208 | fighting stance to throwing a weapon/something  | netsider: "fighting stance to him throwing a weapon looks like or throwing something"
+   213 | poking something upwards                        | netsider: "him poking something upwards"                    (live: armed HP 212-213 -> victim 311)
+   212 | holding the spear and moving it upwards         | netsider: "him like holding the spear and moving it upwards, or w/e it is"
+   netsider's observation: 210/212/213 look like moves for a DIFFERENT weapon than 217/219 (Fujin's crossbow). Which weapon: GUESS, open.
+   Live: 217-219-259 played on D while armed (same input as Sonya's armed crouch 217/219); no hit seen from 217 itself. Open.
+5) CORRECTION (2026-10-23 ~2:05 AM ET): the earlier live table put "after weapon mode HK -> P2 131, dx +163825, rise 66945" under
+   HK 65. It belongs to 208: armed HK played 208 and the victim's 131 started during 208; 65 only started ~1.1 s later, after
+   Fujin was back to unarmed idle 291. PROVEN (re-read of the live log). FUJIN_CLIPS.txt has it right (rows 65, 131, 208).
+6) Open items: MK4_TODO_UNKNOWNS.txt E5.
+==== SHINNOK (fighter id 6): LIVE PASS, CLIP LIST (2026-10-23, ~1:10 AM - 2:20 AM ET) ====
+Full clip list with status per clip: SHINNOK_CLIPS.txt (this repo; 104 clips: 61 PROVEN, 16 LIKELY, 14 GUESS, 13 NOT HIS).
+Why Shinnok: next fighter after Fujin in the game's move-table order (fighter ids 5 Fujin, 6 Shinnok); entry f6 of the
+16-entry FIGHTER_SWITCH tables (op 0x3C).
+Method as for Sonya / Fujin: P1 Shinnok with scripted inputs, live memory log of both clip slots (practice vs an inactive
+Shinnok, and VS vs CPU Kai, then Scorpion), plus the static decoder (tools\script_decoder_v3.py, fighter 6).
+Raw units only (65536 = 1 game unit = 256 mesh units). Shinnok idle 283, standing height -73531, practice start gap 170392.
+
+1) PROVEN live (P1 Shinnok):
+   44 round intro (switch 0x4E8EE0 f6; 5 of 5 round starts) | 111 victory pose (switch 0x4E9A28 f6; 5 of 5 won rounds)
+   75 throw, close LP / F+LP (throw switch 0x4E1784 f6 -> 75 / victim 152) -> victim 152-173-328, dx -287678 (thrown behind), rise 66970
+   31 close LK special (table 0x4E0FA0 idx 6 -> script 0x4E1070, opp 146, reaction 134, damage 6553 and 9175) -> victim 146-166-328, dx -33086
+   262 close HP (table 0x4E9BF8, id mod 3 = 0) -> victim 311 | 314 close HK knee -> victim 134, dx +27510
+   294 LP | 296 HP | 66 HK | 67 LK | 293 uppercut -> 128-328, dx +95844, rise 157375 | 63 sweep (even ids) -> 195-197, dx +93583 | 313 roundhouse
+   260 crouch LP | 54 crouch HK -> 311, dx +68187 | 315 crouch LK -> 134, dx +50763 | 257/256 crouch block
+   97 jump HP -> 311 | 96 jump LP -> 186-188, dx +172996 | 327 jump-up kick -> 311 | 55 jump-forward HK -> 131-185, dx +203148, rise 89182
+   58 angled jump LK (switch 0x4E93C0 f6 -> 58) -> 186-188, dx +172996
+   244 weapon draw (B,F+LP; bladed staff) -> 286 weapon stance; armed walks 277 (F) / 278 (B); armed B,F+LP -> 208 weapon throw -> victim 131,
+   dx +196590, rise 66945, then back to unarmed idle 283.
+   Shared locomotion: 267 walk F, 272 walk B, 259/258 crouch, 304 jump, 301 flip, 323 block, 317-307 run.
+   As victim (VS vs CPU): 158-171 (thrown by 81), 13, 132-328 (after opponent clip 21), 180-131-185 (after opponent 1),
+   199-13 (after opponent 14, Scorpion's spear), 189-191 (in his jump kick 58, hit by opponent HK 71), 195-197, 311, 134.
+2) Morphs: the Sonya (F,D,F+HP) and Raiden (D,F,F+HP) morphs change his moveset (HK -> 65 / 71) but play no morph clip;
+   he stays on idle 283 (PROVEN). Scorpion F,B+LP did not trigger; Kai F,F,F+LK went dead. In our test setup the screen
+   showed LOADING with both fighters invisible after a morph and a second morph in the same run could crash the game
+   (real-PC behaviour: GUESS).
+3) Round end (generic, PROVEN from the Fujin and Shinnok VS logs): see MK4_PC_FILE_FORMATS.txt section 10B.
+4) Static only, not seen live: 295, 297 (LIKELY follow-on clips); 261, 532, 533 (close-strike set), 209, 547, 548, 596 (GUESS).
+5) CORRECTION (2026-10-23 ~2:20 AM ET): the earlier live table put "HP afterwards -> P2 131, dx +196590" under the HP
+   after the weapon throw. It belongs to 208: armed B,F+LP played 208 and the victim's 131 started during 208; the HP
+   (296) only started ~1.2 s later and hit nothing. PROVEN (re-read of the live log). The same log shows 278 = armed walk
+   back (B) and 277 = armed walk forward (F). SHINNOK_CLIPS.txt has it right (rows 131, 208, 277, 278).
+6) Open items: MK4_TODO_UNKNOWNS.txt E6.
+==== STAGES, GORE, THROW PLACEMENT, ROUND END, SKELETONS, CD MOVIES (2026-10-23, ~2:10 AM - 2:45 AM ET) ====
+Short log of tonight's format findings; the full text is in MK4_PC_FILE_FORMATS.txt (sections given) and the open items in
+MK4_TODO_UNKNOWNS.txt. Raw units only.
+1) Arenas (guide 3A, PROVEN unless noted): arena number -> GEO from the fixup table VA 0x4D9460 / descriptors VA 0x4E0948
+   (11 arenas: Goro's Lair, The Well, Elder Gods, The Tomb, Wind World, Reptile's Lair, Shaolin Temple, Living Forest,
+   The Prison, Ice Pit, and "Skull" (Practice-menu name only)). 28-byte spawn records = the skeleton bone record format,
+   same builder VA 0x406DD0. Flipbook animation lists per arena (format LIKELY). Texel 0x0000 is the transparency key here
+   too. Code-driven motion (Wind World debris, Prison fan, Lair pickups) and arena 2D sprites: UNKNOWN (TODO J3-J5).
+   Other 3D GEOs: champion pedestal (LIKELY), ladder (GUESS), shinx / cliff / cage_end (UNKNOWN), skull continue screen (PROVEN).
+2) Gore (guide 10A): Sonya's Leg Twist splits the victim into two objects at victim clip 562 frame 1 (legs = new object on
+   clip 563, parts 1 and 10-15; upper body keeps parts 2-9) - PROVEN. Blood = SHARED_G parts 0 (drop), 4 (splat),
+   0xE-0x10 (spurts) + SHARE2_G sprite 0x57 (pool); drop physics PROVEN; the split plays 3 times (instant replay).
+3) Throw-victim clips (guide 10B): frame 0 is a stored thrower -> victim placement, not a pose; the game plays from
+   frame 1 and the victim takes the thrower's facing and yaw during the throw. PROVEN (Sonya throw 78; Sub-Zero 76 LIKELY).
+4) Round end (guide 10B): loser 137 after a standing-hit KO; deciding round loser dizzy in 13 (FINISH HIM); time-out
+   13 -> 137 (after a hit) or 13 -> 206 (after a throw); jump LK / LP on a standing fighter -> 186-188. PROVEN.
+5) Skeletons (guide 7): Sonya and Fujin 17 nodes (extra head node 4, never animated; Sonya's at (0, -4128, 6365), GUESS
+   ponytail; Fujin's zero-offset), Sub-Zero 19 nodes (zero-offset extras 10, 14, 18). Hair is part of the head mesh (LIKELY).
+6) CD movies (TODO A1 / last TODO entry): all 35 .ECM files in the game CD's DATA folder (bios, endings, menu movies) share
+   the decoded A1 header layout (PROVEN by header check); not decoded yet.
+
+==== REIKO (fighter id 7): LIVE PASS, SPECIALS, WEAPON, CLIP LIST (2026-10-23, ~1:50 AM - 3:20 AM ET) ====
+Full clip list with status per clip: REIKO_CLIPS.txt (this repo; 125 clips: 77 PROVEN, 15 LIKELY, 16 GUESS, 17 NOT HIS, 0 UNKNOWN).
+Method as for Sonya / Fujin: P1 Reiko with scripted inputs, live memory log of both clip slots (practice vs an inactive Reiko, and VS vs CPU),
+plus the static decoder (tools\script_decoder_v3.py, fighter 7) and entry f7 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
+Why Reiko: next fighter after Shinnok (id 6) in the game's fighter-id order.
+Raw units only (65536 = 1 game unit = 256 mesh units). Reiko idle 284, standing height -77660, practice start gap 170392.
+
+1) PROVEN live (P1 Reiko):
+   49 round intro (switch 0x4E8EE0 f7; 5 of 5 VS round starts + every practice start) | 113 victory pose "REIKO WINS" (switch 0x4E9A28 f7; 4 of 4 won rounds)
+   80 throw, close LP / F+LP (throw switch 0x4E1784 f7 -> 80 / victim 154) -> victim 154-172-328, dx +232804 (LP) / +236736 (F+LP), rise 72648 (thrown forward)
+   40 close LK special (table 0x4E0FA0 idx 7 -> 0x42BBE0 -> script 0x4E1120: clip 40, opp 148, reaction 132, damage 13762 = 21.0%) -> victim 148, dx +137257
+   263 close HP (table 0x4E9BF8, id mod 3 = 1) -> victim 311 | 314 close HK knee -> victim 134, dx +27510
+   294 LP | 296 HP | 66 HK | 67 LK | 293 uppercut -> 128-328, dx +94962..+96334, rise 157375
+   62 sweep (odd-id switch) -> 192-194, dx +65160 (gap 80000) / +94368 (gap 60000)
+   64 roundhouse -> 142-141-143-328, dx +150696, rise 59294 (gap 55000; no hit at 80000)
+   260 crouch LP -> 134, dx +50763 (gap 70000) | 54 crouch HK -> 311, dx +68187 | 315 crouch LK -> 134, dx +50763 | 257/256 crouch block
+   97 jump HP -> 311 | 96 jump LP -> 186-188, dx +172996 | 61 jump-up kick (LK and HK) | 56 jump-forward HK -> 131-185, dx +203148, rise 89182
+   59 angled jump LK (switch 0x4E93C4 f7 -> 59) -> 186-188, dx +172996
+   Shared locomotion: 267 walk F, 272 walk B, 259/258 crouch, 304 jump, 301 flip, 305 turn, 317-307 run (runs into the opponent and pushes it, +117299).
+2) Specials (PROVEN live):
+   437 D,F+LP throwing stars (proj[18] 0x4F0020) -> victim 182, dx +98248 (gap 200000) / +42713 (gap 350000)
+   110 B,D,F+HK spinning handstand kick (special[1f]) -> victim 128-328, dx +96334 / +136283 (close), rise 157375 (launch)
+   86  D,U teleport (special[0e] 0x4EB2A0): rises 13107/tick to height -274265, reappears at opponent X + 65537 and lands behind it;
+       opponent plays 305 (turn); no hit seen at gaps 60000-350000
+   306 B,F+LK ground dash (special[20] 0x478F30): P1 X -119105 -> +210933 (+330038), dashes past the opponent to its other side (opponent 305; video), no hit (6 runs);
+       at gap 60000 the same input gave LK 67
+   Static only, not seen: 29 (second clip in the star handler), 308 (first clip in the B,D,F+HK handler), 74 / victim 150 (D,U handler). GUESS.
+3) Weapon (PROVEN live; roles from the input that played them, no visual ID by netsider yet):
+   244 draw D,B+HP -> 285 armed stance | 275 / 276 armed walk F / B | 246 armed block
+   232 armed LP (close: victim 205, dx +248911) | 231 armed HP -> victim 319-328, dx +81437, rise 65040
+   217-219 armed crouch (D while armed; also before armed D+HP 293 and armed D+LK 315)
+   208 weapon throw: the draw input again while armed -> victim 131, dx +196590, rise 66945; then unarmed idle 284, and the weapon
+       could not be drawn again in that session (input LIKELY; same pattern as Shinnok's 208).
+   Armed LK / HK / B+LK / B+HK / run keep their normal clips (67, 66, 62, 64, 317-307).
+4) As victim (VS vs CPU): 13 (via 199 after opponent clip 14), 128, 131, 132-328, 153-173-328, 157-586, 158-171-328, 186-188, 189-191,
+   192-194, 311, 328. PROVEN played.
+5) Capture note: in some practice sessions the fighters were missing from the video (stage drawn closer), for the whole session or from
+   a mid-session move on; the memory logs were not affected; VS video was always fine. Cause GUESS (capture-side rendering). Every
+   compare image was checked by eye; moves were re-captured one per session where needed.
+6) Open: 29, 308, 74/150, 295, 297, 261/532/533, 209, 547/548/596; fatalities not attempted (static inputs: fatality A F,D,F+BL,
+   fatality B B,B,D,D+HK, stage arena 8 D,D,B+LP, stage arena 0 F,F,D+LK -> 293); the weapon's identity (GUESS); a clean
+   single-input test for 208. See REIKO_CLIPS.txt "STILL OPEN".
+[2026-10-23] Clip 467 = swim (NETSIDER-ID, seen on Sonya). The 612-clip table is shared, so every fighter can play it; nothing in MK4.EXE points at clip 467 (no clip-record pointer, fixup or script), LIKELY unused/cut. A planned swimming feature is GUESS. 515-517 ("floating set") are also unreferenced; a related swim set is GUESS.
+
+==== QUAN CHI (fighter id 8): LIVE PASS, SPECIALS, WEAPON, CLIP LIST (2026-10-23, ~3:15 AM - 5:20 AM ET) ====
+Full clip list with status per clip: QUANCHI_CLIPS.txt (this repo; 136 clips: 90 PROVEN, 11 LIKELY, 13 GUESS, 22 NOT HIS).
+Method as for Reiko: P1 Quan Chi with scripted inputs, live memory log of both clip slots (practice vs an inactive Quan Chi, and VS vs CPU),
+plus the static decoder (script_decoder_v3.py, fighter 8) and entry f8 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
+Why Quan Chi: next fighter after Reiko (id 7) in the game's fighter-id order. Name from the select screen and "QUAN CHI WINS".
+Raw units only (65536 = 1 game unit = 256 mesh units). Quan Chi idle 283, armed stance 286, standing height -78643, practice start gap 170392.
+
+1) PROVEN live (P1 Quan Chi):
+   51 round intro (switch 0x4E8EE0 f8; every VS round start + every practice start) | 125 victory pose "QUAN CHI WINS" (switch 0x4E9A28 f8)
+   78 throw, close LP / F+LP (throw switch 0x4E1784 f8 -> 78 / victim 156) -> victim 156-176-191, dx -292666..-301598, rise 38296 (thrown behind)
+   38-39 close LK special (table 0x4E0FA0 idx 8 -> 0x42BC40 -> script 0x4E1198: clip 38, opp 160, damage 13762 = 21.0%) -> victim 160-168, dx +359699
+   264 close HP at gap 25000-32000 (table 0x4E9BF8, id mod 3 = 2) -> victim 311; at gap 40000 HP plays 296 -> victim 324
+   314 close HK knee -> victim 134, dx +27510
+   294 LP | 296 HP | 71 HK | 70 LK | 293 uppercut -> 128-328, dx +96285 / +96334, rise 157375
+   63 sweep (even-id switch) -> 195-197, dx +119045 / +114028 | 313 roundhouse -> 142-141-143-328, dx +150696, rise 59294 (gap 45000)
+   260 crouch LP -> 134 | 52 crouch HK -> 128-328 (launch, rise 157375) | 315 crouch LK -> 134, dx +50763 | 257/256 crouch block | 323 block
+   97 jump HP -> 311 | 96 jump LP -> 186-188, dx +172996 | 327 jump-up kick -> 311 | 57 jump forward/back HK -> 131-185, dx +203148
+   60 jump forward/back LK (switch 0x4E93C4 f8 -> 60) -> 186-188
+   Shared locomotion: 267 walk F, 272 walk B, 259/258 crouch, 304 jump, 301 flip, 305 turn, 317-307 run (pushes the opponent +105504).
+2) Specials (PROVEN live):
+   23  F,F+LP skull projectile (proj[07] 0x4F0388) -> victim 182, dx +151371 (gap 200000) / +82566 (gap 350000)
+   87-88-89-90 F,D+LK air stomp (special[0b]) -> victim 178-328; min height -252970 (5 runs)
+   105 F,F+HK flying ram (special[1a] 0x4EB0E0) -> victim 189-191, dx +223765 / +305767, rise 59675
+   74  air throw: BL in the air while the opponent jumps (misc[20] 0x4E8E60) -> victim 150-175, dx about -200000 (thrown behind), rise 171740
+   7   F,B+HP (misc[12]) played 4 times, never hit the opponent; effect GUESS.
+   Static only, not seen: 77 / victim 161 (second air-throw entry), 94 (first clip of the F,D+LK handler). GUESS.
+3) Weapon (PROVEN live; roles from the input that played them, no visual ID by netsider yet; looks like a spiked mace, GUESS):
+   244 draw D,B+HK -> 286 armed stance | 277 / 278 armed walk F / B | 246 armed block | 218-219 armed crouch
+   234 armed LP -> victim 205, dx -28905 | 238 armed HP -> victim 132-328, dx +41282
+   208 weapon throw: the draw input again while armed -> victim 131, dx +196590, rise 66945; then unarmed idle 283 (input LIKELY).
+   Armed LK / HK / B+LK / B+HK keep their normal clips (70, 71, 63, 313); armed D+HP -> 218-219-293.
+4) As victim (VS vs CPU): 13 (via 199 after opponent clip 14), 128, 131, 134, 154-172, 157-586, 158-171, 179, 182, 185, 186-188, 189-191,
+   192-194, 195-197, 311, 328. PROVEN played.
+5) Fatalities: fatality A (static F,D,F+LK release) and fatality B (static U,U,D,D+LP) tried at FINISH HIM with press / hold-release /
+   block-held variants at several distances: no fatality came out, every attempt ended in victory pose 125. Clips unresolved (GUESS;
+   the static input decode may be wrong). Stage fatalities not attempted.
+6) Game crashes during capture (PROVEN, cause GUESS): "Exception C0000005 at Address 004B9545" 4 times, always in a practice-mode reset
+   (or right after F,B+HP); "at 00409B55" once, on armed jump-forward HP. Armed jump / run / D+LK were therefore not logged.
+7) Open: 77/161, 94, 295, 297, 261/532/533, 209, 547/548/596; fatality clips; F,B+HP effect; armed jump / run. See QUANCHI_CLIPS.txt "STILL OPEN".
+
+==== TANYA (fighter id 9): LIVE PASS, SPECIALS, WEAPON, FATALITY, CLIP LIST (2026-10-23, ~3:20 AM - 5:30 AM ET) ====
+Full clip list with status per clip: TANYA_CLIPS.txt (this repo; 139 clips: 98 PROVEN, 9 LIKELY, 12 GUESS, 20 NOT HERS).
+Method as for Reiko / Quan Chi: P1 Tanya with scripted inputs, live memory log of both clip slots (practice vs an inactive Tanya, and VS vs CPU),
+plus the static decoder (script_decoder_v3.py, fighter 9) and entry f9 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
+Why Tanya: next fighter after Quan Chi (id 8) in the game's fighter-id order. Name from the select screen and "TANYA WINS".
+Raw units only (65536 = 1 game unit = 256 mesh units). Tanya idle 439, armed stance 285, standing height -71100, practice start gap 170392.
+Frame sheets (8 frames per clip) of the captured video were checked by eye for 58 clips (victim clips included).
+
+1) PROVEN live (P1 Tanya):
+   46 round intro (switch 0x4E8EE0 f9; every VS round start + every practice start) | 124 victory pose "TANYA WINS" (switch 0x4E9A28 f9)
+   79 throw, close LP / F+LP (throw switch 0x4E1784 f9 -> 79 / victim 151) -> victim 151-174-191, dx -315573..-324505, rise 71505 (thrown behind her)
+   42 close LK special (table 0x4E0FA0 idx 9 -> 0x42B7E0 -> script 0x4E1020: clip 42, opp 162) -> victim 162, dx -50491 (3x)
+   262 close HP at gap 40000 (table 0x4E9BF8, id mod 3 = 0) -> victim 311 | 314 close HK knee -> victim 134, dx +27510
+   294 LP (gap 60000 -> 311) | 296 HP (gap 60000 -> 324) | 66 HK | 308 LK | 293 uppercut -> 128-328, dx +95844, rise 157375
+   62 sweep -> 192-194, dx +71712 | 64 roundhouse -> 142-141-143-328, dx +99130, rise 59294 (gap 45000)
+   260 crouch LP -> 134, dx +50763 | 54 crouch HK -> 311, dx +68187 | 315 crouch LK -> 134, dx +50504 | 257/256 crouch block | 323 block
+   97 jump HP -> 311 | 96 jump LP -> 186-188, dx +172996 | 61 jump-up kick (LK and HK) | 55 jump forward/back HK -> 131-185, dx +203148, rise 89182
+   58 jump forward/back LK (switch 0x4E93C0 f9 -> 58) -> 186-188
+   Shared locomotion: 267 walk F, 272 walk B, 259/258 crouch, 304 jump, 301 flip, 305 turn, 317-307 run (pushes the opponent +105504).
+2) Specials (PROVEN live):
+   26  D,F+HP fireball (proj[0a] 0x4F0250) -> victim 130, dx +127475 (gap 60000/200000), +42989 (gap 350000)
+   24  air fireball: D,B+LP in the air (proj[0b]) -> 304-24-310, victim 130, dx +127475; P1 min height -183219
+   109 F,F+LK corkscrew / flying kick (special[1e]) -> victim 179-328, rise 112119, dx +23546 (gap 40000) .. -96977 (gap 250000)
+   103 F,D,B+LK long travelling kick (special[12] 0x4EB1D8) -> victim 311-131-185, dx +436441 (gap 90000) / +326341 (gap 200000), rise 89182
+   Static only, not seen: 22 (second clip of the D,B+LP handler; on the ground D,B+LP always gave LP 294). GUESS.
+3) Weapon (PROVEN live; the frames show a curved blade thrown like a boomerang, name GUESS):
+   244 draw F,F+HK -> 285 armed stance | 275 / 276 armed walk F / B | 246 armed block | 217-219 armed crouch | 252 armed jump-up HP
+   229 armed LP / HP: blade thrown, comes back -> victim 130, dx about +125000..+127475
+   208 armed F,F+HK: weapon thrown / put away -> victim 131, dx +191130, rise 66945; then unarmed idle 439 (seen once; input LIKELY).
+   Armed LK / HK / B+LK / B+HK keep their normal clips (308, 66, 62, 64); armed D+HP -> 217-219-293.
+4) As victim (VS vs CPU): 13 (via 199 after opponent clip 14), 128, 131, 132, 137, 148, 152-173, 153, 157-586, 158-171, 159-177, 180, 182,
+   183-185, 186-188, 189-191, 192-194, 311, 328. PROVEN played.
+5) Fatalities (VS, opponent dazed at FINISH HIM, X distance 60000):
+   Fatality B D,F,D,F+HK (misc43, condition 0x1B: distance <= 65536): Tanya 564-565-566, victim 567-568-569, then victory 124. PROVEN.
+   Fatality A (misc40 in the BL list, D,D,U,D, condition 0x2B): Tanya 395-396, victim 389-397-409 (opponent explodes, FATALITY). PROVEN.
+   Condition 0x2B (fn 0x45E2F0): distance <= 65536, and at the BL press HP + BL held with Up, HK, LP, LK, RUN not held (masks 0x4E70E0).
+   Working input: hold BL, D,D,U,D (held BL stops the Up from starting a jump), press and hold HP, release BL, press BL again.
+   Without HP held, or at distance 150000, no fatality came out. (An earlier note gave the distance as 52775: that was P2's X before
+   the gap was set, not the distance.) Stage fatalities (arena 8 B,F,D+HP; arena 0 F,F,F+LP -> 293) not attempted.
+6) Capture note: some practice sessions recorded blank video while the memory log was fine (capture-side rendering bug, cause GUESS);
+   315 has no frame sheet for that reason.
+7) Open: 22; 295, 297 (LP/HP follow-ons; LP,LP and HP,HP gave only 294/296); 261/532/533; 209; 547/548/596; 208 clean repeat;
+   static-only victim clips 145, 154, 156, 195-197, 316-320, 549-550, 607, 610. See TANYA_CLIPS.txt "STILL OPEN".
+
+==== SCORPION (fighter id 0): LIVE PASS, SPECIALS, WEAPON, CLIP LIST (2026-10-23, ~5:20 AM - 6:40 AM ET) ====
+Full clip list with status per clip: SCORPION_CLIPS.txt (this repo; 107 clips: 80 PROVEN, 3 LIKELY, 7 GUESS, 17 NOT HIS).
+Method as for Reiko / Quan Chi: P1 Scorpion with scripted inputs, live memory log of both clip slots (practice vs an inactive Scorpion,
+and VS vs CPU), plus the static decoder (script_decoder_v3.py, fighter 0) and entry f0 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
+Why Scorpion: next fighter picked by netsider after Quan Chi. Name from the practice menu, the VS HUD and "SCORPION WINS".
+VS select grid: Scorpion is cell 5 (row 1, col 0); the select screen shows no name text, so the cell was picked by the face and confirmed live.
+Raw units only (65536 = 1 game unit = 256 mesh units). Scorpion idle 290, armed stance 286, standing height -76873, practice start gap 170392.
+
+1) PROVEN live (P1 Scorpion):
+   45 round intro (switch 0x4E8EE0 f0; every VS round start + every practice start) | 115-116-117-118 match-win pose "SCORPION WINS"
+   75 throw, close LP / F+LP (throw switch 0x4E1784 f0 -> 75 / victim 152) -> victim 152-173-328, dx -287678 / -283741, rise 65200 (thrown behind)
+   37-282 close LK grab (table 0x4E0FA0 idx 0 -> 0x42BDD0 -> script 0x4E12E0: clip 37, opp 157, damage 11796 = 18.0%) -> victim 157-586, dx +28140 / +30170
+   262 close HP at gap 25000 / 40000 (table 0x4E9BF8, id mod 3 = 0) -> victim 311 | 314 close HK knee -> victim 134, dx +22029
+   294 LP | 296 HP | 66 HK -> 311 | 67 LK -> 134 | 293 uppercut -> 128-328, dx +96334, rise 155605
+   63 sweep (even-id switch) -> 195-197, dx +114028 | 313 roundhouse -> 142-141-143-328, dx +150696, rise 57524 (gap 45000)
+   260 crouch LP | 54 crouch HK | 315 crouch LK | 257/256 crouch block | 323 block
+   97 jump HP -> 311 | 96 jump LP -> 186-188, dx +172996 | 327 jump-up kick (LK and HK) -> 311 | 55 jump forward/back HK -> 131-185, dx +203148
+   58 jump forward/back LK (switch 0x4E93C4 f0 -> 58) -> 186-188
+   Shared locomotion: 269 walk F, 274 walk B, 259/258 crouch, 304 jump, 301 flip, 305 turn, 317-307 run (pushes the opponent +105504).
+2) Specials (PROVEN live):
+   14  B,B+LP spear (proj[06] 0x4F0430) -> victim 199-13 (pulled in and dazed), dx -196605 / -340782 / -78642 (far / farther / close)
+   448 D,F+LP fire projectile (misc[28] 0x4E8B40) -> victim 182, dx +98248
+   312 D,B+HP teleport punch (special[00] 0x4EB798) -> P1 rises and reappears on the far side; victim 305-311, dx -68259
+   82  air throw: BL in the air while the opponent jumps (misc[22] 0x4E8E10) -> victim 202-185, dx -222567..-236467 (thrown behind)
+   Static only, not seen: 43 / victim 163 (second clip pair of the close-LK script), 209 (RUN action; a RUN tap did nothing). GUESS.
+3) Weapon (PROVEN live; roles from the input that played them; a sword blade is visible in the frames, LIKELY):
+   244 draw F,F+HK -> 286 armed stance | 277 / 278 armed walk F / B | 246 armed block | 218-219 armed crouch
+   236 armed LP / 235 armed HP -> victim 180, dx +98248 (gap 60000) / +43469 (gap 40000)
+   208 weapon throw: the draw input again while armed -> victim 131, dx +130440, rise 65175; then unarmed idle 290 (input LIKELY).
+   Armed LK / HK / B+LK keep their normal clips (67, 66, 63); armed D+HP -> 218-219-293.
+4) As victim (practice and VS vs a Scorpion CPU): 13 (via 199), 128-328, 131-185, 134, 152-173-328, 157-586, 180, 182, 183-185, 186-188,
+   189-191, 195-197, 202-185, 305-311, 311, 142-141-143-328; losers 324 (KO fall), 137 / 206 (defeated poses). PROVEN played.
+   Other fighter seen: Reptile (VS HUD) intro 50, idle 289 (NOT HIS).
+5) Fatalities: fatality A (static B,F,F,B+BL) and fatality B (static B,F,D,U+HP) tried at FINISH HIM with
+   fast / slow / block-held variants: no fatality came out, every attempt ended in the victory pose 115-118. Clips unresolved (GUESS;
+   the static input decode may be wrong). The stage fatality inputs were also tried, but the VS stage is random and was not confirmed to be arena 0 / 8.
+6) Capture stops (PROVEN, cause GUESS): 6 practice sessions stopped part-way (2 exceptions, one at 00409B55; 2 input hangs; 2 stops in the
+   practice reset); one VS fatality run lost the game process during the FINISH HIM
+   placement. Every lost practice move was re-run and logged.
+7) Open: 43/163, 295, 297, 261/532/533, 209, 547/548/596, 52; fatality clips; armed jump / run. See SCORPION_CLIPS.txt "STILL OPEN".
+
+==== RAIDEN (fighter id 1): LIVE PASS, SPECIALS, WEAPON, FATALITIES, CLIP LIST (2026-10-23, ~5:45 AM - 6:55 AM ET) ====
+Full clip list with status per clip: RAIDEN_CLIPS.txt (this repo; 124 clips: 80 PROVEN, 23 LIKELY, 8 GUESS, 13 NOT HIS).
+Method as for Reiko / Quan Chi / Tanya: P1 Raiden with scripted inputs, live memory log of both clip slots (practice vs an inactive Raiden,
+and VS vs CPU), plus the static decoder (script_decoder_v3.py, fighter 1) and entry f1 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
+Name from "RAIDEN WINS". Raw units only (65536 = 1 game unit = 256 mesh units). Raiden idle 291, armed stance 286, standing height -75497.
+Frame sheets (8 frames per clip) of the captured video were checked by eye for 50 clips (victim clips included).
+
+1) PROVEN live (P1 Raiden):
+   47 round intro (switch 0x4E8EE0 f1; every VS round start) | 123 victory pose "RAIDEN WINS" (switch 0x4E9A28 f1; opponent plays 137)
+   80 throw, close LP / F+LP (throw switch 0x4E1784 f1 -> 80 / victim 154) -> victim 154-172-328, dx +227804..+232804, rise 72648
+   33 close LK special -> victim 149-169, dx +151096, rise 51595 | 263 close HP (table 0x4E9BF8, id mod 3 = 1) -> 311
+   532 close HP,HP follow-on (263-532) -> 311 | 314 close HK knee -> 134, dx +27510
+   294 LP | 296 HP | 71 HK | 70 LK | 293 uppercut -> 128-328, dx +96334, rise 157375 | 62 sweep -> 192-194, dx +94368 | 64 roundhouse
+   260 crouch LP | 52 crouch HK -> 128-328 | 315 crouch LK -> 134, dx +50763 | 257/256 crouch block | 323 block
+   97 jump HP -> 311 | 96 jump LP | 61 jump-up kick | 56 jump forward/back HK -> 131-185, dx +203148, rise 89182
+   59 jump forward/back LK (switch 0x4E93C0 f1) -> 186-188, dx +172996
+   Shared locomotion: 267 walk F, 272 walk B, 259/258 crouch, 304 jump, 301 flip, 317-307 run (pushes the opponent +105504).
+2) Specials (PROVEN live):
+   17  D,B+LP lightning bolt (proj[03] 0x4F05D8 -> 17-17-17-19) -> victim 127, dx +159820 (gap 60000/200000), +16832 (gap 350000)
+   94  F,F+LK torpedo (special[0a]) -> 94-301-304, victim 135-182, dx +462812..+593880; in the air 304-94-301-304, victim 135-183-185, dx +520862
+   D,U teleport (special[0c]): no clip of its own; Raiden lands 65536 behind the opponent (X -75000 -> +140536), the opponent turns (305).
+   Static only, not seen: 19 (lightning end), 95 (torpedo end). LIKELY. B,B,F+LK = plain LK 70.
+3) Weapon (hammer, PROVEN live): 244 draw F,B+HP -> 286 armed stance | 277 / 278 armed walk F / B | 246 armed block | 218-219 armed crouch
+   234 armed LP -> victim 205, dx -28905 | 233 armed HP | armed D+HP -> 218-219-293; armed LK / HK / B+LK / B+HK / run keep 70, 71, 62, 64, 317-307.
+   Not resolved: weapon put-away and armed jump-up HP (the clip slot froze during those moves).
+4) Fatalities (VS, opponent dazed at FINISH HIM). Both have condition 0x1B (X distance <= 65536). The Up in the inputs starts a jump unless
+   BL is held, so: hold BL through the whole directional part, release BL, then press the attack.
+   Fatality A (misc40) hold BL, F,B,U,U, release BL, HK: Raiden 392-401-392-401-392-401-392-443, victim 389-393-394 (lightning, opponent
+     explodes, FATALITY). PROVEN 2x (distance 40000 and 33106).
+   Fatality B (misc43) hold BL, D,U,U,U, release BL, HP: Raiden 570-571-572-573, victim 574-575-576, FATALITY. PROVEN 2x (40000 and 33106).
+   No fatality: the plain inputs (no BL hold) at 40000 (B started a jump, 304), and BL-held at 90000 (sweep distance) and 150000 (jump distance).
+   A requested gap of 20000 ended at 33106 (the game pushes the fighters apart). Stage fatalities (arena 0 F,F,D+LP; arena 8 D,F,B+BL) not attempted.
+5) As victim (practice, P2 Raiden): 127, 128-328, 131-185, 134, 135-182, 135-183-185, 149-169, 154-172-328, 186-188, 192-194, 205, 311. PROVEN.
+6) Capture note: many sessions recorded blank video while the memory log was fine (capture-side rendering bug, cause GUESS); 15 PROVEN clips
+   have no frame sheet for that reason (70, 96, 205, 218, 219, 233, 234, 246, 277, 278, 305, 532, 56, 183, 185).
+7) Open: 19, 95, 295, 297 (LIKELY); 261/533, 209, 547/548/596, 179, 9 (GUESS); static-only victim clips 141-143, 145, 152, 153, 158, 171,
+   195-197, 254, 316, 320, 324, 549, 550, 607, 610. See RAIDEN_CLIPS.txt "STILL OPEN".
+
+==== LIU KANG (fighter id 3): LIVE PASS, SPECIALS, WEAPON, FATALITIES, CLIP LIST (2026-10-23, ~6:39 AM - 8:10 AM ET) ====
+Full clip list with status per clip: LIUKANG_CLIPS.txt (this repo; 118 clips: 81 PROVEN, 3 LIKELY, 9 GUESS, 25 NOT HIS).
+Method as for Raiden / Tanya / Scorpion: P1 Liu Kang with scripted inputs, live memory log of both clip slots (practice vs an inactive Liu Kang,
+and VS vs CPU), plus the static decoder (script_decoder_v3.py, fighter 3) and entry f3 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
+Name from the select screen (grid index 3, HUD "LIU KANG"), the practice menu and "LIU KANG WINS". Raw units only (65536 = 1 game unit = 256 mesh units).
+Liu Kang idle 287, armed stance 286, standing height -70320. Frame sheets of the captured video were checked by eye for 44 clips (victim clips included).
+
+1) PROVEN live (P1 Liu Kang):
+   48 round intro (switch 0x4E8EE0 f3; every practice start and VS round start) | 119 victory pose "LIU KANG WINS" (switch 0x4E9A28)
+   79 throw, close LP / F+LP (throw switch 0x4E1784 ids 3,9 -> 79 / victim 151) -> victim 151-174-191, dx -319505 / -304855, rise 71505
+   262 close HP (table 0x4E9BF8, id mod 3 = 0) -> 311 | 314 close HK knee -> 134, dx +27510 | 67 close LK -> 134, dx +30840
+   294 LP | 296 HP | 66 HK -> 311, dx +68187 | 67 LK -> 134 | 293 uppercut -> 128-328, dx +96334, rise 157375 | 62 sweep -> 192-194, dx +94368
+   64 roundhouse -> 142-141-143-328, dx +150696, rise 59294 | 260 crouch LP | 54 crouch HK | 315 crouch LK -> 134, dx +50763
+   257/256 crouch block | 323 block | 97 jump HP -> 311 | 96 jump LP -> 186-188 | 61 jump-up kick (LK and HK)
+   55 jump forward/back HK -> 131-185, dx +203148, rise 89182 | 58 jump forward/back LK (switch 0x4E93C4) -> 186-188, dx +172996
+   Locomotion: 266 walk F, 271 walk B (his own), 259/258 crouch, 304 jump, 301 flip, 305 turn, 266-317-307 run (pushes the opponent +105504).
+2) Specials (PROVEN live):
+   18 F,F+HP high fireball (proj[01]) -> victim 130, dx +127475 (gap 200000) / +90306 (gap 350000)
+   19 F,F+LP low fireball (proj[02]) -> victim 127, dx +159820 / +64146 | 20 air fireball (F,F+HP in a straight jump) -> 130
+   92-93-92 F,F+HK flying kick (special[03]) -> victim 131, dx +196590, rise 66945 (at gap 90000 he flies past: opponent 305)
+   67-287-68 bicycle kick (hold LK ~3.5 s, release; special[04]) -> victim 136-182, dx +377395 (gap 150000) / +447395 (gap 80000)
+3) Weapon (PROVEN live): 244 draw B,F+LK -> 286 armed stance | 277 / 278 armed walk F / B | 246 armed block | 218-219 armed crouch
+   240 armed LP -> victim 189-191, dx +126141, rise 151459 | 233-216 armed HP -> 311, dx +62244 | armed D+HP -> 218-219-293
+   208 weapon throw (armed B,F+LK) -> victim 131, dx +124605, rise 66945; afterwards unarmed 287. Armed HK / LK / B+LK keep 66, 67, 278-62.
+4) Fatalities (VS, opponent dazed at FINISH HIM, victim clip 13). Gap = X distance at FINISH HIM.
+   Fatality B (misc43, condition 0x1B = distance <= 65536): hold BL through F,D,D,U, release BL, HP -> Liu Kang 537-538, victim 539-540
+     (spun into the air, explodes), "FATALITY". PROVEN 2x (gap 50000 and 30000). No fatality with BL still held at HP, nor at gap 90000 (HP 296).
+   Fatality A (misc40, condition 0x26 = distance >= 117964 plus held BL+HK+LK): hold BL, F,F,F,D, and HK+LK must be held when BL is pressed
+     again: (1) slow taps (70/60 ms), then hold HK+LK, release BL, press BL; or (2) hold BL + HK+LK from the start, F,F,F,D, release BL, press BL.
+     -> victim 389-419, Liu Kang becomes a dragon (his clip slot is invalid while the dragon plays; dragon clip id not read), "FATALITY".
+     PROVEN 3x at gap 150000. No fatality: fast taps with HK+LK pressed late (played crouch HK 54), BL re-press without HK+LK, plain inputs,
+     gap 50000, and input (2) at gap 200000 (1 run; cause GUESS). 389 is also the start of Raiden's fatality A victim (shared).
+   Stage fatalities (arena 8 F,F,B+LP; arena 0 F,F,B+HK -> 293 static) not attempted.
+5) As victim (practice, P2 Liu Kang): 127, 128-328, 130, 131-185, 134, 136-182, 142-141-143-328, 151-174-191, 186-188, 189-191, 192-194, 305, 311;
+   in VS (P1 hit by the CPU): 152-173-328 (thrown by an id 0/6/14 fighter), 189-191, 199-13, 311, 134. PROVEN.
+6) Open: 295, 297 (LIKELY, LP / HP follow-ons; LP,LP untested because the game stopped taking inputs after the walk test in two sessions);
+   261/532/533, 547/548/596, 592, 316/320 (GUESS, static only); dragon clip id; fatality A upper distance / timing window.
+   Clip counts: 118 clips: 81 PROVEN, 3 LIKELY, 9 GUESS, 25 NOT HIS. See LIUKANG_CLIPS.txt "STILL OPEN".
+
+==== SCORPION (fighter id 0): FATALITIES A AND B PROVEN (update, 2026-10-23, ~7:45 AM - 8:25 AM ET) ====
+Retry with the hold-Block technique (as on Raiden / Liu Kang). VS mode, P1 Scorpion vs CPU, victim dazed in clip 13 at FINISH HIM;
+gap = X distance between the fighters when the input starts (raw units, 65536 = 1 game unit).
+Fatality B (misc43, B,F,D,U+HP, condition 0x1B = distance <= 65536): hold BL through B,F,D,U, release BL, press HP
+  -> Scorpion 12 (bursts into flame, becomes a giant scorpion), victim 584-585, "FATALITY" on screen. PROVEN 2 of 2 (gap 50000, 36175).
+  Gap 90000, same input: no fatality (victory 115-118).
+Fatality A (misc40, B,F,F,B+BL, condition 0x25 = distance >= 117964): hold BL through B,F,F,B, release BL, press BL again
+  -> Scorpion 390 (fire breath), victim 391 (burns), then 115-118 / 206, "FATALITY" on screen. PROVEN 3 of 3 (gap 130000, 150000, 170000).
+  No fatality at gap 50000 (too close) or 200000 (1 run). An upper distance limit between 170000 and 200000 is LIKELY (Liu Kang's
+  fatality A also failed at 200000); it was not found in the condition code (GUESS).
+The earlier attempts (gap 80000) failed because 80000 is outside both distance windows (LIKELY).
+Clip list: SCORPION_CLIPS.txt now lists 112 clips: 85 PROVEN, 3 LIKELY, 7 GUESS, 17 NOT HIS (new PROVEN: 12, 390, 391, 584, 585).
+Still open for Scorpion: stage fatalities (arena 0 / 8 not confirmed in VS), the fatality A upper distance limit.
+
+==== JAX (fighter id 13): LIVE PASS, SPECIALS, WEAPON, FATALITIES, CLIP LIST (2026-10-23, ~7:05 AM - 8:50 AM ET) ====
+Full clip list with status per clip: JAX_CLIPS.txt (this repo; 133 clips: 78 PROVEN, 23 LIKELY, 7 GUESS, 25 NOT HIS).
+Method as for Raiden / Tanya: P1 Jax with scripted inputs, live memory log of both clip slots (practice vs an inactive Jax,
+and VS vs CPU), plus the static decoder (script_decoder_v3.py, fighter 13) and entry f13 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
+Name from "JAX WINS". Raw units only (65536 = 1 game unit = 256 mesh units). Jax idle 284, armed stance 285, standing height -75169.
+VS select-screen index: Jax = 6 (row 1, column 1; PROVEN from the select screenshot). Johnny Cage = 8.
+Frame sheets (8 frames per clip) of the captured video were checked by eye for 63 clips (victim clips included).
+
+1) PROVEN live (P1 Jax):
+   44 round intro (every VS round start) | 114 victory pose "JAX WINS" (switch 0x4E9A28 f13; opponent plays 137)
+   83 throw, close LP / F+LP (throw switch 0x4E1784 f13 -> 83 / victim 145) -> victim 145-173-328, dx -248593..-253593, rise 82540
+   30 close LK special -> victim 164, dx +118945 | 263 close HP (table 0x4E9BF8, id mod 3 = 1) -> 311
+   532 close HP,HP follow-on (263-532) -> 311 | 314 close HK knee -> 134, dx +27027
+   294 LP | 296 HP | 66 HK -> 311, dx +68187 | 67 LK -> 134 | 293 uppercut -> 128-328, dx +96334, rise 157375
+   62 sweep -> 192-194, dx +94368 | 64 roundhouse -> 142-141-143-328, dx -55982, rise 59294
+   260 crouch LP | 54 crouch HK -> 311 | 315 crouch LK -> 134, dx +50763 | 257/256 crouch block | 323 block
+   97 jump HP -> 311 | 96 jump LP | 61 jump-up kick | 56 jump forward/back HK -> 131-185, dx +203148, rise 89182
+   59 jump forward/back LK (switch 0x4E93C0 f13) -> 186-188, dx +172996
+   Shared locomotion: 265 walk F, 270 walk B, 259/258 crouch, 304 jump, 301 flip, 317-307 run (pushes the opponent +105504).
+2) Specials (PROVEN live):
+   29  D,F+LP energy missile (proj[15] 0x4F0078 -> 29) -> victim 130, dx +127475 (gap 60000/200000), +42989 (gap 350000)
+   299 D,B+LP dash punch (special[17]) -> Jax X +118700..+137600, victim 311-130, dx +238112 (gap 150000) / +323514 (gap 60000);
+       no hit at gap 300000. The video of that session had no fighters, so the name "dash punch" is LIKELY.
+   108 F,F,D+LK ground pound (misc[2c], handler 0x468F50) -> victim 182, dx +124507 (gap 150000/300000), +139579 (gap 60000).
+   Static only, not seen: 28 (missile end), 106 (dash-punch second clip, victim 183). LIKELY.
+   84 air back-breaker (misc[23], BL near an airborne opponent, victim 144): BL vs a standing opponent = block 323. LIKELY.
+3) Weapon (PROVEN live): 244 draw D,F+HP -> 285 armed stance | 275 / 276 armed walk F / B | 246 armed block | 217-219 armed crouch
+   232 armed LP -> victim 205, dx -28905 | 231 armed HP -> victim 319-328, rise 65040 | 252 armed jump-up HP | armed D+HP -> 217-219-293
+   208 weapon throw (D,F+HP again while armed) -> victim 131, dx +196590, rise 66945; Jax returns to unarmed 284.
+   Armed HK / LK / run keep 66, 67, 317-307. Not resolved: armed B+LK / B+HK (the draw did not finish in that session twice).
+4) Fatalities (VS, opponent dazed at FINISH HIM):
+   Fatality B (misc43, move word 1b413243) B,F,F,D+BL, condition 0x1B (X distance <= 65536): hold BL through B,F,F,D, release BL,
+     press BL again (the plain input also works). Jax 555-556, victim 557-206 (energy blast, opponent blown apart, FATALITY).
+     PROVEN 2x (gap 40000, pushed by the game to 34845).
+   Fatality A (misc40, move word 2e014640) hold LK, F,F,D,F, release LK. It sits on the LK RELEASE list, condition 0x2E (code at
+     0x45E200, check at 0x45E5C0): X distance [0x533d5c] <= 0x10000, the finish-him flags ([0x535f14] != 0, [0x535f18] == 0,
+     byte [0x4f160c] != 0), and frame counter [0x538418] minus the LK-press time ([0x53FDBC] P1 / [0x528a04] P2, written by the
+     LK-press handlers 0x45CD00 / 0x45D4C0) >= 240. The counter runs at 64 per second (~3.7 s), longer than most of the dazed time,
+     and an LK press next to the dazed opponent plays close LK 30 (knockdown, round over).
+     Working method: press LK during the match-ending throw (P1 83 / P2 145) and keep holding; at FINISH HIM do F,F,D,F and release
+     LK (~4.7 s total hold). Jax 384-443, victim 389-400 (arms ripped off, FATALITY). PROVEN 3x (gap 40000 plain, gap 40000 with
+     BL held through the directions, gap 90000 - the F taps walk Jax in). A 5.0 s hold target failed (the dazed time ran out).
+     Failed tries: LK pressed at FINISH HIM close (close LK 30), or far and held (dazed time ran out, P1 114).
+   Stage fatalities (arena 0 F,F,B+HP; arena 8 F,F,B+LK) not attempted.
+5) As victim (practice, P2 Jax): 128-328, 130, 131-185, 134, 142-141-143-328, 145-173-328, 164, 182, 186-188, 192-194, 205, 311,
+   319-328. PROVEN.
+6) Capture note: many practice sessions recorded the stage without fighters while the memory log was fine (capture-side rendering bug,
+   cause GUESS); 3 PROVEN clips have no frame sheet for that reason (54, 256, 315). LK held ~3.5 s and released at gap 150000 in
+   practice froze the game logic twice (P1 stuck in 67); GUESS: linked to the LK-hold check above.
+7) Open: 28, 106, 183, 84/144, 605/607, 295, 297 (LIKELY); 261/533, 209, 547/548/596, 9 (GUESS); armed B+LK / B+HK.
+   See JAX_CLIPS.txt "STILL OPEN".
+
+==== REPTILE (fighter id 10): LIVE PASS, SPECIALS, WEAPON, FATALITIES, CLIP LIST (2026-10-23, ~7:00 AM - 8:47 AM ET) ====
+Full clip list with status per clip: REPTILE_CLIPS.txt (this repo; 123 clips: 80 PROVEN, 18 LIKELY, 8 GUESS, 17 NOT HIS).
+Method as for Reiko / Quan Chi / Tanya / Raiden: P1 Reptile with scripted inputs, live memory log of both clip slots (practice vs an inactive
+Reptile, and VS vs CPU), plus the static decoder (script_decoder_v3.py, fighter 10) and entry f10 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
+Name from "REPTILE WINS". Raw units only (65536 = 1 game unit = 256 mesh units). Reptile idle 289, armed stance 286, standing height -73531.
+Frame sheets (8 frames per clip) of the captured video were checked by eye; 64 clips have a compare image (victim clips included).
+
+1) PROVEN live (P1 Reptile):
+   50 round intro (switch 0x4E8EE0 f10; every VS round start) | 121 victory pose "REPTILE WINS" (switch 0x4E9A28 f10; opponent plays 137)
+   76 throw, close LP / F+LP (throw switch 0x4E1784 f10 -> 76 / victim 153) -> victim 153-173-328, dx -305897..-310897 (thrown behind), rise 75382
+   32 close LK special -> victim 147-167-191, dx +161843 | 263 close HP -> 311 | 532 close HP,HP follow-on (263-532) -> 311
+   314 close HK knee -> 134, dx +27405
+   294 LP | 296 HP | 66 HK (switch 0x4E8C88 f10) | 67 LK (switch 0x4E8D78 f10) | 293 uppercut -> 128-328, rise 157375
+   63 sweep -> 195-197, dx +114028 | 313 roundhouse -> 142-141-143-328, rise 59294 | 260 crouch LP -> 134 | 257/256 crouch block | 323 block
+   97 jump HP -> 311 | 96 jump LP | 327 jump-up kick (switch 0x4E91E0 f10; Raiden f1 = 61) | 56 jump forward/back HK -> 131-185, dx +203148,
+   rise 89182 | 59 jump forward/back LK (switch 0x4E93C0 f10) -> 186-188, dx +172996
+   Shared locomotion: 268 walk F, 273 walk B, 259/258 crouch, 304 jump, 301 flip, 305 turn, 317-307 run (pushes the opponent +105504).
+   52 crouch kick: LIKELY only (static lists 0x4E9008 / 0x4E8FB8; the clip slot froze on both clean tries).
+2) Specials (PROVEN live):
+   25  D,F+HP acid spit (proj[0c] 0x4F01D0 -> 25) -> victim 182, dx +98248 (gap 200000). Only 1 of 4 tries worked (350000, 60000, 2nd 200000: nothing).
+   106 B,F+LP close strike (special[16] 0x4EB160) -> victim 183-185, dx +334857, rise 83605 (gap 60000); at 350000 106 with no hit.
+   302-303-302 B,F+LK (special[18] 0x4EB110) at gaps 60000..300000 (4x); close -> victim 179-328, dx -87733 / -88208 (pulled toward Reptile).
+   12  BL+HK (misc[1f] 0x4E8B98, cond 0x17 = BL+HK held, Up not held): 323-12-289 (2x); green flash in the frames, fighters not drawn, so the
+       invisibility toggle is LIKELY only. HK held then BL = plain HK 66.
+   Static only, not seen: 26 (spit second clip), 299 (B,F+LK alternate). LIKELY. RUN tap = nothing (209 GUESS).
+3) Weapon (axe, PROVEN live): 244 draw B,B+LK -> 286 armed stance | 277 / 278 armed walk F / B | 240 armed LP -> 189-328, dx +112357, rise 196725
+   230 armed HP -> 189-191, dx +168410, rise 151459 | 246 armed block | 218-219 armed crouch | 252 armed jump-up HP
+   208 armed B,B+LK: the axe is thrown -> victim 131, dx +196590, rise 66945; Reptile is unarmed (289) afterwards.
+   Armed LK / HK / B+LK / B+HK / D+HP / run keep 67, 66, 63, 313, 293, 317-307.
+4) Fatalities (VS, opponent dazed 13 at FINISH HIM).
+   Fatality A (cond 0x2C, code 0x45E2A0): X distance <= 65536 (call 0x45E5C0) AND HP+HK+LP+LK held with BL NOT held at the moment Up is pressed
+     (mask table 0x4E70C0). Input: hold BL, press and hold HP+HK+LP+LK, release BL, press Up. Reptile 289-432, victim 389-431: the opponent
+     is pulled to Reptile and his head is torn off, REPTILE WINS / FATALITY. PROVEN 3x (PAH 40000, PAH 60000, PAV 40000 = Tanya variant).
+     No fatality: plain input at 40000 and 32270 (the first button fired LP 294 and hit the opponent), Up pressed while BL still held (40000),
+     and BL-held at 90000 (2 runs; the Up started a jump 304).
+   Fatality B (cond 0x25, code 0x45E580): X distance >= 0x1CCCC (117964) only, so it is a FAR fatality and the close-range rule does not apply.
+     Input U,D,D,D+HP (with or without the BL hold). Reptile 493-544-545-544-493, victim 13-546: acid vomit, the opponent melts to a skeleton,
+     FATALITY. PROVEN 5x (120000, 150000 3x (2 BL-held, 1 plain), 180000).
+     No fatality: 40000 (below the bound), Tanya variant at 150000, and 200000 / 250000 (P1 121, P2 206). The upper limit is NOT RESOLVED
+     (the condition code has only the lower bound; GUESS: input timing at long range).
+5) As victim (practice, P2 Reptile): 128-328, 131-185, 134, 142-141-143-328, 147-167-191, 153-173-328, 179-328, 182, 183-185, 186-188,
+   189-328, 189-191, 195-197, 311. PROVEN. VS opponent: 13, 137; 206 after failed far fatality tries (GUESS what).
+6) Capture note: many sessions recorded blank video or a broken camera while the memory log was fine (capture-side rendering bug, cause GUESS);
+   PROVEN clips without a usable sheet: 32, 59, 128, 141, 142, 143, 147, 167, 185, 186, 188, 191, 260, 296 (and 137, 389: no sheet).
+   One redo chunk (spit / B,F+LP / RUN) froze the clip slot and gave no data. Overlapping-run VS logs (wrong fighter, intro 45) were excluded and redone.
+7) Open: fatality B upper limit; 26, 295, 297, 299, 52 (LIKELY); 261/533, 209, 547/548/596, 9, 206 (GUESS); static-only victim clips 145, 152,
+   154, 158, 171, 172, 196, 254, 324, 549, 550, 607, 610. See REPTILE_CLIPS.txt "STILL OPEN".
+
+==== JAREK (fighter id 12): LIVE PASS, SPECIALS, WEAPON, FATALITIES, CLIP LIST (2026-10-23, ~8:10 AM - 9:00 AM ET) ====
+Full clip list with status per clip: JAREK_CLIPS.txt (this repo; 107 clips: 73 PROVEN, 4 LIKELY, 10 GUESS, 19 NOT HIS, 1 UNKNOWN).
+Method as for Raiden / Liu Kang / Scorpion: P1 Jarek with scripted inputs, live memory log of both clip slots (practice vs an inactive Jarek,
+and VS vs CPU), plus the static reading of his handlers and entry f12 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
+Run natively on a Windows PC with the retail game (windowed). PROVEN: MK4.EXE has a single-instance check (named file mapping
+"Mortal Kombat 4", also the window class / title, at 0x4F2B10; the game exits if it already exists); a second copy needs that name changed.
+Name from the select screen (row 1, col 4), the practice menu and "JAREK WINS". Raw units only (65536 = 1 game unit = 256 mesh units).
+Jarek idle 284, armed stance 286, standing height -73531. Fatality frames checked by eye.
+
+1) PROVEN live (P1 Jarek):
+   49 round intro (switch 0x4E8EE0; every practice start and VS round start) | 125 victory pose "JAREK WINS"
+   80 throw, close LP / F+LP (throw switch 0x4E1784 ids 1,7,12 -> 80 / victim 154) -> victim 154-172-328, dx +232804, rise 72648
+   262 close HP (table 0x4E9BF8, id mod 3 = 0) -> 311 | 314 close HK knee -> 134, dx +27510 | 30 close LK -> 164, dx +128954
+   294 LP -> 311 | 296 HP | 65 HK -> 311, dx +60591 | 308 LK -> 134, dx +49846 | 293 uppercut -> 128-328, dx +95697, rise 157375
+   63 sweep -> 195-197, dx +136068 | 313 roundhouse -> 142-141-143-328, rise 59294 | 260 crouch LP | 54 crouch HK | 315 crouch LK
+   257/256 crouch block | 309 after crouch LP / crouch block (role UNKNOWN) | 323 block | 97 jump HP -> 311 | 96 jump LP -> 186-188, dx +122648
+   327 jump-up kick (LK and HK) -> 311 | 55 jump forward/back HK -> 131-185, dx +159487, rise 89182 | 58 jump forward/back LK -> 186-188, dx +142240
+   Locomotion: 267 walk F, 272 walk B, 259/258 crouch, 304 jump, 301 flip, 305 turn, 317-307 run (pushes the opponent +139813).
+2) Specials (PROVEN live):
+   27 D,B+LP projectile (proj[0e]) -> victim 130, dx +124525 / +35130 / +77604 | 107 B,D,B+HK (special[14]) -> victim 182
+   B,F+LK (special[15]) -> 301-304 low roll -> victim 183-185, rise 33209
+   F,D,F+HP (special[1d]) -> 301-304 rising (P1 min height -225975) -> victim 183-185 close, 305 (cross-over) at mid / far.
+   Static special[1d] lists 308, but the move played 301-304 (308 is his LK); 308 for this move is not proven (GUESS: unused entry).
+3) Weapon (PROVEN live): 244 draw F,F+HP -> 286 armed stance | 277 / 278 armed walk | 246 armed block | 218-219 armed crouch
+   229 armed LP | 239 armed HP | armed D+HP 293 | armed HK / LK / B+LK / B+HK keep 65, 308, 63, 313 | run 317-307
+   208 weapon throw (armed F,F+HP) -> victim 131, dx +195090, rise 66945; afterwards unarmed.
+4) Fatalities (VS, opponent dazed at FINISH HIM, victim clip 13). Gap = X distance at FINISH HIM.
+   Fatality A (misc40, F,B,F,F+LK, condition 0x1B = distance <= 65536): F,B,F,F (BL held or not), release BL, LK
+     -> Jarek 402-405 (punches into the chest, pulls the heart out and holds it up), victim 389-404, then JAREK WINS. PROVEN 4 of 4 (gap 40000 x3, 26553 x1;
+     3 with BL held, 1 without). No fatality at gap 90000 (LK 308) or 150000. LK-then-BL variant at 40000 failed.
+   Fatality B (misc43, U,U,F,F+BL, condition 0x25 = distance >= 117964): hold BL through U,U,F,F (so Up does not jump), release BL,
+     press BL again -> Jarek 577 (red eye laser destroys the opponent), victim 182-206, then 125. PROVEN 2 of 2 at gap 150000. No fatality at 40000
+     (too close; victim 137), at 200000 (2 runs; FINISH HIM timed out) or without BL held (the Ups jump: 304). Upper limit LIKELY 150000-200000.
+   No "FATALITY" banner was caught in the sampled frames (0.4 s steps) for either one; the kills are clear in the frames.
+   206 is the dazed victim's fall when FINISH HIM ends (also played after a FINISH HIM timeout), not fatality-only. PROVEN.
+   Stage fatalities (arena 0 B,F,F+LP -> 293 static; arena 8 F,D,F+HK) not confirmed: the VS stage was not arena 0 / 8.
+5) As victim (practice, P2 Jarek): 128-328, 130, 131-185, 134, 142-141-143-328, 154-172-328, 164, 182, 183-185, 186-188, 195-197, 305, 311;
+   in VS (P1 hit by the CPU): 131-185, 132-328, 134, 183, 186-188, and 131 / 185 under the CPU's fatality (CPU clip 527). PROVEN.
+6) Open: 295, 297 (LIKELY, LP / HP follow-ons; LP,LP and HP,HP played 294 / 296 only); 209 (RUN action, never played);
+   261/532/533, 547/548/596, 9, 52, 316, 549 (GUESS, static only); 309 role; stage fatalities; fatality B upper distance limit.
+   No game crash in this pass.
+   Clip counts: 107 clips: 73 PROVEN, 4 LIKELY, 10 GUESS, 19 NOT HIS, 1 UNKNOWN. See JAREK_CLIPS.txt "STILL OPEN".
+
+==== JAREK (fighter id 12): FATALITY UPDATE (2026-10-23, ~9:02 AM - 9:08 AM ET) ====
+Extra VS run (P1 Jarek vs CPU, same hold-Block method; gap = X distance at FINISH HIM, raw units).
+Fatality B (U,U,F,F+BL, BL held): Jarek 577, victim 13-182-206 at gap 130000, 170000 and 185000 (3 of 3) -> now PROVEN 5 of 5
+  (130000 to 185000). With the 2 failures at 200000, the upper distance limit is between 185000 and 200000 (LIKELY).
+  One try at gap 150000 after a jump pre-move failed (victory 125, victim 206; cause GUESS).
+Fatality A (F,B,F,F+LK): Jarek 402-405, victim 389-404 at gap 60000 and at 38695 (after a close pre-move) -> now PROVEN 6 of 6 (26553 to 60000).
+Stage fatality arena 0 (B,F,F+LP) at gap 40000: no fatality (victory 125, victim 137); stage not known to be arena 0, so unresolved.
+JAREK_CLIPS.txt updated to match (same clip counts: 107 clips: 73 PROVEN, 4 LIKELY, 10 GUESS, 19 NOT HIS, 1 UNKNOWN).
+
+==== KAI (fighter id 11): LIVE PASS, SPECIALS, WEAPON, FATALITIES, CLIP LIST (2026-10-23, ~8:15 AM - 9:15 AM ET) ====
+Full clip list with status per clip: KAI_CLIPS.txt (this repo; 139 clips: 107 PROVEN, 6 LIKELY, 7 GUESS, 19 NOT HIS).
+Method as for Raiden / Reptile / Jax: P1 Kai with scripted inputs, live memory log of both clip slots (practice vs an inactive
+Kai, and VS vs CPU), run natively on Windows with a private input hook in the game process, plus the shared static tables
+(entry f11 of the 16-entry FIGHTER_SWITCH tables, op 0x3C). Inputs from the in-game MOVES LIST (pause menu).
+Name from "KAI WINS". Raw units only (65536 = 1 game unit = 256 mesh units). Kai idle 288, armed stance 285, standing height -74829.
+
+1) PROVEN live (P1 Kai):
+   45 round intro | 122 victory pose "KAI WINS" (victory switch 0x4E9A28; opponent plays 137)
+   81 throw, close LP / F+LP (throw switch 0x4E1784: 81/158 for ids 5,11) -> victim 158-171-328, dx +324835..+328637, rise 98654
+   34 close LK special (VS, gap 40000) -> victim 159-177 (KO). In practice the same LK at 40000 gave 70.
+   264 close HP (close-HP switch: id mod 3 = 2) | 533 close HP,HP follow-on (264-533) -> 311
+   294 LP (LP,LP -> 311) | 296 HP | 71 HK (switch 0x4E8C88) | 70 LK (switch 0x4E8D78) -> 134, dx +48706 | 293 uppercut
+   62 sweep -> 192-194, dx +118296 | 64 roundhouse (no hit) | 260 crouch LP | 52 crouch HK | 315 crouch LK | 257/256 crouch block | 323 block
+   97 jump HP | 96 jump LP | 61 jump-up kick (switch 0x4E91E0) | 57 jump forward/back HK | 60 jump forward/back LK -> 186-188, dx +168944
+   Locomotion: 265 walk F, 270 walk B (his own), 259/258 crouch, 304 jump, 301 flip, 305 turn, 265-317-307 run (pushes +77939).
+2) Specials (PROVEN live; inputs from the in-game moves list):
+   21  B,B+HP falling fireball -> victim 132-328, dx +18347 (gaps 200000, 350000). 23 = static second clip (LIKELY).
+   22-310-304 F,F+LP rising fireball (ground and in the air) -> victim 179-328, rise 217304, dx -31230..-58950; Kai rises 124590..205044.
+   298-310 D,F+HP air fist: Kai rises 158856, opponent turns (305); never hit at gaps 90000..300000 (victim clip not known).
+   551 D,F+LK super roundhouse -> victim 131-185, dx +289641, rise 89182 (gap 90000); no hit at 200000.
+   Handstand BL+LK: 1 start, 4 held, 5 walk, 6 LK kick (-> 127, dx +98212), 0 HK kick (-> 131-185, dx +289281), 2-3-2 LP spin (hold or tap LP).
+   HP in the handstand: nothing. RUN tap: nothing (209 GUESS). Air B,B+HP / air D,F+HP: plain jump HP 97.
+3) Weapon (knife, PROVEN live): 244 draw D,B+LP -> 285 armed stance | 275 / 276 armed walk F / B | 246 armed block | 217-219 armed crouch
+   229 armed LP -> 132-328, dx +86686 | 230 armed HP -> 183-185, dx +353536, rise 92443 | armed HK 71 -> 311, armed LK 70 -> 134
+   208 armed D,B+LP: weapon thrown -> victim 131, dx +23296, rise 66945; Kai is unarmed (288) afterwards. Armed B+LK 276-62, armed D+HP 217-219-293.
+4) Fatalities (VS, opponent dazed 13 at FINISH HIM; gap = X distance written just before the input):
+   Fatality A (moves list "FATALITY (HOLD BLK) U.F.U.B+HK"; condition 0x2D + held mask BL+HK at 0x4E70A0, close):
+     Input: hold BL, U,F,U,B (40 ms taps, 20 ms gaps), press HK while BL is STILL held, then release. Kai 440-445-440-443,
+     victim 389-441-444-441: Kai lifts the opponent overhead and tears him in half, KAI WINS / FATALITY. PROVEN 2x (gap 40000).
+     No fatality: BL released before HK (4x at 30000 / 40000 / 50000 -> plain HK 71), slow taps at 50000, no BL hold (jump 304),
+     gap 90000 (too far).
+   Fatality B (moves list "FATALITY II U.U.U.D+BLK"; condition 0x25 = X distance >= 117964, FAR):
+     Input: hold BL, U,U,U,D (70 ms taps, 60 ms gaps), release BL, press BL. Kai 493-486-487, victim 13-130-206: Kai floats up,
+     raises his fist, the opponent bursts in blood and falls, KAI WINS. PROVEN 3x (150000 2x, 120000).
+     No fatality: 40 ms taps (150000, 200000: Kai only crouches 259-258-257-256), D still held when BL is pressed again (crouch block),
+     the "release BL, then D+BL" form, plain U,U,U,D+BL (jump 304), gap 40000 (below the bound), gap 200000 with slow taps
+     (upper limit; cause not found, as for Reptile).
+   Stage fatalities (spike B,F,D+HK; fan F,F,D+BL) not tried. LIKELY from the moves list only.
+5) As victim (VS, P1 Kai vs CPU): 128-328, 130, 131(-185/-311), 132-328, 134, 146-166-328, 151-174-191, 152-173-328, 154-172-328,
+   157-586, 158-171-328, 159-177, 162, 164, 180, 182, 183-185, 186-188, 189-191, 192-194, 195-197, 305, 311, 328, 606-607-152-173-328. PROVEN.
+   Opponent: 13 (dazed), 137 (lost round), 206 (after FINISH HIM ends; meaning GUESS).
+6) Open: fatality B upper limit (fails at 200000); stage fatalities and the Shinnok morph to Kai not tried; air fist 298 never hit;
+   23, 295, 297 (LIKELY), 94, 209, 261, 532, 547, 548, 596 (GUESS) static-only; 141-143 roundhouse victim set not hit live.
+   See KAI_CLIPS.txt "STILL OPEN".
+
+
+==== GORO (fighter id 15): CLIP PASS (2026-10-23) ====
+Goro is a hidden / boss fighter: not on the select grid, and the practice menu cycles fighter ids 0..14 only (0x4F11CC P1 / 0x4F11D0 P2).
+Name table 0x4F11D8 (18 names): 15 = GORO, 16 = KITANA, 17 = NOOB (PROVEN static). He takes entry f15 (the last) of the 16-entry
+FIGHTER_SWITCH tables (PROVEN live: HK 66, LK 67, sweep 63, jump-up kick 327, jump LK 60 all match f15).
+ROUTE USED: FORCED FIGHTER ID IN MEMORY (not the player code).
+  Practice: 15 written to 0x4F11CC and 0x4F11D0 with the practice menu open -> menu reads "PLAYER 1 GORO" / "PLAYER 2 GORO";
+  code 0x4A3620 copies 0x4F11CC to the fight-time P1 id 0x535EC8 at practice start. PROVEN (frames show the four-armed Goro).
+  VS: Arcade, P1 picks Shinnok (grid 2), then 0x535EC8 = 6 overwritten with 15 for 3 s -> HUD "GORO" vs "REPTILE", "GORO WINS". PROVEN.
+  Game's own route (static, code 0x4A0180 for P1, 0x4A0490 for P2): after the pick, if Hidden flag [0x53FD54] != 0, input bits
+  0x4D30A4&0x20 and 0x4D30A8&4 clear (two buttons held), Goro-unlocked flag [0x5416A4] != 0, pick == 6 (Shinnok) and once-flag
+  [0x5416A8] == 0 -> id 15 and 0x5416A8 = 1 (Noob: 0x5416AC / 0x5416B0 with Reiko 7 -> 0x11). LIKELY matches the public code
+  (beat the game with Shinnok, then Hidden, U,U,U,L on Shinnok, RUN+BL). Setting those flags in memory and picking Shinnok with BL+RUN
+  held still loaded Shinnok (0x535EC8 stayed 6) - not resolved (GUESS: 0x53FD54 is reset by the select screen).
+Goro idle 587, standing height -85458 (raw; Liu Kang -70320), walk F 590 / B 589, run 590-317-307, block 323, crouch 259/258, jump 304 / 301.
+Specials (PROVEN live): fireball F,B+HP 592 (P2 130); two-handed punch F,F+HP 599 (P2 319-328, gap 60000); hard uppercut D,D+HP 600
+  (P2 181-328, rise 191187); stomp F,F,B+HK 601-602 (leaps to height -258462, P2 305-178-328); B,F,D,D+HK played 602 alone (P2 182).
+Throw (PROVEN): 604-605-75, victim 606-607-152-173-328, dx -287678. Victory pose 594 (PROVEN, VS). No round-start intro clip (LIKELY).
+Fatalities: none - no misc40 / misc43 / stage-fatality rows for fighter 15 (PROVEN static). None attempted.
+Clip list: GORO_CLIPS.txt lists 94 clips: 51 PROVEN, 10 LIKELY, 19 GUESS, 14 NOT HIS. Detail: GORO_PROVEN_TABLE.txt.
+Open: chest kick B,B+HK (598 / 591) not captured - the sessions that reached it lost the game input or the logger (skipped after
+  3 tries); 603, 295 / 297, 27, 209, 261 / 532 / 533 static only; 609 / 610 (throw switch id 15) not what he threw; the game's own
+  hidden-select route not completed live.
+Run problems: the practice game stopped taking inputs or the memory logger stalled several times (as on Liu Kang); a watcher thread
+  added to the move driver made it stall every time and was removed; lost moves were re-run after a reboot.
+Clip list file: GORO_CLIPS.txt (this repo).
+
+==== JOHNNY CAGE (fighter id 14): LIVE PASS, SPECIALS, WEAPON, FATALITIES, CLIP LIST (2026-10-23, ~8:52 AM - 9:52 AM ET) ====
+Full clip list with status per clip: CAGE_CLIPS.txt (this repo; 114 clips: 74 PROVEN, 15 LIKELY, 6 GUESS, 19 NOT HIS).
+Method as for Raiden / Jax: P1 Cage with scripted inputs, live memory log of both clip slots (practice vs an inactive Cage,
+and VS vs CPU), plus the static decoder (script_decoder_v3.py, fighter 14) and entry f14 of the 16-entry FIGHTER_SWITCH tables (op 0x3C).
+Name from "JOHNNY CAGE WINS". Raw units only (65536 = 1 game unit = 256 mesh units). Cage idle 291, armed stance 286, standing height -74645.
+VS select-screen index: Cage = 8 (PROVEN).
+Frame sheets (8 frames per clip) of the captured video were checked by eye for 62 clips (victim clips included).
+
+1) PROVEN live (P1 Cage):
+   44 round intro (every VS round start; same clip as Jax) | 111 victory pose "JOHNNY CAGE WINS" (switch 0x4E9A28 f14; opponent 137)
+   75 throw, close LP / F+LP (throw switch 0x4E1784 f14 -> 75 / victim 152) -> victim 152-173-328, dx -287678, rise 66970
+   534 close LK special -> victim 535-536, dx +177095 | 264 close HP (table 0x4E9BF8, id mod 3 = 2) -> 311
+   533 close HP,HP follow-on (264-533) -> 311 | 314 close HK knee -> 134, dx +27300
+   294 LP | 296 HP | 71 HK | 70 LK | 293 uppercut -> 128-328, dx +96334, rise 157375
+   63 sweep -> 195-197, dx +114028 | 313 roundhouse (no hit logged at gap 45000)
+   260 crouch LP | 52 crouch HK -> 128-328 | 315 crouch LK -> 134, dx +50763 | 257/256 crouch block | 323 block
+   97 jump HP -> 311 | 96 jump LP | 327 jump-up kick | 57 jump forward/back HK -> 131-185, dx +203148, rise 89182
+   60 jump forward/back LK (switch 0x4E93C0 f14) -> 186-188, dx +172996
+   Shared locomotion: 291 idle (same as Raiden), 267 walk F, 272 walk B, 259/258 crouch, 304 jump, 301 flip, 317-307 run (+105504).
+2) Specials (PROVEN live):
+   28  green bolt. D,B+LP (proj[13] 0x4F00C0 -> 28) -> victim 130, dx +127475 (gap 60000), +42989 (gap 350000).
+       D,F+HP (proj[14], not resolved statically) also plays 28; it hit only at gap 60000 (victim 130, dx +127475), no hit at
+       200000 / 350000. Two D,x bolt tries froze the practice game (P1 stuck in 258 / 28; see 6).
+   85  B,D,B+HP shadow uppercut (special[1c]) -> victim 127-311-131-185, dx +400194 (gap 60000) / +420194 (gap 40000),
+       rise 159959; Cage rises to height -157231; green shadow trail. No hit at gap 150000.
+   308 B,F+LK shadow kick (special[1b]) -> victim 183-185, dx +250323 (gap 150000 / 300000), +332239 (gap 60000), rise 59675.
+   Static only, not seen: 27 (bolt second clip), 105 (shadow-uppercut second clip). LIKELY.
+   438 LP+BL special (misc[2a], victim 126): LP+BL at gap 40000 = throw 75, at 60000 = LP 294, BL then LP = block 323. LIKELY.
+3) Weapon = sword (PROVEN live, c2 + c4): 244 draw F,D,F+LK -> 286 armed stance. The draw only came out with F held into D
+   (F down, D down, F up, D up, then F + LK); quick taps F,D,F+LK gave walk / LK 70 (c2, c3_0).
+   230 armed LP (rising slash) -> victim 189-191, dx +168410 (gap 90000), rise 151459 | 226 armed HP (stab) -> victim 182, dx +106152
+   armed D+HP -> 218-219-293 (uppercut) | armed B+LK -> 278-63 sweep (victim 195-197) | armed B+HK -> 278-313 | armed HK / LK keep 71 / 70
+   277 / 278 armed walk F / B | 218-219 armed crouch | armed run 277-317-307 (pushes the opponent +114023)
+   208 sword throw (F,D,F+LK again while armed) -> victim 131, dx +196590, rise 66945; Cage returns to unarmed 291.
+4) Fatalities (VS, opponent dazed 13 at FINISH HIM; hold-Block technique: BL held through the directions, release, then the button):
+   Fatality A (misc40, move word 1b413c40) F,B,D,D+HK, condition 0x1B (X distance <= 65536): Cage 406-443, victim 389-410
+     (Cage tears the opponent in half, JOHNNY CAGE WINS, FATALITY). PROVEN 2x at gap 40000 (BL held, and the plain input).
+   Fatality B (misc43, move word 1b413243) D,D,F,D+BL, condition 0x1B: Cage 259-258-293 (the uppercut clip, green energy burst),
+     victim 130 then 206 (head knocked off, remains; FATALITY). PROVEN 2x at gap 40000 (BL held, and the plain input). No clip of its own.
+   Far-range check (gap 150000, BL held): fatality B input = no fatality (P1 111, P2 137); fatality A input = plain HK 71, then the
+     dazed time ran out. Both Cage fatalities are close-range only, as condition 0x1B says (not far-range like some other fighters').
+   Stage fatalities (arena 0 B,F,F+LK -> 293; arena 8 D,F,F+HK) not attempted. LIKELY (static input).
+5) As victim (practice, P2 Cage): 127-311-131-185, 128-328, 130, 131-185, 134, 152-173-328, 183-185, 186-188, 195-197, 311,
+   535-536. PROVEN. In VS Cage was never hit by the CPU.
+6) Capture / freeze note: several practice sessions froze (P1 clip slot stuck, once the game process ended: the D,F+HP bolt in c1,
+   D,B+LP in the re-run); the frozen moves were re-run in fresh boots. GUESS: the same capture-side bug seen on other fighters.
+7) Open: 27, 105, 438/126, 295, 297, 192/194, 196/549/550, 153/154/158 (LIKELY); 9, 261, 532, 547, 548, 596 (GUESS);
+   stage fatalities; armed block / armed jump attacks not tried. See CAGE_CLIPS.txt "STILL OPEN".
+
+==== NOOB SAIBOT (fighter id 17): CLIP PASS (2026-10-23) ====
+Noob is a hidden fighter: not on the select grid, and the practice menu cycles fighter ids 0..14 only (0x4F11CC P1 / 0x4F11D0 P2).
+Name table 0x4F11D8 (18 names): 17 = NOOB (PROVEN static). Opcode 0x3C (FIGHTER_SWITCH) maps 17 to Reiko's entry f7 (PROVEN static;
+live idle 284, HK 66, LK 67, sweep 62, jump-up kick 61, jump LK 59, intro 49, victory 113 all match Reiko's entries).
+ROUTE USED: FORCED FIGHTER ID IN MEMORY (as for Goro).
+  Practice: 17 written to 0x4F11CC and 0x4F11D0 (were 3 / 3) with the practice menu open -> menu reads "PLAYER 1 NOOB SAIBOT" /
+  "PLAYER 2 NOOB SAIBOT"; fight is Noob vs Noob (all-black ninjas in the frames). PROVEN.
+  VS: Arcade, P1 picks Shinnok (grid 2), then 0x535EC8 = 6 overwritten with 17 for 3 s -> HUD "NOOB SAIBOT" vs "REPTILE",
+  "NOOB SAIBOT WINS". He beat Reptile, Scorpion and Kai and reached Reiko. PROVEN.
+  Game's own route (static, 0x4A0180): Hidden + flags 0x5416AC / 0x5416B0 + pick 7 (Reiko) -> 0x11. Not tried.
+Noob idle 284, standing height -77660 (same as Reiko), walk F 267 / B 272, run 267-317-307, block 323, crouch 259/258,
+  crouch block 257/256, jump 304 / 301. RUN tap: nothing.
+Basics (PROVEN live): LP 294, HP 296, close HP 263 (P2 311), HK 66 (gap 90000, P2 311, dx +67946), LK 67 (P2 134, dx +67281),
+  close LK 41 (P2 165-200, dx +75893; Reiko plays 40), close HK 314 (P2 134, dx +27447), uppercut 293 (P2 128-328, dx +86583,
+  rise 149577), sweep 62 (P2 192-194), roundhouse 64, crouch LP 260 / HK 54 / LK 315, jump HP 97 / LP 96, jump-up kick 61,
+  jump F/B HK 56 / LK 59.
+Throw (PROVEN): close LP or F+LP 80 -> P2 154-172-328, dx +232804 / +236736 (gap 40000); VS vs Reptile the same. VS vs Scorpion
+  the throw played 76 -> P2 153-173 (once). Why it changed: not known (GUESS: opponent id or position).
+Specials (PROVEN live): shadow ball D,F+LP 26 (purple ball; P2 130, dx +127475 at gaps 200000 / 60000, +50704 at 350000);
+  air shadow ball (jump forward, D,F+LP) 24-310 (P2 130, dx +127475); teleport D,U 86 (rises 13107 per tick to height -274265,
+  lands at P2 X + 65536; P2 plays 305; no hit at gaps 60000 / 150000 / 300000). Static teleport hit 74 -> 150 and air throw
+  (misc[20]) 74/77 -> 150/161 not seen (LIKELY).
+Weapon (PROVEN live; scythe-like blade in the frames, LIKELY): draw F,F+HK 244 -> armed stance 286; armed walk 277 / 278;
+  armed LP 229 (P2 132-328, dx +64218); armed HP 239 (P2 189-328, dx +112357, rise 188927); armed D+HP 218-219-293 (P2 128-328,
+  dx +96334); armed B+LK 278-62 (P2 192-194, dx +94368); armed BL 246; armed jump-up HP 252; F,F+HK while armed throws it: 208
+  (P2 131, dx +196590 at gap 150000 / +211662 at 60000, rise 59147), then he is unarmed again (284).
+Round: intro 49 every round, victory 113 (PROVEN, VS).
+Fatalities: none - no misc40 / misc43 rows for fighter 17 (PROVEN static), so there was nothing to try with hold-Block.
+  Stage-fatality rows exist (arena 0 F,D,F+HK -> 293; arena 8 D,B,B+HK, clip not resolved) - LIKELY static, not attempted.
+Clip list: NOOB_CLIPS.txt lists 111 clips: 78 PROVEN, 6 LIKELY, 18 GUESS, 9 NOT HIS. Detail: NOOB_PROVEN_TABLE.txt.
+Open: teleport hit 74 / 150 and 183; air throw; throw 76 vs 80; stage fatalities; 22, 295 / 297, 52, 55 / 57 / 58 / 60 / 327, 209,
+  261 / 532 / 533, 547 / 548 / 596, 549 / 550 / 196 static only; the game's own hidden-select route not tried.
+Run notes: no crashes or input stalls in this pass. After the teleport both fighters are invisible in the capture renderer
+  (as on Reiko), so the teleport frames are blank; the memory logs are fine.
+Clip list file: NOOB_CLIPS.txt (this repo).
+==== 2026-10-23 EVENING UPDATE (~6:30 PM - 7:45 PM ET): BICYCLE CONTACT, HIT BLOOD, SIMS, CLIP AUDIT, CLIP 57 RECHECK ====
+Bicycle Kick juggle (72 -> 73 loops -> 72 -> 310 -> 304; victim 136 -> 183 -> 185) [PROVEN live]:
+  Contact point on the way up is mostly the victim's CHEST/MIDSECTION - confirmed by netsider from real-game frames (not feet-to-feet, not the hips).
+  The position lock (victim locked to the attacker while 73 kicks, released at 183) stays PROVEN.
+Hit blood per move (box captures c8-c10, Wine, practice, Sonya vs inactive dummy; render-node list 0x52B6CC + pool 0x5224F0; raw units, Y up = negative):
+  - CORRECTION: an earlier sim used the Leg Twist gore drops for normal hits - WRONG. Each move has its own effect; none uses the Leg Twist drops
+    (Leg Twist gravity 1310/pass; uppercut drops 229/tick).
+  - HK 65 [PROVEN]: 2 sprites SHARE2_G 0x7C->0x88 (half-fan spray, one mirrored = full round burst), 1 frame/tick, ~14 ticks (0.21 s).
+    Spawn = victim root at contact + (-1311 toward attacker, -39321 up, +-2621 z); v = (+3276 away, 0, +-2621)/tick; no gravity. Earlier 'HK: no blood' was WRONG.
+  - Bicycle 72-73 [PROVEN]: 7 sprites SHARE2_G 0x8D->0x98 (blood cloud), one every ~8 ticks (0.124 s) from victim 136 f1; spawn = victim root + (0,-26214,0);
+    constant v, no gravity: x +2659..+3886 (away), y -2664..-3898 (up), z -689..-1906; freed at ~20 ticks. No drops or splats.
+  - Uppercut 293 [PROVEN]: 9 SHARED_G drops (5 at contact + 1/tick x4) from victim root + (0,-6782,0), gravity +229/tick; drop parts cycle 0->3 (2 ticks each);
+    on the floor each becomes a splat animating parts 4->0xC (2 ticks each), then removed. Also SHARED_G 0x91->0x99 ring at root + (0,-26541,0) rising 327/tick,
+    and SHARE2_G 0x60->0x63 floor splatter at the victim's X when the body lands (~0.83 s).
+  - Cartwheel 104 (victim 131 -> 185) [PROVEN c9, 2 reps]: 4 sprites SHARE2_G 0x89->0x98 (0x89-0x8C pre-roll, then the Bicycle cloud frames), one every 3 ticks
+    from contact, each gone at ~17 ticks; spawn = victim root + (-6553, -21626 / -23591 alternating, 0); constant v (~+1600..+2400 away, -200..-1200 up), no gravity.
+  - All moves: SHARED_G 0xB6-0xBE grey landing dust (not blood) [LIKELY].
+  - Sprite world size = record ww/wh x 64 raw [LIKELY, from video]. Capture video runs 0.0745 s ahead of the memory log [PROVEN on one HK run].
+  - Nut Punch 438 (Cage): NOT captured (LP+BL gave 294 / 323 / crouch; two tries crashed the game). Its blood stays GUESS.
+Sims (local viewer, not in this repo - they load extracted game models):
+  - Sonya remaining specials sim: Square Wave 310-101-310 (vs standing dummy = no hit, dummy turns 305) / Leg Grab 257-102, victim 201-328 / Energy Ring 15 -> 130
+    [all PROVEN replays]. Cartwheel 104 is her last special[] entry [PROVEN static]; next of her moves in the tables is the weapon draw [LIKELY].
+  - Raiden vs Raiden sim v1: 48 entries (24 moves each) from RAIDEN_PROVEN_TABLE; PROVEN pairs incl. jump-in HK 56>131-185, jump-in LK 59>186-188, bolt 17>127,
+    torpedo 94>135-182; LIKELY: jump LP 96>186-188, roundhouse 64>142-141-143; GUESS: HK 71>311, jump kick 61>311.
+Clip used/unused audit (files in this repo: MK4_MASTER_ANIM_LIST.csv / .txt, SONYA_CLIPS_USED_vs_UNUSED.txt):
+  - Method: per-fighter *_CLIPS.txt + live seen list + byte scan of MK4.EXE for every clip record 0x4FDD6C+12*clip (and >>2).
+  - 144 of 612 clips have ZERO references in MK4.EXE (incl. 329-383, 449-526, 467 swim): LIKELY never played (a computed index is not ruled out).
+  - 366 clips are USED by at least one audited fighter; 102 are referenced in the EXE but not tied to an audited fighter (UNKNOWN).
+  - The viewer exports ~477 clips for every fighter; only ~80-113 per fighter are used by that fighter - that is why the viewer shows so many anims not in the game.
+  - Kitana (id 16): no clip list / exports, not audited.
+Clip 57 recheck (netsider doubted 57 = jump HK) [PROVEN]:
+  - Viewer clip numbering = EXE clip ids: frame counts match 477/477 for Sonya (shift +-1 gives ~68 matches); Cage 57/58/304 match.
+  - Live: 4 of 4 jump forward/back HK runs played 304-301-57-304. 60 fps video: Sonya airborne, leaning back with the kicking leg level = the reclined
+    'centerfold' look in the viewer (the viewer shows the mid-air pose on the floor, without the jump arc) [LIKELY visual match].
+  - So 57 = jump_fwd_back_HK_air, USED (Sonya and Cage). netsider's pose description of 57 is kept.
+Corrected clip names: the viewer auto name 'fall_knockdown_lying_torso_horizontal' (on 135 clip ids) was a pose-shape default, not evidence.
+  MK4_MASTER_ANIM_LIST.csv has columns auto_glb_name / corrected_name / corrected_name_label / corrected_name_evidence (37 PROVEN, 71 LIKELY = used live,
+  named by role only, 27 GUESS = never seen live, 'unidentified'). Key: 55/56/57 jump_fwd_back_HK_air, 58/59/60 jump_fwd_back_LK_air, 61 jump_up_kick,
+  301 jump_fwd_back_flip_lead_in [all PROVEN]. Viewer .glb file names are not changed.
+
+
+==== PROJECTILE / JUMP / FREEZE PHYSICS + AI SEARCH (2026-10-23 evening ~11:00 PM ET) ====
+Findings from live captures + EXE tables. Nothing was written into the sims. Tags kept as given.
+
+Raw units are 16.16: 65536 = 1 game unit. The animation counter runs at about 60 ticks a
+second (measured 61.3). Sleeps and these velocities use that same tick, so a per-second
+figure below is that conversion, tagged LIKELY.
+
+--- Ice Blast and Energy Ring ---
+
+Speed - PROVEN. Ice (projectile handler 0x49bd00) and the Energy Ring (0x49baa0) both store
+13107 (0x3333) along the owner's facing into the projectile's +0x6C / +0x74. That is 0.200
+game units per tick, 12.0 game units per second at 60 ticks/s. The position adder at
+0x407560 does X += +0x6C, Y += +0x70, Z += +0x74 every tick.
+
+Where they appear - PROVEN. Shared spawn 0x49c350 places both 3276 raw in front of the
+owner. Ice is 655 raw above the root. The ring is 6553 raw above it.
+
+When they leave the hand - LIKELY. Both attacker scripts wait 15 animation ticks, then
+spawn. Animations advance one frame per tick, so that is frame 15 of clip 16 (ice, 36
+frames) and frame 15 of clip 15 (ring, 20 frames). An airborne shot skips that wait and
+spawns immediately.
+
+Hit test - PROVEN. Each tick, 0x49c860 strikes if either horizontal gap to the target is
+within 6553 raw. The strike index is the projectile's type word: ice is 3, ring is 4, in
+table 0x540DC8.
+
+Ice look - PROVEN structure, LIKELY the picture. The ice object is the only thing drawn by
+0x40D720. Its list at 0x4F0880 is eight sprites, ids 0x4B through 0x52, plus a second
+eight-sprite layer drawn by 0x405DD0. On the first flight tick the color add 0x404D50(0x808)
+runs while the state word is 0x2001, which fills the green and blue channels to the cap
+0xFE00 and leaves red alone. That is a full cyan glow. It matches the cyan orbs on
+SHARED_G page 2. There is no ice-blast mesh.
+
+Ring look - the flying ring is still missing. Ring flight does not use that sprite list and
+does not tint. On a hit, 0x40D990 adds color 0x00FB43FB: red and blue 0xFB, green 0x43.
+That is the purple hit flash. The ring's own body (the torus) is not in this draw list.
+
+Ring hit - PROVEN. Strike index 4 calls reaction 0x44, script 0x4ECDD0: victim clip 130,
+pushed back at 16384 raw per tick (0.250 per tick). The live travel of that hit is
++127475. The blocked reaction id in that strike record is 0x0A.
+
+--- How long a freeze is, and how icy ---
+
+Duration - PROVEN in ticks. An ice hit uses strike index 3, reaction 0x43 (0x486280).
+There is no victim clip. It sets state 0x1003 and sets bit 0x800 on +0x34, then:
+
+1. Six shiver pairs. Each pair is +3276 raw, wait 3, -3276 raw, wait 3. That is 36 ticks.
+   The same +-3276 is scaled onto X and Z by the facing pair, and added straight to Y.
+   A pair cancels, so the body twitches and stays put.
+2. A still hold of 88 ticks (0x58 written into 0x53FFCC, the same slot the sleep opcode
+   uses).
+3. Three more shiver pairs, 18 ticks.
+4. Bit 0x800 is cleared and the victim goes to the getup at 0x46F6A0.
+
+36 + 88 + 18 = 142 ticks. At the measured tick rate that is about 2.37 seconds.
+
+How icy - two separate numbers.
+- The shiver size is fixed at 3276 raw. That part does not scale.
+- At the start, if +0x7C is greater than 0 the reaction stores 19660 (0x4CCC), otherwise
+  32768 (0x8000), into the player word 0x538364 or 0x5383F4. The reader at 0x48DF49 clamps
+  that word at 1.0 and adds it into +0x80, the angular-rate slot. So a second ice is weaker
+  than the first. What +0x7C means is still open. LIKELY this word is the strength of the
+  ice, not a color. No victim tint value showed up in this path. The cyan is the projectile,
+  not the frozen body.
+
+--- Sub-Zero throw path ---
+
+The script - PROVEN. Close LP / F+LP, fighter 4, script 0x4E16A0: opponent clip 153,
+attacker clip 76, both held until frame 25 (0x19), then reaction 0x66, then operand 7864,
+then 15 percent damage (9830), then native 0x42CE80. Reaction 0x66 is the whiff tail (clips
+142-141-143). The landed throw is the live chain 153 -> 173 -> 328.
+
+The release - PROVEN magnitude, direction still a pair of globals. 0x42CEB0 writes the
+victim's +0x6C and +0x74 as 7864 times the pair in 0x53835C and 0x53839C. If that step
+would not move the victim farther from the thrower, it flips the sign. 7864 is 0.120 raw
+per tick, about 7.2 game units per second. Those two globals are filled by 0x48FAF8.
+Their source is not pinned to a unit facing yet.
+
+The live path - PROVEN, from the captures. Thrown behind the thrower: X about -265480 to
+-310897, rise 75382. Frame 0 of clip 153 is the placement record, not a pose (key0 about
+-3072, -3528, 76931).
+
+The words at 0x4E18D0 are not that arc. 0x42E1C0 adds 15 of them to the Z of whatever
+object is in 0x528A90 (net +6553), started from 0x42D717. The per-frame root inside clips
+153 and 173 was not pulled out of the glbs.
+
+--- Forward-jump speed ---
+
+PROVEN speeds, from the jump blocks.
+
+  Jump              Horizontal  Vertical  Added each tick  State
+  Straight          0           -12451    +655             -
+  Aux 9, 0x46FE40   +3604       -12451    +589             0x2009
+  Aux 10, 0x46FED0  -3604       -11796    +589             0x200A
+
+The horizontal word is multiplied by the pair loaded through 0x4911E0 before it is stored.
+Positive travels with that pair, negative against it.
+
+The straight arc matches a live number exactly. Each tick does vertical += 655, then
+Y += vertical. Starting at -12451, the top is 112119 raw above the takeoff, on tick 20.
+That is the measured straight-jump rise. Same rule on the forward record: top is 125412
+raw, tick 22, and the body keeps +3604 raw per tick the whole way (0.055 per tick, about
+3.3 game units per second, a little under the proven walk of 3932 per tick).
+
+Which record is forward - LIKELY. Aux 9 is the positive one and aux 10 is the negative one,
+in that order after the straight jump. The stick test that picks 9 versus 10 was not found,
+so "forward = +3604" is the sign, not a captured button.
+
+The live forward-jump minimum, height -214793 (rise 137133 from a standing -77660), is
+deeper than this 125412 object arc. The extra is the jump clip's own root. The sim's
+airborne push of 159996 is the uppercut push, not this jump.
+
+--- The computer ---
+
+Not found. No move-probability table, no block-chance compare, and no difficulty byte
+feeding the fighter. "VERY EASY" through "ULTIMATE" are menu strings (one reference,
+0x4B74B9). The block handler is real, and it is the player's block, aux index 0x12 at
+0x46B240:
+
+- +0x84 already set: standing block 0x460410, clip slot for 323.
+- +0x84 clear: state 0x2005, then 0x46B350.
+- Crouch block sets state 0x2002 and the clip slot for 256.
+
+Nothing in that path decides whether the computer blocks, or which move it throws. The
+cycle in the sims is a handmade list, not this code.

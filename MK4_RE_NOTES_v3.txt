@@ -1060,3 +1060,212 @@ Corrected clip names: the viewer auto name 'fall_knockdown_lying_torso_horizonta
   MK4_MASTER_ANIM_LIST.csv has columns auto_glb_name / corrected_name / corrected_name_label / corrected_name_evidence (37 PROVEN, 71 LIKELY = used live,
   named by role only, 27 GUESS = never seen live, 'unidentified'). Key: 55/56/57 jump_fwd_back_HK_air, 58/59/60 jump_fwd_back_LK_air, 61 jump_up_kick,
   301 jump_fwd_back_flip_lead_in [all PROVEN]. Viewer .glb file names are not changed.
+
+
+==== PROJECTILE / JUMP / FREEZE PHYSICS + AI SEARCH (2026-10-23 evening ~11:00 PM ET) ====
+Findings from live captures + EXE tables. Nothing was written into the sims. Tags kept as given.
+
+Raw units are 16.16: 65536 = 1 game unit. The animation counter runs at about 60 ticks a
+second (measured 61.3). Sleeps and these velocities use that same tick, so a per-second
+figure below is that conversion, tagged LIKELY.
+
+--- Ice Blast and Energy Ring ---
+
+Speed - PROVEN. Ice (projectile handler 0x49bd00) and the Energy Ring (0x49baa0) both store
+13107 (0x3333) along the owner's facing into the projectile's +0x6C / +0x74. That is 0.200
+game units per tick, 12.0 game units per second at 60 ticks/s. The position adder at
+0x407560 does X += +0x6C, Y += +0x70, Z += +0x74 every tick.
+
+Where they appear - PROVEN. Shared spawn 0x49c350 places both 3276 raw in front of the
+owner. Ice is 655 raw above the root. The ring is 6553 raw above it.
+
+When they leave the hand - LIKELY. Both attacker scripts wait 15 animation ticks, then
+spawn. Animations advance one frame per tick, so that is frame 15 of clip 16 (ice, 36
+frames) and frame 15 of clip 15 (ring, 20 frames). An airborne shot skips that wait and
+spawns immediately.
+
+Hit test - PROVEN. Each tick, 0x49c860 strikes if either horizontal gap to the target is
+within 6553 raw. The strike index is the projectile's type word: ice is 3, ring is 4, in
+table 0x540DC8.
+
+Ice look - PROVEN structure, LIKELY the picture. The ice object is the only thing drawn by
+0x40D720. Its list at 0x4F0880 is eight sprites, ids 0x4B through 0x52, plus a second
+eight-sprite layer drawn by 0x405DD0. On the first flight tick the color add 0x404D50(0x808)
+runs while the state word is 0x2001, which fills the green and blue channels to the cap
+0xFE00 and leaves red alone. That is a full cyan glow. It matches the cyan orbs on
+SHARED_G page 2. There is no ice-blast mesh.
+
+Ring look - the flying ring is still missing. Ring flight does not use that sprite list and
+does not tint. On a hit, 0x40D990 adds color 0x00FB43FB: red and blue 0xFB, green 0x43.
+That is the purple hit flash. The ring's own body (the torus) is not in this draw list.
+
+Ring hit - PROVEN. Strike index 4 calls reaction 0x44, script 0x4ECDD0: victim clip 130,
+pushed back at 16384 raw per tick (0.250 per tick). The live travel of that hit is
++127475. The blocked reaction id in that strike record is 0x0A.
+
+--- How long a freeze is, and how icy ---
+
+Duration - PROVEN in ticks. An ice hit uses strike index 3, reaction 0x43 (0x486280).
+There is no victim clip. It sets state 0x1003 and sets bit 0x800 on +0x34, then:
+
+1. Six shiver pairs. Each pair is +3276 raw, wait 3, -3276 raw, wait 3. That is 36 ticks.
+   The same +-3276 is scaled onto X and Z by the facing pair, and added straight to Y.
+   A pair cancels, so the body twitches and stays put.
+2. A still hold of 88 ticks (0x58 written into 0x53FFCC, the same slot the sleep opcode
+   uses).
+3. Three more shiver pairs, 18 ticks.
+4. Bit 0x800 is cleared and the victim goes to the getup at 0x46F6A0.
+
+36 + 88 + 18 = 142 ticks. At the measured tick rate that is about 2.37 seconds.
+
+How icy - two separate numbers.
+- The shiver size is fixed at 3276 raw. That part does not scale.
+- At the start, if +0x7C is greater than 0 the reaction stores 19660 (0x4CCC), otherwise
+  32768 (0x8000), into the player word 0x538364 or 0x5383F4. The reader at 0x48DF49 clamps
+  that word at 1.0 and adds it into +0x80, the angular-rate slot. So a second ice is weaker
+  than the first. What +0x7C means is still open. LIKELY this word is the strength of the
+  ice, not a color. No victim tint value showed up in this path. The cyan is the projectile,
+  not the frozen body.
+
+--- Sub-Zero throw path ---
+
+The script - PROVEN. Close LP / F+LP, fighter 4, script 0x4E16A0: opponent clip 153,
+attacker clip 76, both held until frame 25 (0x19), then reaction 0x66, then operand 7864,
+then 15 percent damage (9830), then native 0x42CE80. Reaction 0x66 is the whiff tail (clips
+142-141-143). The landed throw is the live chain 153 -> 173 -> 328.
+
+The release - PROVEN magnitude, direction still a pair of globals. 0x42CEB0 writes the
+victim's +0x6C and +0x74 as 7864 times the pair in 0x53835C and 0x53839C. If that step
+would not move the victim farther from the thrower, it flips the sign. 7864 is 0.120 raw
+per tick, about 7.2 game units per second. Those two globals are filled by 0x48FAF8.
+Their source is not pinned to a unit facing yet.
+
+The live path - PROVEN, from the captures. Thrown behind the thrower: X about -265480 to
+-310897, rise 75382. Frame 0 of clip 153 is the placement record, not a pose (key0 about
+-3072, -3528, 76931).
+
+The words at 0x4E18D0 are not that arc. 0x42E1C0 adds 15 of them to the Z of whatever
+object is in 0x528A90 (net +6553), started from 0x42D717. The per-frame root inside clips
+153 and 173 was not pulled out of the glbs.
+
+--- Forward-jump speed ---
+
+PROVEN speeds, from the jump blocks.
+
+  Jump              Horizontal  Vertical  Added each tick  State
+  Straight          0           -12451    +655             -
+  Aux 9, 0x46FE40   +3604       -12451    +589             0x2009
+  Aux 10, 0x46FED0  -3604       -11796    +589             0x200A
+
+The horizontal word is multiplied by the pair loaded through 0x4911E0 before it is stored.
+Positive travels with that pair, negative against it.
+
+The straight arc matches a live number exactly. Each tick does vertical += 655, then
+Y += vertical. Starting at -12451, the top is 112119 raw above the takeoff, on tick 20.
+That is the measured straight-jump rise. Same rule on the forward record: top is 125412
+raw, tick 22, and the body keeps +3604 raw per tick the whole way (0.055 per tick, about
+3.3 game units per second, a little under the proven walk of 3932 per tick).
+
+Which record is forward - LIKELY. Aux 9 is the positive one and aux 10 is the negative one,
+in that order after the straight jump. The stick test that picks 9 versus 10 was not found,
+so "forward = +3604" is the sign, not a captured button.
+
+The live forward-jump minimum, height -214793 (rise 137133 from a standing -77660), is
+deeper than this 125412 object arc. The extra is the jump clip's own root. The sim's
+airborne push of 159996 is the uppercut push, not this jump.
+
+--- The computer ---
+
+Not found. No move-probability table, no block-chance compare, and no difficulty byte
+feeding the fighter. "VERY EASY" through "ULTIMATE" are menu strings (one reference,
+0x4B74B9). The block handler is real, and it is the player's block, aux index 0x12 at
+0x46B240:
+
+- +0x84 already set: standing block 0x460410, clip slot for 323.
+- +0x84 clear: state 0x2005, then 0x46B350.
+- Crouch block sets state 0x2002 and the clip slot for 256.
+
+Nothing in that path decides whether the computer blocks, or which move it throws. The
+cycle in the sims is a handmade list, not this code.
+
+==== WALL EDGE / SLIDE GET-UP / BICYCLE / CAMERA (2026-10-23 evening ~11:37 PM ET) ====
+
+How a push slows down
+
+PROVEN. This is the wall-edge routine at 0x42b930, armed by 0x42b8c0. An open-floor hit keeps the constant velocity its reaction script wrote. It does not enter this routine.
+
+0x42b8c0 reads the two stage-edge globals 0x5386f4 and 0x533c84. The two callers, 0x45c0a0 and 0x47df8e, put 131072 in the inset first. If the position is past the edge minus that inset, it starts 0x42b930. The 20 passed alongside the callback is not the tick count.
+
+First call, while +0x84 is 0:
+
+- Both fighters' +0x6c (vx) become -((P1.X * 1966) >> 16).
+- Both fighters' +0x74 become -((P1.Z * 1966) >> 16).
+- The counter at 0x540000 is set to 10, then the routine sleeps one tick.
+
+1966 is 0x7AE, an immediate in this function. The same pair is written to P1 and P2. +0x74 is also the field fighters use as a state word, so this write lands in that slot.
+
+Each later call multiplies both fighters' +0x6c and +0x74 by 58982 and shifts right 16. 58982 / 65536 is the 0.9 factor. The counter decrements. The call that brings it to 0 then zeroes +0x6c, +0x70, +0x74, and +0x4c on both fighters (0x490730) and calls 0x41f830.
+
+LIKELY match to the logged wall uppercut. (X * 1966) >> 16 equals the logged 17693 when X is 589791 through 589823, just under 9 * 65536. The logged running sum 157498 is term 21 of that integer series (terms 0 through 20). This routine's counter is 10, so that 21-term total is a different count from the counter in the EXE.
+
+A second * 58982 loop at 0x427220 decays one non-fighter object and has no direct call. It is a different routine.
+
+Which get-up follows a slide hit
+
+PROVEN static chain, clip id included. Reaction 0x7a (0x483550) runs script 0x4EC5D8, and that script ends at the native. The bytes after it are the next record.
+
+The script is: a voice op, then velocity 2621, -12451, gravity 655, then clip 179, then native 0x488bd0. The live slide velocity -2622 is that 2621 after the facing scale, off by 1, and -11796 is -12451 plus one gravity step of 655.
+
+0x488bd0 toggles the facing bit (0x4903a0). If 0x53fdec is clear, it stores clip record 328 (0x4FECCC) in the clip register 0x53ffc8 and calls 0x491510 with 0x4ed1f8. That is the same register the bicycle uses when it selects clip 72. Clip 328 is the shared flip get-up. The native at 0x488c20 is a different entry and stages clip 191.
+
+0x491510 can leave that path. If bit 0 of 0x54000c is set it goes to 0x4916e0. Along the other branch it sets current +0x74 to 0x200e. Its first act, 0x490710, copies linked +0x48 into linked Y and then zeroes the velocities. While a script is running, +0x48 is the script cursor, so that copy is a height snap only if the cursor was already replaced.
+
+The bicycle kick
+
+Sonya's move is handler 0x47e1d0, state +0x74 = 0x201, script 0x4EB5A8. It ends at native 0x47e220. Liu Kang's bicycle, clips 67-287-68, starts at the next record, 0x4EB5F8.
+
+Spacing - PROVEN stores.
+
++-----------------------------------+--------------------------------------------------------------+
+| What                              | Raw                                                          |
++-----------------------------------+--------------------------------------------------------------+
+| Takeoff horizontal, opcode 0x5f   | 6553, along the facing basis, written to the linked fighter  |
++-----------------------------------+--------------------------------------------------------------+
+| Kick, opcode 0x59, four words     | 6553, 0, -6553, -131                                         |
++-----------------------------------+--------------------------------------------------------------+
+| Those four, applied by 0x490960   | 6553 along current's basis into linked +0x6c and +0x74;      |
+|                                   | 0 mixed into that; -6553 into linked vy (+0x70);             |
+|                                   | -131 into linked +0x4c                                       |
++-----------------------------------+--------------------------------------------------------------+
+| Body snap, 0x48ff30, both deltas  | fighter at current +0x38 is moved to linked X/Z plus the     |
+| 6553                              | basis times 6553, and linked Y + 6553                        |
++-----------------------------------+--------------------------------------------------------------+
+
+Plus on Y is downward. Strike index 2, record 0x4EF1D0: box 19005, -9830, 39321, 57671, reaction bytes 0x57, 0x57, 0x00, flag byte 0x00, damage 13107.
+
+The old "miss at distance 2.4" compare is a rise. 0x47e680 sets 0x53ffec to linked +0x48 minus linked Y. She keeps ticking while that value is under 157286 (0x26666). A linked fighter still at standing height does not trip it.
+
+Her height. There is no body-height immediate. Clip 73 is the pose (72 is the takeoff, and 72 is also the recovery clip). The vertical numbers above are written to the linked fighter, using the current fighter's facing basis. The callback object stores 0x201 and, on the branch below, 0x1017, so current is Sonya there. The slide reaction is the precedent that linked is who receives the velocity. If that split holds during her own script, the -6553 and the rise tests belong to the other fighter, and the 6553 snap moves whoever is stored at Sonya's +0x38. Which of those two slots is which was not settled by another read.
+
+After a hit, once that same rise is at least 137625 (0x21999), a 32-tick ending starts (0x540000 = 0x20). Each of those ticks also applies the 6553 snap. When the 32 expires: state word 0, clip 72, then the landing at 0x47e9e0.
+
+The fall path 0x47e300 waits while linked vy is negative, then while the rise is above 101580 (0x18CCC). Then it installs clip 72. The phase after that calls the shared get-up 0x46f6a0.
+
+The branch the old note called the blocked bounce. PROVEN as a branch, and the block button was not found in it.
+
+0x47e410, first phase: if 0x540008 == 1, current +0x74 becomes 0x1017 and script 0x4EB5E0 is pushed. That script is two ops: velocity -1310, -11796, gravity 458, then native 0x47e300. Otherwise linked +0x6c, +0x74, and vy are each multiplied by 39321.
+
+The strike writes the 1 itself, on the path that reads reaction byte +0x12. For this strike that byte is 0. It gets there only when the damage routine 0x48ded0 copied a nonzero 0x535f14 into 0x540008. No test of the block bit (0x20 in 0x4d30a4) sits on that path. So 0x1017 and the -1310 / -11796 / 458 script are what == 1 does. Calling that "blocked" is still the old label.
+
+Camera pull, and the turn toward you
+
+Not found. No world-unit pull-back distance, and no angle added to the fighters' yaw.
+
+What the renderer actually does:
+
+- When the object's +0x2c is 0, 0x4b9751 copies that object's own X, Y, and Z into the view point. The copy adds nothing.
+- 0x4b91e6 adds 11141 (0x2B85) to the Y at 0xab2c84, and only when 0x53ffdc has bits 0x180000 and 0xab2d00 is nonzero. There is no matching add on Z.
+- 0x4b926a loads 0xab2d28 from 0x5414d0 and caps it at 0x100.
+- The word at 0xab2ce0 is written -64 and then 0 in that same setup. Nothing in these reads adds that word to fighter yaw +0x64.
+
+A logged fighter yaw of 308837 is 6 raw from three-halves of the integer pi in this EXE (205887). That sample sits on the side-on yaw.
