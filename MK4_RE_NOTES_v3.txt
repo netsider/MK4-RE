@@ -1096,21 +1096,27 @@ runs while the state word is 0x2001, which fills the green and blue channels to 
 SHARED_G page 2. There is no ice-blast mesh.
 
 Ring look - PROVEN (live Wine dump on box, 2026-10-24). The flying ring body is
-SHARED_G part 0x2A on page 3 (live descriptor 0x50969C). Ring flight does not use the
-ice sprite list. Soft glow is additive draw plus a color tint, not a scene light. Shape
-change during flight is LIKELY the comet filmstrip SHARED_G 0x2B-0x30 (stepper at
-0x507780), swapping part ids each tick rather than morphing one mesh. Files:
+SHARED_G part 0x2A on page 3 (live descriptor 0x50969C; stays 0x2A while flying). Ring
+flight does not use the ice sprite list. Soft glow is additive draw plus a color tint,
+not a scene light. Shape change on the flying shot (not the little hit dots) is PROVEN:
+draw-nodes step the comet filmstrip SHARED_G 0x2B -> 0x2C -> 0x2D -> 0x2E (descs through
+0x30; bank 0x50908C), swapping part ids each tick rather than morphing one mesh. Trace:
+box /workspace/mk4_orbs_extract/PROVEN_LIVE/proof/film_fist_dense.json. Earlier body dump:
 capture_v3\projectile_live_20261024\box_dump\.
 
-Ring hit flecks (little purple orbs) - PROVEN (2026-10-24). On a hit, sub 0x49bb50 goes
-to 0x40D990, which adds color 0x00FB43FB (red and blue 0xFB, green 0x43) and spawns
-about 0xC0 particles via 0x49cb30 / 0x49db30. Art list VA 0x4d4c60 points at bank
-0x50f290 = SHARE2_G.GEO (not SHARED_G). The flecks are SHARE2_G sprite records 0x64
+Ring hit flecks (little purple orbs / little dots) - PROVEN (2026-10-24). These are a
+different art set from the flying filmstrip. On a hit, sub 0x49bb50 goes to 0x40D990,
+which adds color 0x00FB43FB (red and blue 0xFB, green 0x43) and spawns about 0xC0
+particles via 0x49cb30 / 0x49db30. Art list VA 0x4d4c60 points at bank 0x50f290 =
+SHARE2_G.GEO (not SHARED_G). The little dots' shapes are SHARE2_G sprite records 0x64
 through 0x6F (twelve frames; tiny 4x5..7x7 grit; raw texels brownish; purple from the
-tint). The same ids on SHARED_G are unrelated 3D meshes - that is why the old note said
+tint). The spray looks mixed because those twelve frames differ - that is the fleck
+shape variety. The filmstrip 0x2B-0x2E is the flying ring trail only, not these flecks.
+The same ids on SHARED_G are unrelated 3D meshes - that is why the old note said
 0x64-0x71 were not reached. Soft look = brightness as opacity on the additive pass.
-Live shots show the spray of little glowing orbs around the victim; the shape variety is
-those twelve frames. Exports: box /workspace/mk4_orbs_extract/FINAL/.
+Live shots show the spray around the victim. Exports: box
+/workspace/mk4_orbs_extract/PROVEN_LIVE/ (recreate.py rebuilds fleck/film/fist PNGs from
+GEO; also FINAL/).
 
 White fist muzzle orb - LIKELY. SHARED_G parts 0x28 / 0x29 on page 2 (type 0x100, 2-tri
 billboards; UV top-origin: 0x28 (53,1)-(76,24), 0x29 (79,1)-(102,24); bright center into

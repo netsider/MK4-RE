@@ -414,9 +414,11 @@ K6. Public assembler for fighter parts (GEO parts placed on the skeleton)
        Status: DONE/PROVEN 2026-10-24: flecks are SHARE2_G sprites 0x64-0x6F (art list 0x4d4c60 -> bank
        0x50f290), tinted 0x00FB43FB by hit path 0x49bb50 -> 0x40D990; ~0xC0 particles via 0x49cb30/0x49db30.
        Old "0x64-0x71 not reached" was SHARED_G (wrong GEO). Soft glow = additive + tint (brightness as
-       opacity). Shape variety = the twelve fleck frames. White fist muzzle at shoot = LIKELY SHARED_G
-       0x28/0x29 page 2 (live dump at clip 15 f~15 still needed for PROVEN). Box exports:
-       /workspace/mk4_orbs_extract/FINAL/. Screenshots: OneDrive Screenshots 1\Screenshot 2026-10-24 013957.png
+       opacity). Little-dot shapes = the twelve SHARE2 fleck frames 0x64-0x6F (not the flying
+       filmstrip). Flying shape change PROVEN separately: SHARED_G 0x2B->0x2E trail nodes.
+       White fist muzzle at shoot = LIKELY SHARED_G 0x28/0x29 page 2 (live spawn catch still
+       needed for PROVEN). Box exports: /workspace/mk4_orbs_extract/PROVEN_LIVE/ (+ recreate.py).
+       Screenshots: OneDrive Screenshots 1\Screenshot 2026-10-24 013957.png
        (hit spray) and 014032.png (fist flash + flying ring).
     3. Ice eight SHARED_G parts 0x4B-0x52 (records 0x509A54-0x509B18, callback 0x40d720): list exists, but tick
        0x40d920 does not advance through them. Find whether / how they cycle.
