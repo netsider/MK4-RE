@@ -403,3 +403,22 @@ K6. Public assembler for fighter parts (GEO parts placed on the skeleton)
     3. Run CPU vs CPU, log which routine picks each move, then decompile it (Ghidra) to see what it checks
        (distance, opponent state, difficulty).
     Status: UNKNOWN. Label findings PROVEN / LIKELY / GUESS here and in MK4_RE_NOTES_v3.txt.
+
+[TODO 2026-10-24] Open items from the 2026-10-24 dump (all still open; no progress claimed). Raw 16.16, Y negative = up.
+    1. Flying Energy Ring picture: handler 0x49baa0 spawns record 0x4F0550, arms descriptor 0x4F0560; no draw list
+       found (model word 0, never writes ice list 0x4F0880). Find what actually draws the ring body.
+       Status: UNKNOWN.
+    2. Ring hit burst: what it actually plays. Purple 0x00FB43FB is PROVEN; list at 0x4D4C50 walks 1 / 4 / 1 / end
+       with zero low halves (no sprite spawn). Part records 0x64-0x6F, 0x70, 0x71 after the list are not reached.
+       Status: UNKNOWN.
+    3. Ice eight SHARED_G parts 0x4B-0x52 (records 0x509A54-0x509B18, callback 0x40d720): list exists, but tick
+       0x40d920 does not advance through them. Find whether / how they cycle. Status: UNKNOWN.
+    4. Sub-Zero throw roots before f25: clips 76 (attacker) + 153 (victim) XYZ root words dumped. Confirm clip 153
+       f0 Y = +3528 (stored) vs old note / GLB key -3528. Status: partial-LIKELY.
+    5. Computer move choice: not next to button dispatcher 0x45c5b0 or the difficulty strings (0x4B74B9 / 0x4B74E3).
+       No move table or block-chance compare found yet. Status: UNKNOWN.
+    6. Slide get-up: where clip register 0x53ffc8 (clip record 328, set by 0x488bd0) is stored into the anim slot.
+       SET_CLIP 0x45a8a0 does not read it. Status: UNKNOWN.
+    7. Bicycle: which of current / linked is Sonya during script 0x4EB5A8. Status: UNKNOWN.
+    8. Camera pull distance and turn-toward-camera: still not found in the view code (0x4b9751, 0x4b91e6, 0x4b9cd8
+       checked). Status: UNKNOWN.
