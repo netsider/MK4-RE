@@ -1095,11 +1095,33 @@ runs while the state word is 0x2001, which fills the green and blue channels to 
 0xFE00 and leaves red alone. That is a full cyan glow. It matches the cyan orbs on
 SHARED_G page 2. There is no ice-blast mesh.
 
-Ring look - the flying ring is still missing. Ring flight does not use that sprite list and
-does not tint. On a hit, 0x40D990 adds color 0x00FB43FB: red and blue 0xFB, green 0x43.
-That is the purple hit flash. The ring's own body (the torus) is not in this draw list.
+Ring look - PROVEN (live Wine dump on box, 2026-10-24). The flying ring body is
+SHARED_G part 0x2A on page 3 (live descriptor 0x50969C). Ring flight does not use the
+ice sprite list. Soft glow is additive draw plus a color tint, not a scene light. Shape
+change during flight is LIKELY the comet filmstrip SHARED_G 0x2B-0x30 (stepper at
+0x507780), swapping part ids each tick rather than morphing one mesh. Files:
+capture_v3\projectile_live_20261024\box_dump\.
 
-Ring hit - PROVEN. Strike index 4 calls reaction 0x44, script 0x4ECDD0: victim clip 130,
+Ring hit flecks (little purple orbs) - PROVEN (2026-10-24). On a hit, sub 0x49bb50 goes
+to 0x40D990, which adds color 0x00FB43FB (red and blue 0xFB, green 0x43) and spawns
+about 0xC0 particles via 0x49cb30 / 0x49db30. Art list VA 0x4d4c60 points at bank
+0x50f290 = SHARE2_G.GEO (not SHARED_G). The flecks are SHARE2_G sprite records 0x64
+through 0x6F (twelve frames; tiny 4x5..7x7 grit; raw texels brownish; purple from the
+tint). The same ids on SHARED_G are unrelated 3D meshes - that is why the old note said
+0x64-0x71 were not reached. Soft look = brightness as opacity on the additive pass.
+Live shots show the spray of little glowing orbs around the victim; the shape variety is
+those twelve frames. Exports: box /workspace/mk4_orbs_extract/FINAL/.
+
+White fist muzzle orb - LIKELY. SHARED_G parts 0x28 / 0x29 on page 2 (type 0x100, 2-tri
+billboards; UV top-origin: 0x28 (53,1)-(76,24), 0x29 (79,1)-(102,24); bright center into
+a cyan halo). Also near effects draw list 0x4e6190 (used at 0x45664c) with gray tint
+0x808080. Alt candidate: SHARED_G additive sprite id 29. Mark PROVEN with a live dump of
+the descriptor at ring spawn (clip 15, frame ~15) on the box only, not on the PC.
+
+UV note - raw GEO UV bytes are top-origin. Ice 0x4B is (79,53)-(102,76) on page 2.
+Earlier dump reports that treated Y as bottom-origin were wrong.
+
+Ring hit reaction - PROVEN. Strike index 4 calls reaction 0x44, script 0x4ECDD0: victim clip 130,
 pushed back at 16384 raw per tick (0.250 per tick). The live travel of that hit is
 +127475. The blocked reaction id in that strike record is 0x0A.
 

@@ -407,12 +407,21 @@ K6. Public assembler for fighter parts (GEO parts placed on the skeleton)
 [TODO 2026-10-24] Open items from the 2026-10-24 dump (all still open; no progress claimed). Raw 16.16, Y negative = up.
     1. Flying Energy Ring picture: handler 0x49baa0 spawns record 0x4F0550, arms descriptor 0x4F0560; no draw list
        found (model word 0, never writes ice list 0x4F0880). Find what actually draws the ring body.
-       Status: UNKNOWN.
+       Status: DONE/PROVEN 2026-10-24 (live Wine dump on box): live ring object carries draw descriptor
+       0x50969C -> SHARED_G part 0x2A on page 3 (purple/magenta). Files: capture_v3\projectile_live_20261024\box_dump\.
     2. Ring hit burst: what it actually plays. Purple 0x00FB43FB is PROVEN; list at 0x4D4C50 walks 1 / 4 / 1 / end
        with zero low halves (no sprite spawn). Part records 0x64-0x6F, 0x70, 0x71 after the list are not reached.
-       Status: UNKNOWN.
+       Status: DONE/PROVEN 2026-10-24: flecks are SHARE2_G sprites 0x64-0x6F (art list 0x4d4c60 -> bank
+       0x50f290), tinted 0x00FB43FB by hit path 0x49bb50 -> 0x40D990; ~0xC0 particles via 0x49cb30/0x49db30.
+       Old "0x64-0x71 not reached" was SHARED_G (wrong GEO). Soft glow = additive + tint (brightness as
+       opacity). Shape variety = the twelve fleck frames. White fist muzzle at shoot = LIKELY SHARED_G
+       0x28/0x29 page 2 (live dump at clip 15 f~15 still needed for PROVEN). Box exports:
+       /workspace/mk4_orbs_extract/FINAL/. Screenshots: OneDrive Screenshots 1\Screenshot 2026-10-24 013957.png
+       (hit spray) and 014032.png (fist flash + flying ring).
     3. Ice eight SHARED_G parts 0x4B-0x52 (records 0x509A54-0x509B18, callback 0x40d720): list exists, but tick
-       0x40d920 does not advance through them. Find whether / how they cycle. Status: UNKNOWN.
+       0x40d920 does not advance through them. Find whether / how they cycle.
+       Status: DONE/PROVEN 2026-10-24 (live Wine dump on box): parts 0x4B-0x52 = cyan orbs on SHARED_G page 2.
+       (Exact cycle rate still not found in tick.) Files: capture_v3\projectile_live_20261024\box_dump\.
     4. Sub-Zero throw roots before f25: clips 76 (attacker) + 153 (victim) XYZ root words dumped. Confirm clip 153
        f0 Y = +3528 (stored) vs old note / GLB key -3528. Status: partial-LIKELY.
     5. Computer move choice: not next to button dispatcher 0x45c5b0 or the difficulty strings (0x4B74B9 / 0x4B74E3).

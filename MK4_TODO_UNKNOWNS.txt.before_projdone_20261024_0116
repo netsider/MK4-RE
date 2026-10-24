@@ -1,0 +1,424 @@
+MK4 PC (1998) - TODO / UNKNOWNS
+Everything not yet known, by area. Notes by netsider, as of 2026-10-22.
+Companion to MK4_PC_FILE_FORMATS.txt (the guide; section 11 = short gaps list) and MK4_RE_NOTES_v3.txt.
+Status tags:
+  UNKNOWN        = nothing solid yet
+  partial-LIKELY = part known or strong evidence, not fully proven
+  GUESS          = an idea only
+Each item: what is missing / status / suggested way to get it.
+
+==========================================================================================
+A. FILE FORMATS
+==========================================================================================
+A1. ECM video codec
+    Done: fully decoded. Header 0xE18 bytes ("ECM" 0x02, u32 frames, 900 x u32 chunk sizes; 0xE18 + sum = file size
+    for all four files, M_INTRO included - the "different header" was a misreading). Chunk = 1 s = 15 frames:
+    "SEC" 0, 0x2B14 bytes IMA ADPCM sound (22050 Hz mono, state carried over; VA 0x4AC190), then an EDL block
+    (Eurocom LZ + Huffman, VA 0x4B07E0) holding "MPC" 0x02 video: 5-5-5 palette, 80 x 60 codes of 4x4 blocks per
+    320x240 frame, codebook at +0x23484, code >= 65000 = solid colour. Guide section 5.
+    Evidence: tools\ecm_tool.py's EDL output is byte-identical to the EXE's decompressor and its frames to the EXE's
+    frame routine VA 0x4BDD50 (frames 1-14 of M_MIDWAY and M_INTRO chunks 0-1, run in an emulator). Content seen:
+    Midway logo (152 frames), Eurocom logo (203), trailer (331), Raiden intro (1000).
+    Open: the game's random "soften" pass on solid blocks is not reproduced (cosmetic); sound checked as smooth
+    waveforms only, not by ear (LIKELY).
+    Status: PROVEN. DONE.
+A2. GEO block types 0x100 and 0x2
+    Done: the draw dispatch VA 0x4BA01D reads byte 0 of the type word as flags; byte 1 is never read by the draw or
+    prep code (VA 0x4BB840). So 0x100 draws exactly like type 0 (normal lit renderer VA 0x4BAA60); 0x2 = byte 0 bit 1
+    -> VA 0x4BAF60, per-vertex shade from depth (VA 0x4B2990), used only by buyin_ge. Also 0x40 -> VA 0x4BAD10
+    (no lighting call; one part per arena) and bit 0 + object flag 0x80000 -> VA 0x4BA630 (optional path).
+    0x100 parts: shared_g 64, share2_g 22, lair/prison/skull/tomb/wind; mostly 2-triangle quads or repeated copies.
+    Status: PROVEN (code paths) / LIKELY (0x2 = depth-shaded look, 0x40 = unlit, byte 1 = editor/group flag) /
+    GUESS (0x100 parts = effect frames picked by object code).
+    Get it (rest): watch the buy-in screen and an arena with 0x100 parts; find who picks 0x100 part numbers.
+A3. GEO "2D set" table (types 128..640, count 0)
+    Done: these are 2D SPRITE records, byte 0 bit 0x80 (draw VA 0x4BB180; pair path VA 0x4BA4D1). Layout, 16 bytes:
+    +0 flags (0x80 sprite, 0x01 = draw the next record too), +1 blend & 3 (table VA 0x4F41C0: 0 opaque, 1/2 additive,
+    3 = 50/50 translucent), +2 GEO-local page, +3 sequential id (unread), +4/+6 s16 screen w/h, +8/+0xA s16 screen
+    x/y, +0xC/+0xD u8 u/v, +0xE/+0xF u8 texel w/h (screen size may differ: stretched). The "count 0" was bytes 2-3
+    (page 0, id 0) read as a u16. Guide section 3.
+    Status: PROVEN (layout and draw code) / LIKELY (visual look of the blend modes). Which screen uses which file:
+    LIKELY from the file names; the fatality-effect use is still a GUESS.
+A4. GEO block type 0x4 (Midway logo, MK title logo, attract medallion)
+    Done: 0x4 = byte 0 bit 2, which no renderer tests -> the normal lit renderer; same mesh layout as type 1.
+    tools\export_pc_geo.py now takes every 3D record when a file has no type-1 parts (logos, buyin_ge, arenas),
+    skips 2D sprite records instead of stopping, and stacks several texture pages into one atlas. Exports: midway_g
+    2 parts / 2336 triangles (3D "MIDWAY" logo), MKlogo_g 19 parts / 2033 (UVs on colour swatches: flat-coloured
+    mesh), attract_ 1 part / 1692 on 2 pages (dragon medallion). Fighter output is byte-identical to before.
+    Status: PROVEN (layout, export). Not yet compared side by side with the in-game title screens.
+A5. Sprite cut-out rectangles
+    Done (rectangles only): the 2D sprite records of A3 ARE the rectangles: page, u, v, tw, th, plus the on-screen
+    size and offset. Triangle UVs on 3D parts give the rest.
+    Not done (on purpose, for now): no sprites have been cut and no cutter tool is included.
+    Status: PROVEN (layout). Cutting: open.
+A6. Texture transparency key
+    Done: texel value 0x0000 (pure black) is transparent. The game renders in software (DDRAW + DSOUND, no Direct3D);
+    its textured span loops skip a texel equal to 0, e.g. VA 0x4BF2B1 "test ax,ax; je skip" (14 loops in
+    VA 0x4BEC00-0x4C2400). Bit 15 can't be a key: it is the RLE run flag. Blend modes come from the polygon mode
+    bits (A3).
+    Status: PROVEN. DONE.
+A7. GEO UV row byte 0
+    Done: byte 0 = GEO-local texture page. VA 0x4BB943 reads it (movsx) and maps it through the loaded file's page
+    table (VA 0x4BC810 writes {slot, slot} at tex_off + 8 + 4*page) into the polygon's page bits. Check: byte 0 <
+    page count in all 107,176 rows of all GEOs. Byte 1 (previously called the page) is never read by the game:
+    values 0-144 in runs, not the strip index.
+    Status: PROVEN (byte 0) / LIKELY (byte 1 = editor-only group/material id).
+A8. ESF flag 0x80 (13 files)
+    Done: loop flag. The ESF loader VA 0x4B0600 returns bit 31 of the header word; VA 0x4C225A stores it as bit 0
+    of the sound slot's flag byte (VA 0xF8D9A6 + 28 * n); the play routine passes that bit as the flags argument of
+    IDirectSoundBuffer::Play (VA 0x4C2783 -> call [vtbl+0x30]) = DSBPLAY_LOOPING; the stop routines VA 0x4C2943 /
+    0x4C29DD stop only these sounds. Also from the same loader: bit 29 = 16-bit output (ADPCM), bit 30 = 22050 Hz.
+    The 13: pcmk0101, 0102 (8-bit 11 kHz); pcmk2003, 2007, 2011, 2015, 2023, 2031, 2035, 2039 (= sound codes 3, 7, ...
+    39 = each arena music code + 2); pcmk2070, 2071, 2081 (12-16 s).
+    Status: PROVEN (loop). What they are: LIKELY arena ambience loops (not listened to / not checked live).
+A9. MENU.TGA use
+    Done: loaded once at start-up: init VA 0x4B1A70 -> VA 0x4B5580 opens "c:\source\mk4\win\menu.tga" (VA 0x4F40D0),
+    skips the 18-byte TGA header, reads 256 rows bottom-up into the staging buffer and copies it to texture slot 15
+    (VA 0x4BE440(15, 0, 0, 256, 256)); GEO pages only use slots 0-14. Content: ASCII font, colour swatches, blue
+    dragon medallion.
+    Status: PROVEN (load, slot 15) / LIKELY (shown as the font/background of the PC set-up and key-config menus).
+    Get it (rest): find the code that draws from slot 15.
+==========================================================================================
+B. SOUNDS
+==========================================================================================
+B1. Sound file names
+    All 674 ESF entries are named by hash: pcmk0021 ... pcmk2100.esf (tools\fsys_tool.py list).
+    MK4.EXE builds them with the format string "c:\source\mk4\win\sound\pcmk%04ld.esf" (file 0xFC6D0; pushed at VA 0x4C2238).
+    Status: PROVEN (names). DONE.
+B2. What each sound is (voice / hit / move / announcer / UI)
+    Missing: meaning of each pcmk number. Earlier names came from speech recognition and are GUESSES.
+    Now: the code -> file rule and every script sound table are PROVEN (see D2); script_decoder_v3.py "movesounds"
+    gives the files each move can play, and the announcer fighter names are tied to pcmk0621-0687 (guide section 8B).
+    Status: partial-LIKELY (which move plays which file: PROVEN statically; what the file says: recogniser GUESS)
+    Get it: listen to the files a move uses; log the code passed to 0x4BD7C0 at run time to confirm.
+B3. Number ranges (0xxx, 1xxx, 2xxx, ...)
+    Missing: whether the hundreds digit groups sounds (per fighter / announcer / effects).
+    Status: GUESS
+    Get it: same runtime log as B2, grouped by number range.
+B4. Arena music location
+    Found: music code at position i of the list at VA 0x4F5CC8 -> CD audio track i + 2, played by VA 0x4AC5E0 with
+    mciSendCommandA (WINMM) and a time in seconds from VA 0x4F5D00[track] (92 s for most). Not in FILESYS.DAT.
+    Arena -> music code table at VA 0x4DDD18 (LIKELY, 11 arenas).
+    Status: PROVEN (CD audio, code -> track); arena -> track LIKELY.
+    Get it: compare with the CD's track list; log [0x53849C] and the track played per arena.
+
+==========================================================================================
+C. ANIMATIONS / CLIPS
+==========================================================================================
+C1. Clips never seen in a live session
+    Missing: 422 of 612 clips in the v3 list (NEVER_SEEN_CLIPS_v3.txt); at least 5 have since been seen (17, 50, 114,
+    136, 388), so about 417 remain.
+    Status: UNKNOWN (LIKELY unused, or only used by fatalities, Goro/Noob/hidden fighters, endings, stage fatalities)
+    Get it: use the static decoder (who names each clip) and forced playback (tools\mk4_force_clip.py) to view them.
+C2. Clips with no matching skeleton
+    Missing: rigs for 386 and 422/423, 426/427, 446/447 (6-node = 3-bone clips); other odd node counts
+    (418 13 nodes, 429/430 4 nodes, 434/541 20 nodes) are not matched either.
+    Status: GUESS (severed limbs / gore pieces / objects)
+    Get it: find the native code that names these clips and the object it attaches them to.
+C3. Clip table +0x8 bit 0 (set on 27 clips)
+    Missing: meaning.
+    Status: UNKNOWN
+    Get it: compare the 27 clips; find the code that tests the bit.
+C4. Clips not named by any script, table or code
+    Missing: 161 clips are never named by a fixup; 310 more are not named statically through scripts.
+    Status: UNKNOWN
+    Get it: search .data for further record pointers; check runtime use with the live logger.
+C5. Who owns which clip (fighter-specific vs shared) beyond Sonya
+    Status: partial-LIKELY (static tables)
+    Get it: live per-fighter runs as done for Sonya.
+
+C6. Extra skeleton nodes
+    Done (2026-10-23): node counts per fighter (guide section 7): Sonya and Fujin 17 (extra head node 4), Sub-Zero 19
+    (zero-offset extras 10, 14, 18). None is animated.
+    Missing: what Sonya's head node 4 at (0, -4128, 6365) is (GUESS: ponytail; the hair is modelled into the head mesh,
+    LIKELY) and why Fujin / Sub-Zero carry zero-offset placeholders.
+    Status: PROVEN (counts, offsets) / GUESS (purpose)
+    Get it: look for code that reads node 4 / kind 0x11 records at run time.
+==========================================================================================
+D. MOVE SCRIPTS / EXE CODE
+==========================================================================================
+D1. Script opcodes (handler table 0x4E6970, 128 entries)
+    Done: every handler disassembled; tools\script_decoder_v3.py "ops" lists name, operand words, effect and tag for
+    all 128. PROVEN now: 03 (LIKELY), 04 n animate n ticks / stop at clip end, 4A n animate until frame <= n,
+    34 = the plain sleep (05 = wait while animating, LIKELY), 5A push back, 5C gravity, 5D nudge, 65 velocity to the
+    opponent, 63 damage, 6C has ONE operand word (v2 read two), all sound ops (see D2).
+    Status: partial-LIKELY - still not traced: 01, 02, 05, 08, 0D, 14, 17, 1C, 1D, 24, 28, 2E, 40, 44, 4D, 4F, 56, 59
+    (internals), 60, 62, 64, 69, 6A, 6D, 6F, 71, 72, 76, 7C.
+    Get it: forced script runs (patch a script in memory, log the fighter) for the remaining ones.
+D2. Byte-argument calls: sound / effect / damage
+    Done (PROVEN): 20/25/26/27 = sound tables 0x4ED998 / 0x4EDD18 / 0x4EDAE0 / 0x4EDA00; 2B = per-fighter voice
+    (random lists); 2C = per-fighter line; 73/74/75 fixed sounds; 2A = effect process (LIKELY); damage = strike
+    +0x14 and op 63. Sound code -> file: code > 100 -> pcmk(code/5), <= 100 -> pcmk(2000+code), music codes -> CD
+    audio tracks (MCI, see B4). Per-move list: script_decoder_v3.py "movesounds" (e.g. Scorpion spear plays pcmk0219, recognised as
+    "Get over here!").
+    Open: 4 table codes point to files that do not exist (pcmk0888, 1037, 1204, 1207 - GUESS: silent on PC);
+    op 20 with index > 0x32 (e.g. the sweep's 0xAF) plays nothing on PC.
+    Status: DONE (static); per-move lists are "can play" (all branches), not checked live.
+D3. Native-code chains (Square Wave, Bicycle Kick)
+    Done: control flow traced (guide section 8A). Square Wave: clip 310, rise at -0.15/tick to height -2.5, clip 101 at
+    0.2/tick with hit checks, 12 extra ticks, on hit stop + 10 ticks, landing 0x47E9E0 with clip 310 from frame 7.
+    Bicycle: per-tick hit check; on hit both fighters move together, velocity x 0.6, 32-tick end phase, clip 72, the
+    same landing routine. No kick counter in code (the repeated kicks = victim reaction 0x57, LIKELY).
+    Status: PROVEN (flow); names of helper routines LIKELY.
+D4. Condition table 0x4E7EA8
+    Done: every used entry read (guide section 8B step 3; script_decoder_v3.py "conds"): cool-down timers, own/opponent
+    state, held buttons, distance, arena, round won. Corrections: 02/03 test the fighter itself; [0x53849C] is the
+    arena number (LIKELY), not "finish him".
+    Open: 0C (held-button list unclear, GUESS); what each timer event T(n) is.
+    Status: PROVEN (code) / LIKELY (field names)
+D5. Command tables and the Player 2 tables
+    Done: input words 0x4D30A4 / 0x4D30A8 and their press/release lists traced. 0x5405F8 = LK RELEASE (PROVEN; not
+    "held"); 0x540688 = RUN bit (PROVEN, name LIKELY); 0x540448 = joystick up (LIKELY). P2 tables 0x5406D0-0x540880
+    and 0x540640 hold exactly the P1 contents (PROVEN statically, 144/144 entries).
+    Status: PROVEN except the "up" name (LIKELY). Not re-checked live.
+D6. Action-table sizes
+    Done: misc 0x44 slots, aux 0x14, special 0x23, projectile 0x1B, bit-5 table 0x50 (from where the next data starts;
+    LIKELY); the dispatcher 0x45F640 has no bounds check and skips empty entries (PROVEN). Condition table >= 0x39.
+    Status: LIKELY (sizes) / PROVEN (dispatcher)
+D7. Strike record fields
+    Done: +0x10 byte 0 = reaction (standing), byte 1 = reaction if the victim is airborne, byte 2 = reaction when
+    blocked, byte 3 flags; +0x14 = damage, 16.16 of the health bar, x 0.2 when blocked (code VA 0x48D630-0x48D720).
+    Open: hit box +0x00..+0x0C (LIKELY x, y, w, h).
+    Status: PROVEN (except the hit box)
+D8. Shinnok impersonations and finisher slots
+    Done: misc 13-1E/24/25 = morph stubs into 0x469B30 (target id, announcer name, sound banks, 600-tick timer);
+    input -> target table in guide section 8B. Finishers: misc 40 / 43 = fatality slots (clip slot id+1 / id+0x10),
+    misc 41 = arena-8 stage fatality, misc 42 = arena-0 stage fatality (uppercut 293) - LIKELY names.
+    Open: the clips that end up in the fatality slots at run time.
+    Done (2026-10-23): Sonya's Leg Twist plays 558-559-560 (attacker) and 561/562 (victim) in these slots (PROVEN live).
+    Status: PROVEN (code) / LIKELY (names); slot contents PROVEN for one fatality
+    Get it: log the slot contents live during a fatality.
+
+==========================================================================================
+E. FIGHTERS
+==========================================================================================
+E1. Per-fighter verification
+    Missing: live checks of each fighter's move table; only Sonya is done (77 PROVEN clips).
+    Also done (2026-10-23): Fujin (id 5) live pass, see E5.
+    Also done (2026-10-23): Shinnok (id 6) live pass, see E6.
+    Status: partial-LIKELY (16 other fighters statically decoded; 166 GUESS rows in the per-fighter table)
+    Get it: repeat the Sonya live procedure per fighter (logger + scripted inputs).
+E2. Sub-Zero: 19 clips he plays but nobody has identified yet
+    26, 42, 47, 58, 62, 79, 103, 115, 116, 117, 118, 151, 153, 162, 174, 185, 186, 188, 262
+    Done (2026-10-23, notes "SONYA OPEN ITEMS + SUB-ZERO 19-CLIP PASS"): PROVEN his 47 153 185 186 188; PROVEN not his 62 262;
+    LIKELY other fighters 26 42 103 162; LIKELY 174 (throw landing).
+    Open: 58, 79, 151, 115-118 (GUESS), and his second throw 80/154.
+    Done (2026-10-23, notes "SUB-ZERO PART 2"): PROVEN 115-118 = his round-win victory pose (live VS, 8 of 8 rounds won).
+    PROVEN his throw is only 76/153 (per-fighter switch at script 0x4E1784, f4); 80/154 = f1/f7/f12 throw (he plays 154-172-328 as victim, live).
+    LIKELY not his: 58 (angled jump kick for f0/3/6/9/12; his = 59, live), 79/151 (f3/f9 Tanya throw). 174 LIKELY victim landing after 151 (not seen live).
+    Still open: 174 live.
+    Status: mostly done (PROVEN/LIKELY); 174 GUESS-live
+    Get it: label from the in-game recordings; fatality runs.
+E3. Fighter ids 16 and 17
+    Missing: confirmation of names.
+    Status: partial-LIKELY (16 = Kitana, 17 = Noob Saibot from the name table 0x4F11D8; op 3C maps them to Sonya / Reiko scripts)
+    Also (PROVEN code): dispatchers 0x48E4E0 / 0x46BEB4 / 0x46B49A map id 0x10 -> 2 (Sonya) and 0x11 -> 4 (Sub-Zero).
+    Get it: unlock/select them in game and read obj+0x34; check which GEO loads.
+E4. Hidden / boss fighters (Goro, Noob, Meat, Shinnok boss form) clip sets
+    Status: UNKNOWN
+    Get it: play or force those fighters and log their clips.
+E5. Fujin (fighter id 5): live pass done 2026-10-23 (notes "FUJIN"; FUJIN_CLIPS.txt, 59 PROVEN + 9 netsider-named weapon clips)
+    Open: 99 (B,F,D+LK) never produced live (9 timing variants), so its victim 195-179 is unseen too.
+    Open: 217/219 played on D while armed (217-219-259); netsider sees a shooting pose - find what makes it fire and if it hits.
+    Open: 210/212/213 look like a different weapon than the 217/219 crossbow (netsider) - which weapon: GUESS.
+    Open: static-only clips in his handlers: 295, 297, 312, 54, 261, 532, 533, 209, 547, 548, 596, 91.
+    Open: victim clips not yet seen on him: 141-142-143, 324, 254, 182, 316-320-192-194, 195-197, 172, 179, 549-550,
+          and the other fighters' throw victims 145 / 151 / 152 / 153 / 154 / 607 / 610.
+    Open: clip 8 has two readings (continue-screen well fall vs lifted by 98 / armed 10-11); 199 only seen after opponent
+          clip 14 (which move is 14?); sweep 62 never hit (gap 80000); fatalities and stage fatalities not attempted.
+    Status: PROVEN (59 clips) / LIKELY-GUESS rest (see FUJIN_CLIPS.txt)
+    Get it: same live procedure; close-range sweep; B,F,D+LK timing sweep; run the other fighters' throws on him; fatality runs.
+
+E6. Shinnok (fighter id 6): live pass done 2026-10-23 (notes "SHINNOK"; SHINNOK_CLIPS.txt, 61 PROVEN)
+    Open: armed clips 286 / 277 / 278 / 208 named from input and X movement only (no visual check); other armed inputs
+          (armed LP / HP / HK / LK, armed D, armed block) not tried - more weapon clips likely exist.
+    Open: static-only clips in his handlers: 295, 297, 261, 532, 533, 209, 547, 548, 596.
+    Open: victim clips not yet seen on him: 141-142-143 (his roundhouse 313 never hit), 324, 254, 182, 316-320-192-194,
+          172, 549-550-196, and the other fighters' throw victims 145 / 151 / 153 / 154 / 607 / 610.
+    Open: 132, 180, 199 seen only as reactions to opponent clips 21, 1 and 14; which moves those are.
+    Open: morphs - Scorpion and Kai inputs did not work, 10 others not tried; no morph clip exists (moveset swap only).
+    Open: fatalities and stage fatalities not attempted.
+    Status: PROVEN (61 clips) / LIKELY-GUESS rest (see SHINNOK_CLIPS.txt)
+    Get it: same live procedure; armed-move sweep; other fighters' throws on him; fatality runs.
+==========================================================================================
+F. VICTIM REACTIONS
+==========================================================================================
+F1. Square Wave victim 305
+    Done (2026-10-23): the Square Wave hit reaction is 186-188 (PROVEN live, vs a jumping opponent); 305 is not a Square Wave
+    hit reaction - LIKELY a turn-around when the attacker crosses over.
+    Status: PROVEN (186-188) / LIKELY (305 meaning)
+    Get it: trace Square Wave handler 0x47E6A0; log the victim live during Square Wave.
+F2. Ring (projectile) victim 130
+    Status: PROVEN live (Ring -> 130, on the ground and in the air); static path from the projectile object still open
+    Get it: trace the projectile object's hit code (projectile table 0x4F0810).
+F3. Cartwheel reaction 0x79
+    Done (2026-10-23): live Cartwheel hit -> victim 131-185 (ground and air).
+    Status: PROVEN live (table decode of 0x79 not done)
+    Get it: decode reaction 0x79 in table 0x4ED4D0; log a Cartwheel hit live.
+F4. Sonya clip 43 (round end / vs 163)
+    Status: LIKELY (close F+LK special from table 0x4E0FA0: Sonya entry -> clip 43, victim 163)
+    Get it: more VS logs.
+
+==========================================================================================
+G. FATALITIES
+==========================================================================================
+G1. Sonya's Leg Twist
+    Done (2026-10-23): FINISH HIM, gap 160,000 units: hold BL, U,D,D,U, release BL, HK -> 558-559-560 / victim 561-562.
+    Status: PROVEN (live)
+    Get it: confirm the input and distance (misc 0x40/0x43 rows); retry with scripted inputs.
+G2. Stage fatalities (Goro's Lair F,D,F+HP close; Prison D,D,B,B+HK close)
+    Status: UNKNOWN (not yet run; misc41/misc42 possible stage-fatality slots: GUESS)
+    Get it: run them live on those stages with the logger.
+G3. Fatality scripts in general
+    Missing: the clips the fatalities play; inputs found (misc 0x40/0x43, LIKELY) but clips not traced.
+    Status: partial-LIKELY
+    Get it: trace the finisher handlers; force and log.
+G4. Fatality effect GEOs (ra/sb/sc/fj_fat_g, no 3D blocks)
+    Status: GUESS (2D effects)
+    Get it: see A3.
+
+G5. Leg Twist gore: what is still unknown (split, blood and replay are decoded: guide section 10A)
+    Missing: the code that sets the per-part hide flag (0x2000, LIKELY) and spawns the drops / spurts / pools; the
+    spawn RNG for drop velocities; why gravity scales 1x / 2x / 3x per replay pass; the spurt w2 data; where SHARED_G
+    splat parts 5-12 are used; the replay camera per pass.
+    Status: UNKNOWN (mechanics PROVEN from one capture)
+    Get it: find the writer of object flag 0x2000 and the allocator calls with descriptor 0x5091E8; capture other gore
+    fatalities.
+==========================================================================================
+H. SONYA LEFTOVERS
+==========================================================================================
+H1. Clips 25 (spit?) and 26 (arms open?)
+    Done (2026-10-23): 25 = Reptile's spit projectile; 26 = D,F+P projectile throw of Tanya / Kitana / Noob (decoder).
+    Status: LIKELY (not produced live; not Sonya's own moves)
+    Get it: find who names them (decoder); try taunt/intro variants.
+H2. Juggle follow-ups and air throw
+    Done (2026-10-23): air throw = both airborne + BL -> 77/310, victim 161-198-197 (PROVEN). No juggle found after Ring,
+    Bicycle, air throw or uppercut (LIKELY none).
+    Status: PROVEN (air throw) / LIKELY (no juggle)
+    Get it: practice-mode runs with the logger.
+
+==========================================================================================
+I. PHYSICS
+==========================================================================================
+I1. Unit scale
+    Done: code scale found - positions are 16.16, 65536 = 1 game unit = 256 mesh units (renderer VA 0x4B9CD8 shifts
+    the view-space translation right by 8 before adding the s16 mesh). The game has no metre constant, so metre
+    conversion is intentionally not used: every distance, speed and gravity value is given in raw units (units,
+    units/tick, units/tick^2). Earlier 238,800/m and 64,000/m figures are withdrawn. Guide section 10 (it keeps one
+    GUESS side note only).
+    Status: PROVEN (unit scale). Metre conversion: intentionally not used.
+I2. Push-back on hit, open floor
+    Done: logged mid-stage on PC. Victim moves: HK 27,510 (Sonya, 2/2); HP 0 (3/3); uppercut 96,334; flying kick
+    196,590 (2/2); slide 97,014; roundhouse 150,696 X + 150,742 Z; sweep 28,855 X + 145,609 Z. The attacker does not
+    move on open floor; at the wall the attacker is pushed instead (uppercut: 157,498 units). Guide 10.
+    Open: why some knockdowns travel in Z (GUESS: per-move knockdown table velocity).
+    Status: PROVEN (values listed, one fighter pair each).
+I3. P1 vs P2 position field naming (vertical/depth)
+    Done: fighter object P1 0x5224F0 / P2 0x522574 (P1 + 0x84), same offsets: +0x54 X, +0x58 height (negative = up),
+    +0x5C Z, +0x6C/70/74 velocities, +0x48 standing height, +0x50 camera depth (not a world field). Checked with P1
+    jumping and P2 launched (uppercut, flying kick, slide); P2 cannot jump by itself in practice, so the
+    "both jumping" log was replaced by the code (op 58 / integrator) plus those logs. Guide section 9.
+    Status: PROVEN.
+I4. Floor travel speeds on PC (walk/slide/flying kick)
+    Done: per tick on PC - walk 3932 (0.060), back 2754 (0.042), run 8519 (0.130), Sub-Zero slide 9830 (0.150) for
+    26 ticks, Liu Kang flying kick 9175 (0.140) until contact then 1310. Walk speeds match the arcade captures, so
+    arcade units = PC units. Guide section 10.
+    Status: PROVEN (walk for Sonya/Liu Kang/Sub-Zero; run/slide Sub-Zero; flying kick Liu Kang).
+
+==========================================================================================
+J. STAGE OBJECTS / PICKUPS
+==========================================================================================
+J1. Picking up stage objects (Lair rock, Goro's Lair heads)
+    Status: UNKNOWN (D+LP, D+HP, LP, run over: no pickup clip)
+    Get it: find the pickup handler in the action tables; check the needed input/distance.
+J2. Object meshes and throw paths
+    Status: UNKNOWN
+    Get it: locate the object GEO parts; log object positions live.
+
+J3. Code-driven stage motion
+    Done (2026-10-23): arena descriptors, spawn records and flipbook lists decoded (guide section 3A).
+    Missing: Wind World (no flipbooks; callback starts processes 0x42A050 / 0x42A2B0 / 0x42A960, LIKELY the flying
+    debris), the Prison fan (callback 0x42ACD0, GUESS), Shaolin flicker (LIKELY), the Lair rock / heads pickups (J1),
+    Skull animation groups 2-4 (no spawned object), descriptor word w4, w7-w15, the real flipbook tick length.
+    Status: UNKNOWN (data layout PROVEN)
+    Get it: follow the per-arena callbacks; log object positions on those stages.
+J4. 2D sprite records inside arena GEOs (Wind World 42, Ice Pit 1)
+    Missing: how they are placed in 3D (Wind World records give x, y but no z).
+    Status: UNKNOWN
+    Get it: find the code that draws sprite records for arena objects (VA 0x4BB180 callers).
+J5. Non-arena 3D GEOs: shinx_ge, cliff_ge, cage_end (and ladder_g)
+    Done: ped_geo = champion pedestal (LIKELY); skbgnd_g = skull "PRESS KEY TO CONTINUE" screen (PROVEN by content).
+    Missing: what shinx_ge (spawned by VA 0x418498) is; cliff_ge / cage_end lists are not referenced statically; ladder_g
+    = ladder screen is a GUESS.
+    Status: UNKNOWN / GUESS
+    Get it: watch the ladder, ending and continue screens and log which handles are spawned.
+==========================================================================================
+K. TOOLS NOT YET IN tools\
+==========================================================================================
+K1. GLB animation exporter
+    Missing: a self-contained exporter; the existing one needs joint data dumped from MAME RAM.
+    Status: partial-LIKELY (skeleton tables are in MK4.EXE, section 7)
+    Get it: build joints from the EXE skeleton tables + anim_emu.py, then write GLB.
+K2. 3D clip viewer
+    Missing: a shareable viewer (current one is tied to a local layout and three.js copy).
+    Status: UNKNOWN
+    Get it: package a small viewer that loads exported GLBs.
+K3. Automated capture/compare pipeline
+    Missing: generic versions of the forced capture / compare / index scripts.
+    Status: UNKNOWN (current scripts are tied to a Wine + Xvfb setup)
+    Get it: generalise them around mk4_force_clip.py and mk4_live_log.py.
+K4. FILESYS.DAT read mapper (strace-based)
+    Status: UNKNOWN (current script is setup-specific)
+    Get it: rewrite with arguments for the log and FILESYS.DAT paths.
+K5. Sprite cutter
+    Missing: a tool that cuts single sprites out of the texture atlases.
+    Status: not started (deferred on purpose); the rectangles and the transparency key are PROVEN (A3, A5, A6).
+    Get it: read the 2D sprite records of each GEO, crop page[u..u+tw, v..v+th], make texel 0 transparent.
+K6. Public assembler for fighter parts (GEO parts placed on the skeleton)
+    Exists: assembled, animated fighters are already exported by the private code-derived export pipeline
+    (codefix.py / fightkit.py) that made the viewer and sim GLBs. It puts part i on bone i: world = parent +
+    parentRot * joint offset; root = frame words 0..2 / 256; GEO vertices added in mesh units.
+    Missing: only a public, self-contained version in tools\. The private scripts are not generic: they need the
+    MAME RAM skeleton dumps, capture traces and per-fighter JSON files.
+    Joint-offset scale: the pipeline now uses 256, as MK4.EXE code gives (guide section 7, PROVEN). This is done
+    through x256 copies of the scripts (fightkit_256.py, codefix_256.py, bake_playback_256.py; setting BONE_SCALE,
+    default 256). The old x270 scripts and their outputs are kept unchanged (their bones are about 5.5% too long).
+    The fighter GLBs were rebuilt into a new fightkit_x256 folder, and Sonya sim v6 uses them.
+    tools\export_pc_geo.py itself only writes the parts in their bone-local frames (by design).
+    Status: assembly method PROVEN (code); public tool not written. Same work as K1.
+    Get it: read the joint offsets from the MK4.EXE skeleton tables (section 7) at x256, place part i on bone i
+    (rest pose, or a frame from anim_emu.py), write one node per bone with the parent links.
+
+
+[TODO 2026-10-23] Decode the PC CD's .ECM movie files (DATA\*.ECM, 35 files): B_<fighter> = bios (~3 MB), E_<fighter> = endings (3-18 MB), M_EURO / M_INTRO / M_KOMERC / M_MIDWAY = main movies (LIKELY, from names). Header 'ECM' + 0x02, then uint32 count (B_SCORPN: 225, PROVEN), then a uint32 offset table (LIKELY one per frame). Codec, resolution, fps and audio unknown. Output plan: MP4s, personal use only, no game data in this repo.
+    Update (2026-10-23 ~2:45 AM ET, header check only, nothing decoded): all 35 files use the A1 layout - "ECM" 0x02,
+    u32 frames, 900 x u32 chunk sizes, 0xE18 + sum = file size, ceil(frames / 15) non-zero chunks (PROVEN). So the
+    "offset table" above is the chunk-size table. 16 B_ bios, 225 frames each (15 s at 15 fps); 15 E_ endings,
+    223-1144 frames. The A1 decoder (tools\ecm_tool.py) LIKELY works on them unchanged (not run).
+
+[TODO 2026-10-23] Map the fighter state machine and the CPU AI in MK4.EXE (next big phase, after the fighters and the ECM movies).
+    1. Label the per-fighter state block (health, position, current clip, state/move id) by watching it change live.
+    2. Watch the state/move fields in a debugger to find the MK4.EXE code that writes them (the state machine: idle,
+       walk, jump, hit, dazed, ...).
+    3. Run CPU vs CPU, log which routine picks each move, then decompile it (Ghidra) to see what it checks
+       (distance, opponent state, difficulty).
+    Status: UNKNOWN. Label findings PROVEN / LIKELY / GUESS here and in MK4_RE_NOTES_v3.txt.
+
+[TODO 2026-10-24] Open items from the 2026-10-24 dump (all still open; no progress claimed). Raw 16.16, Y negative = up.
+    1. Flying Energy Ring picture: handler 0x49baa0 spawns record 0x4F0550, arms descriptor 0x4F0560; no draw list
+       found (model word 0, never writes ice list 0x4F0880). Find what actually draws the ring body.
+       Status: UNKNOWN.
+    2. Ring hit burst: what it actually plays. Purple 0x00FB43FB is PROVEN; list at 0x4D4C50 walks 1 / 4 / 1 / end
+       with zero low halves (no sprite spawn). Part records 0x64-0x6F, 0x70, 0x71 after the list are not reached.
+       Status: UNKNOWN.
+    3. Ice eight SHARED_G parts 0x4B-0x52 (records 0x509A54-0x509B18, callback 0x40d720): list exists, but tick
+       0x40d920 does not advance through them. Find whether / how they cycle. Status: UNKNOWN.
+    4. Sub-Zero throw roots before f25: clips 76 (attacker) + 153 (victim) XYZ root words dumped. Confirm clip 153
+       f0 Y = +3528 (stored) vs old note / GLB key -3528. Status: partial-LIKELY.
+    5. Computer move choice: not next to button dispatcher 0x45c5b0 or the difficulty strings (0x4B74B9 / 0x4B74E3).
+       No move table or block-chance compare found yet. Status: UNKNOWN.
+    6. Slide get-up: where clip register 0x53ffc8 (clip record 328, set by 0x488bd0) is stored into the anim slot.
+       SET_CLIP 0x45a8a0 does not read it. Status: UNKNOWN.
+    7. Bicycle: which of current / linked is Sonya during script 0x4EB5A8. Status: UNKNOWN.
+    8. Camera pull distance and turn-toward-camera: still not found in the view code (0x4b9751, 0x4b91e6, 0x4b9cd8
+       checked). Status: UNKNOWN.
