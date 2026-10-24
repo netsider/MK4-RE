@@ -1,3 +1,14 @@
+====================================================================================================
+SUMMARY - SONYA, HOW MANY OF HER ANIMATIONS ARE IN THE GAME   (added 2026-10-23 ~20:10 ET)
+====================================================================================================
+Her viewer folder has 486 clips, but she only USES 98 of them in the game.
+  USED     98 = she really plays it (seen live = PROVEN, or in her MK4.EXE tables = LIKELY).
+  UNUSED  237 = not hers: never referenced by MK4.EXE at all, another fighter's clip, or viewer export only.
+  UNKNOWN 159 = referenced by MK4.EXE but never seen live and not tied to her.
+  (494 rows total = her clip list + every viewer export.)  141 of her viewer clips are never referenced by MK4.EXE at all (LIKELY in no fighter's game).
+Whole game: 612 clip ids; 366 used by some fighter, 144 never referenced by MK4.EXE (see MK4_UNUSED_CLIPS_144.txt), 102 unknown.
+====================================================================================================
+
 SONYA (fighter id 2) - CLIPS USED vs UNUSED IN THE GAME   (built 2026-10-23 ~19:45 ET, read-only from SONYA_CLIPS.txt, a box copy of MK4.EXE, live-capture lists)
 Columns: clip | used? | label | name | where used / why not
 Rules: USED = PROVEN live (seen played in the running game) or LIKELY (in her static move/reaction tables).

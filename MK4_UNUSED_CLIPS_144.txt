@@ -1,0 +1,153 @@
+MK4 PC - THE 144 CLIPS NEVER REFERENCED BY MK4.EXE   (built 2026-10-23 ~20:10 ET from MK4_MASTER_ANIM_LIST.csv)
+These clip ids have ZERO references in MK4.EXE (byte scan for the clip record 0x4FDD6C+12*clip and its >>2 form): no move table, script or code points at them.
+=> LIKELY never played in the game (cut / leftover animations). A computed index could in theory still reach one, so this is LIKELY, not PROVEN.
+They still show up in the viewer because the export wrote every clip for every fighter.
+Count: 144 of 612 clip ids.
+Name = corrected name if one exists, else the curated name, else the viewer auto name (auto names are pose-shape guesses, not evidence).
+
+clip | name | fighters whose viewer folder has it
+  69 | unidentified (auto name not evidence; not seen live) | all 15 viewer fighters
+ 207 | misc_move | all 15 viewer fighters
+ 241 | kick_leg_raised_high | all 15 viewer fighters
+ 281 | idle_stance_loop | all 15 viewer fighters
+ 318 | misc_move | all 15 viewer fighters
+ 329 | misc_move | all 15 viewer fighters
+ 330 | misc_move | all 15 viewer fighters
+ 331 | idle_stance_loop | all 15 viewer fighters
+ 332 | idle_stance_loop | all 15 viewer fighters
+ 333 | idle_stance_loop | all 15 viewer fighters
+ 334 | misc_move | all 15 viewer fighters
+ 335 | idle_stance_loop | all 15 viewer fighters
+ 336 | punch_arm_strike_long_reach | all 15 viewer fighters
+ 337 | idle_stance_loop | all 15 viewer fighters
+ 338 | idle_stance_loop | all 15 viewer fighters
+ 339 | misc_move | all 15 viewer fighters
+ 340 | kick_leg_raised_high | all 15 viewer fighters
+ 341 | unidentified (auto name not evidence; not seen live) | all 15 viewer fighters
+ 342 | idle_stance_loop | all 15 viewer fighters
+ 343 | kick_leg_raised_high | all 15 viewer fighters
+ 344 | idle_stance_loop | all 15 viewer fighters
+ 345 | kick_leg_raised_high | all 15 viewer fighters
+ 346 | idle_stance_loop | all 15 viewer fighters
+ 347 | idle_stance_loop | all 15 viewer fighters
+ 348 | idle_stance_loop | all 15 viewer fighters
+ 349 | idle_stance_loop | all 15 viewer fighters
+ 350 | idle_stance_loop | all 15 viewer fighters
+ 351 | misc_move | all 15 viewer fighters
+ 352 | idle_stance_loop | all 15 viewer fighters
+ 353 | kick_leg_raised_high | all 15 viewer fighters
+ 354 | idle_stance_loop | all 15 viewer fighters
+ 355 | idle_stance_loop | all 15 viewer fighters
+ 356 | idle_stance_loop | all 15 viewer fighters
+ 357 | idle_stance_loop | all 15 viewer fighters
+ 358 | misc_move | all 15 viewer fighters
+ 359 | misc_move | all 15 viewer fighters
+ 360 | idle_stance_loop | all 15 viewer fighters
+ 361 | misc_move | all 15 viewer fighters
+ 362 | idle_stance_loop | all 15 viewer fighters
+ 363 | idle_stance_loop | all 15 viewer fighters
+ 364 | idle_stance_loop | all 15 viewer fighters
+ 365 | misc_move | all 15 viewer fighters
+ 366 | idle_stance_loop | all 15 viewer fighters
+ 367 | misc_move | all 15 viewer fighters
+ 368 | idle_stance_loop | all 15 viewer fighters
+ 369 | idle_stance_loop | all 15 viewer fighters
+ 370 | misc_move | all 15 viewer fighters
+ 371 | idle_stance_loop | all 15 viewer fighters
+ 372 | misc_move | all 15 viewer fighters
+ 373 | fold-up [netsider visual ID] | all 15 viewer fighters
+ 374 | unidentified (auto name not evidence; not seen live) | all 15 viewer fighters
+ 375 | idle_stance_loop | all 15 viewer fighters
+ 376 | idle_stance_loop | all 15 viewer fighters
+ 377 | idle_stance_loop | all 15 viewer fighters
+ 378 | idle_stance_loop | all 15 viewer fighters
+ 379 | misc_move | all 15 viewer fighters
+ 380 | misc_move | all 15 viewer fighters
+ 381 | idle_stance_loop | all 15 viewer fighters
+ 382 | misc_move | all 15 viewer fighters
+ 383 | idle_stance_loop | all 15 viewer fighters
+ 433 | misc_move | all 15 viewer fighters
+ 449 | static_pose | all 15 viewer fighters
+ 450 | static_pose | all 15 viewer fighters
+ 451 | static_pose | all 15 viewer fighters
+ 452 | static_pose | all 15 viewer fighters
+ 453 | static_pose | all 15 viewer fighters
+ 454 | static_pose | all 15 viewer fighters
+ 455 | static_pose | all 15 viewer fighters
+ 456 | static_pose | all 15 viewer fighters
+ 457 | static_pose | all 15 viewer fighters
+ 458 | misc_move | all 15 viewer fighters
+ 459 | misc_move | all 15 viewer fighters
+ 460 | idle_stance_loop | all 15 viewer fighters
+ 461 | idle_stance_loop | all 15 viewer fighters
+ 462 | misc_move | all 15 viewer fighters
+ 463 | misc_move | all 15 viewer fighters
+ 464 | idle_stance_loop | all 15 viewer fighters
+ 465 | idle_stance_loop | all 15 viewer fighters
+ 466 | unidentified (auto name not evidence; not seen live) | all 15 viewer fighters
+ 467 | swim [netsider visual ID] | all 15 viewer fighters
+ 468 | unidentified (auto name not evidence; not seen live) | all 15 viewer fighters
+ 469 | unidentified (auto name not evidence; not seen live) | all 15 viewer fighters
+ 470 | idle_stance_loop | all 15 viewer fighters
+ 471 | kick_leg_raised_high | all 15 viewer fighters
+ 472 | walk_like_legs_alternate | all 15 viewer fighters
+ 473 | misc_move | all 15 viewer fighters
+ 474 | walk_like_legs_alternate | all 15 viewer fighters
+ 475 | idle_stance_loop | all 15 viewer fighters
+ 476 | idle_stance_loop | all 15 viewer fighters
+ 477 | idle_stance_loop | all 15 viewer fighters
+ 478 | misc_move | all 15 viewer fighters
+ 479 | idle_stance_loop | all 15 viewer fighters
+ 480 | idle_stance_loop | all 15 viewer fighters
+ 481 | misc_move | all 15 viewer fighters
+ 482 | misc_move | all 15 viewer fighters
+ 483 | misc_move | all 15 viewer fighters
+ 484 | idle_stance_loop | all 15 viewer fighters
+ 485 | misc_move | all 15 viewer fighters
+ 488 | idle_stance_loop | all 15 viewer fighters
+ 489 | misc_move | all 15 viewer fighters
+ 490 | misc_move | all 15 viewer fighters
+ 491 | misc_move | all 15 viewer fighters
+ 492 | idle_stance_loop | all 15 viewer fighters
+ 494 | misc_move | all 15 viewer fighters
+ 495 | unidentified (auto name not evidence; not seen live) | all 15 viewer fighters
+ 496 | idle_stance_loop | all 15 viewer fighters
+ 497 | misc_move | all 15 viewer fighters
+ 498 | idle_stance_loop | all 15 viewer fighters
+ 499 | misc_move | all 15 viewer fighters
+ 500 | idle_stance_loop | all 15 viewer fighters
+ 501 | walk_like_legs_alternate | all 15 viewer fighters
+ 502 | unidentified (auto name not evidence; not seen live) | all 15 viewer fighters
+ 503 | idle_stance_loop | all 15 viewer fighters
+ 504 | idle_stance_loop | all 15 viewer fighters
+ 505 | idle_stance_loop | all 15 viewer fighters
+ 506 | kick_leg_raised_high | all 15 viewer fighters
+ 507 | idle_stance_loop | all 15 viewer fighters
+ 508 | unidentified (auto name not evidence; not seen live) | all 15 viewer fighters
+ 509 | misc_move | all 15 viewer fighters
+ 510 | idle_stance_loop | all 15 viewer fighters
+ 511 | static_pose | all 15 viewer fighters
+ 512 | kick_leg_raised_high | all 15 viewer fighters
+ 513 | idle_stance_loop | all 15 viewer fighters
+ 514 | static_pose | all 15 viewer fighters
+ 515 | floating set (1 of 3) [netsider visual ID] | all 15 viewer fighters
+ 516 | floating set (2 of 3) [netsider visual ID] | all 15 viewer fighters
+ 517 | floating set (3 of 3) [netsider visual ID] | all 15 viewer fighters
+ 518 | touch, then look at hand [netsider visual ID] | all 15 viewer fighters
+ 519 | idle_stance_loop | all 15 viewer fighters
+ 520 | misc_move | all 15 viewer fighters
+ 521 | misc_move | all 15 viewer fighters
+ 522 | idle_stance_loop | all 15 viewer fighters
+ 523 | misc_move | all 15 viewer fighters
+ 524 | idle_stance_loop | all 15 viewer fighters
+ 525 | static_pose | all 15 viewer fighters
+ 526 | 180-degree turn [netsider visual ID] | all 15 viewer fighters
+ 528 | misc_move | all 15 viewer fighters
+ 529 | idle_stance_loop | all 15 viewer fighters
+ 530 | shielding face from a slap attack | all 15 viewer fighters
+ 531 | walk with arm raised to the crowd [netsider visual ID] | all 15 viewer fighters
+ 588 |  | none (no viewer export)
+ 593 |  | none (no viewer export)
+ 608 |  | none (no viewer export)
+ 611 | unidentified (auto name not evidence; not seen live) | all 15 viewer fighters
+

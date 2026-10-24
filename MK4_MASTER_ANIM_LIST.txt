@@ -1,3 +1,44 @@
+====================================================================================================
+SUMMARY - HOW MANY ANIMATIONS ARE (AND ARE NOT) IN THE GAME   (added 2026-10-23 ~20:10 ET; counted from MK4_MASTER_ANIM_LIST.csv)
+====================================================================================================
+What the words mean:
+  USED    = the fighter really plays this clip in the game: seen in a live game log (PROVEN) or in that fighter's move/reaction tables in MK4.EXE (LIKELY).
+  UNUSED  = the fighter does not use it. Either MK4.EXE never references the clip at all (LIKELY not in the game for anyone - see the 144 list below),
+            or it belongs to another fighter, or it only exists as a viewer export that is not in this fighter's tables/captures.
+  UNKNOWN = MK4.EXE does reference the clip, but it was never seen live and is not tied to this fighter. Might be used somewhere, not proven.
+
+WHOLE GAME (612 unique clip ids, 0-611):
+  USED by at least one fighter ............ 366
+  NEVER referenced by MK4.EXE (not in game, LIKELY) ... 144   (full list: MK4_UNUSED_CLIPS_144.txt and below)
+  Referenced but never seen used (UNKNOWN)  102
+  (366 + 144 + 102 = 612)
+
+PER FIGHTER (a fighter's viewer folder holds ~477 clips, but each fighter only uses ~80-113 of them):
+id fighter       viewer_clips  USED  UNUSED  UNKNOWN   viewer clips never referenced by MK4.EXE
+ 0 Scorpion               477    88     263      138   141
+ 1 Raiden                 477   103     263      131   141
+ 2 Sonya                  486    98     237      159   141
+ 3 Liu Kang               477    84     266      139   141
+ 4 Sub-Zero               482    83     251      155   141
+ 5 Fujin                  488    80     260      155   141
+ 6 Shinnok                477    77     265      143   141
+ 7 Reiko                  477    92     251      143   141
+ 8 Quan Chi               477   101     255      130   141
+ 9 Tanya                  477   107     246      142   141
+10 Reptile                477    98     257      138   141
+11 Kai                    477   113     248      131   141
+12 Jarek                  477    77     272      139   141
+13 Jax                    477   101     264      127   141
+14 Johnny Cage            477    89     266      134   141
+15 Goro                  none    61      14       19   -
+17 Noob Saibot           none    84       9       18   -
+  (USED/UNUSED/UNKNOWN count every row for that fighter = his clip list + every viewer export. Goro and Noob have no viewer exports;
+   Kitana (id 16) has no clip list or exports and is not audited.)
+
+The 144 clip ids NEVER referenced by MK4.EXE (LIKELY never played; a computed index is not fully ruled out):
+  69, 207, 241, 281, 318, 329-383, 433, 449-485, 488-492, 494-526, 528-531, 588, 593, 608, 611
+====================================================================================================
+
 MK4 PC - MASTER ANIMATION LIST, USED vs UNUSED PER FIGHTER   (built 2026-10-23 ~19:50 ET; sortable copy: MK4_MASTER_ANIM_LIST.csv)
 Sources (read-only): <FIGHTER>_CLIPS.txt (this repo), clips_seen_never_v3.json (live captures), clip_names_v3.json,
   viewer exports fightkit_x256\<f> then fightkit\<f>, and a byte scan of a box copy of MK4.EXE for every clip record 0x4FDD6C+12*clip (and >>2).
